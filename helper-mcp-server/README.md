@@ -1,8 +1,8 @@
-# Helper MCP Server
+# Epicure / Helper MCP Server
 
-Local stdio MCP server for the Helper support app.
+Local stdio MCP server for the Epicure Inbox app (forked from Helper).
 
-It uses Helper's existing data and mutation layer so ticket reads and writes behave like the app, including side effects such as event logs, notifications, notes, and reply queueing.
+It uses the app's data and mutation layer so ticket reads and writes behave like the dashboard, including side effects such as event logs, notifications, notes, and reply queueing.
 
 ## Included tools
 
@@ -12,7 +12,6 @@ It uses Helper's existing data and mutation layer so ticket reads and writes beh
 - `helper_get_ticket`
 - `helper_get_shopify_orders`
 - `helper_get_shopify_order`
-- `helper_get_pocket_user`
 - `helper_reply_to_ticket`
 - `helper_set_ticket_status`
 - `helper_assign_ticket`
@@ -20,11 +19,10 @@ It uses Helper's existing data and mutation layer so ticket reads and writes beh
 
 `helper_list_tickets` defaults to active tickets sorted newest-first. It also supports first-class MCP views like `active`, `mine`, `open_unread`, `unassigned_open`, and `awaiting_customer`, plus sort aliases like `latest`, `created_desc`, and `updated_desc`.
 
-The external lookup tools are read-only:
+The Shopify lookup tools are read-only:
 
 - `helper_get_shopify_orders` fetches Shopify customer and order history by email
 - `helper_get_shopify_order` fetches a Shopify order by order number or name, with or without `#`
-- `helper_get_pocket_user` fetches Pocket user details and devices by email
 
 ## Acting user
 
@@ -109,6 +107,6 @@ Start the HTTP server first with `pnpm mcp:helper:http`.
 - The HTTP server uses session-based Streamable HTTP, which is a better fit for Codex URL-based MCP registration.
 - When `HELPER_MCP_BEARER_TOKEN` is set, HTTP requests must include `Authorization: Bearer <token>`.
 - Ticket timelines expose both `html_body` and normalized `body_text` for message reading and draft generation.
-- Shopify and Pocket lookup tools return structured `configured`, `found`, and `error` fields so agents can branch cleanly on missing integrations versus no-match lookups.
+- Shopify lookup tools return structured `configured`, `found`, and `error` fields so agents can branch cleanly on missing integrations versus no-match lookups.
 - All tools accept `response_format` with `markdown` or `json`.
 - File uploads are not exposed yet. Reply and note tools currently operate without attachments.

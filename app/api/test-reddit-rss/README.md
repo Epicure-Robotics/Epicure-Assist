@@ -29,7 +29,7 @@ https://your-app.vercel.app/api/test-reddit-rss
 
 Or test with a specific subreddit:
 ```
-https://your-app.vercel.app/api/test-reddit-rss?subreddit=heypocketai
+https://your-app.vercel.app/api/test-reddit-rss?subreddit=technology
 ```
 
 ## Expected Response
@@ -39,8 +39,8 @@ If RSS works from Vercel, you'll see:
 ```json
 {
   "success": true,
-  "subreddit": "heypocketai",
-  "url": "https://www.reddit.com/r/heypocketai/.rss",
+  "subreddit": "technology",
+  "url": "https://www.reddit.com/r/technology/.rss",
   "totalPosts": 25,
   "recentPosts": 2,
   "allPosts": [...],

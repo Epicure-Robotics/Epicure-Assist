@@ -4,7 +4,6 @@ import { z } from "zod";
 import {
   formatCurrentUser,
   formatListTickets,
-  formatPocketUserLookup,
   formatTeamMembers,
   formatTicket,
   formatTicketMutation,
@@ -229,27 +228,6 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
         response_format,
         formatTicket,
       ),
-  );
-
-  server.registerTool(
-    "helper_get_pocket_user",
-    {
-      title: "Get Pocket User By Email",
-      description:
-        "Fetch Pocket user details by email, including subscription fields and known devices. Returns a graceful configured/found/error result for missing integrations or no-match lookups.",
-      inputSchema: {
-        email: z.string().email().describe("Pocket user email address."),
-        response_format: RESPONSE_FORMAT,
-      },
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    },
-    ({ email, response_format }) =>
-      handleWithFormatting(() => service.getPocketUserByEmail({ email }), response_format, formatPocketUserLookup),
   );
 
   server.registerTool(

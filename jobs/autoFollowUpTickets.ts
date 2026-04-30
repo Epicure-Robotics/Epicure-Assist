@@ -21,7 +21,7 @@ Just checking in - did my last message help?
 If you need any clarification or have more questions, just let me know!
 
 Emma
-Pocket Support`;
+Epicure Robotics`;
 
 const DAY_10_TEMPLATE = `Hey,
 
@@ -32,7 +32,7 @@ If I don't hear from you in the next 4 days, I'll close this ticket to keep thin
 Let me know if you need anything else!
 
 Emma
-Pocket Support`;
+Epicure Robotics`;
 
 const DAY_14_TEMPLATE = `Hey,
 
@@ -41,7 +41,7 @@ Since I haven't heard back, I'm closing this ticket for now.
 If you still need help, just reply to this email and I'll reopen it right away!
 
 Emma
-Pocket Support`;
+Epicure Robotics`;
 
 const convertPlainTextToHtml = (text: string) =>
   text

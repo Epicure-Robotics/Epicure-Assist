@@ -75,7 +75,7 @@ export async function fetchRedditRSS(subreddit: string): Promise<RedditRSSPost[]
 
   const response = await fetch(rssUrl, {
     headers: {
-      "User-Agent": "web:heypocketai:v1.0.0 (by /u/heypocketai)",
+      "User-Agent": "web:epicure-inbox:v1.0.0",
     },
   });
 

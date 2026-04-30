@@ -7,7 +7,7 @@ import { fetchRedditRSS } from "@/lib/reddit/rss";
  */
 export async function GET(request: NextRequest) {
   try {
-    const subreddit = request.nextUrl.searchParams.get("subreddit") || "heypocketai";
+    const subreddit = request.nextUrl.searchParams.get("subreddit") || "technology";
     const rssUrl = `https://www.reddit.com/r/${subreddit}/.rss`;
 
     console.log("🔍 Testing Reddit RSS from:", rssUrl);

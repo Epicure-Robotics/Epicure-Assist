@@ -17,7 +17,7 @@ import { useMembers } from "@/components/useMembers";
 const eventDescriptions: Partial<Record<ConversationEvent["eventType"], string>> = {
   request_human_support: "Human support requested",
   email_auto_ignored: "Email auto ignored",
-  device_deleted: "Pocket device deleted",
+  device_deleted: "Linked device removed",
 };
 
 const statusVerbs = {

@@ -281,8 +281,6 @@ const ConversationHeader = ({
         >
           {subject
             ?.replace("World's First AI Thought Companion ", "")
-            .replace(" Access to Pocket’s Full Power", "")
-            .replace(" Access to Pocket's Full Power", "")
             .replace(" (Launch Special)", "") ?? "(no subject)"}
         </div>
       </div>

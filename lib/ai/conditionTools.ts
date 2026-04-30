@@ -1,6 +1,5 @@
 import { tool, Tool } from "ai";
 import { z } from "zod";
-import { isPocketConfigured, searchPocketUserByEmail } from "@/lib/pocket/client";
 import { getCustomerOrdersByEmail, isShopifyConfigured } from "@/lib/shopify/client";
 
 /**
@@ -54,43 +53,6 @@ export function buildConditionTools(_email: string | null) {
           };
         } catch (error) {
           return { error: `Failed to fetch Shopify data: ${error instanceof Error ? error.message : "Unknown error"}` };
-        }
-      },
-    });
-  }
-
-  // PocketUserInfo tool - get Pocket user data
-  if (isPocketConfigured()) {
-    tools.pocket_user_info = tool({
-      description:
-        "Get Pocket user information including subscription status, onboarding status, role, and app version. Use this to check user subscription, account status, or user type.",
-      parameters: z.object({
-        email: z.string().describe("User email address to look up"),
-      }),
-      execute: async ({ email: lookupEmail }): Promise<Record<string, unknown>> => {
-        try {
-          const user = await searchPocketUserByEmail(lookupEmail);
-          if (!user) {
-            return { found: false, message: "No Pocket user found with this email" };
-          }
-          return {
-            found: true,
-            user: {
-              id: user.id,
-              email: user.email,
-              displayName: user.display_name,
-              subscriptionType: user.subscription_type,
-              onboardingStatus: user.onboarding_status,
-              role: user.role,
-              appVersion: user.app_version,
-              isDeleted: user.deleted_at !== null,
-              deletionReason: user.deletion_reason,
-            },
-          };
-        } catch (error) {
-          return {
-            error: `Failed to fetch Pocket user: ${error instanceof Error ? error.message : "Unknown error"}`,
-          };
         }
       },
     });

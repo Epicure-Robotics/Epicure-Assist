@@ -93,10 +93,6 @@ export const env = createEnv({
     SHOPIFY_SHOP_DOMAIN: z.string().min(1).optional(), // Your Shopify store domain (e.g., yourstore.myshopify.com)
     SHOPIFY_ADMIN_ACCESS_TOKEN: z.string().min(1).optional(), // Admin API access token from custom app
     SHOPIFY_API_VERSION: z.string().min(1).optional().default("2025-01"), // Shopify API version
-    // Pocket app database integration for displaying user information
-    POCKET_DB_URL: z.string().url().optional(), // PostgreSQL connection string for Pocket app database
-    POCKET_SUPPORT_API_TOKEN: z.string().min(1).optional(), // Support API token for syncing user subscription from RevenueCat
-    // RevenueCat API integration for checking subscription status
     REVENUECAT_API_KEY: z.string().min(1).optional(), // API key from https://revenuecat.com for subscription checking
     // Cal.com API integration for webhook handling
     CAL_API_KEY: z.string().min(1).optional(), // API key from https://cal.com for webhook integration

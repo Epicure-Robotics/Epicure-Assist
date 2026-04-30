@@ -2,7 +2,6 @@ import type {
   HelperCurrentUserResult,
   HelperListTicketsResult,
   HelperNoteResult,
-  HelperPocketUserLookupResult,
   HelperReplyResult,
   HelperResponseFormat,
   HelperShopifyLookupResult,
@@ -204,47 +203,4 @@ export const formatShopifyLookup = (result: HelperShopifyLookupResult) => {
     : "No orders found for this Shopify customer.";
 
   return [...header, customerSection, `Returned ${result.total_orders} order(s).`, ordersSection].join("\n\n");
-};
-
-export const formatPocketUserLookup = (result: HelperPocketUserLookupResult) => {
-  const header = [
-    `Acting as ${formatActor(result.acting_as.display_name, result.acting_as.email)}`,
-    `Pocket lookup: email=${result.lookup_email}`,
-  ];
-
-  if (!result.configured) {
-    return [...header, "Pocket integration is not configured."].join("\n\n");
-  }
-
-  if (result.error) {
-    return [...header, `error: ${result.error}`].join("\n\n");
-  }
-
-  if (!result.found || !result.user) {
-    return [...header, "No Pocket user matched that email."].join("\n\n");
-  }
-
-  const user = result.user;
-  const userHeader = [
-    `user: ${user.display_name ? `${user.display_name} <${user.email}>` : user.email}`,
-    `subscription_type: ${user.subscription_type ?? "unknown"}`,
-    `onboarding_status: ${user.onboarding_status ?? "unknown"}`,
-    `role: ${user.role ?? "unknown"}`,
-    `app_version: ${user.app_version ?? "unknown"}`,
-    user.deleted_at ? `deleted_at: ${user.deleted_at}` : null,
-    user.deletion_reason ? `deletion_reason: ${user.deletion_reason}` : null,
-  ]
-    .filter(Boolean)
-    .join("\n");
-
-  const devicesSection = user.devices.length
-    ? user.devices
-        .map(
-          (device, index) =>
-            `${index + 1}. device_id=${device.device_id ?? "unknown"} | serial=${device.serial_number ?? "unknown"} | model=${device.model_string ?? "unknown"} | firmware=${device.firmware_version ?? "unknown"} | last_sync=${device.last_sync_time ?? "unknown"}`,
-        )
-        .join("\n")
-    : "No devices found.";
-
-  return [...header, userHeader, `Returned ${user.devices.length} device(s).`, devicesSection].join("\n\n");
 };

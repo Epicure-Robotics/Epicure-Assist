@@ -242,8 +242,6 @@ export const ShopifyOrderItem = ({ order, initialExpanded = true }: ShopifyOrder
                           <div className="font-semibold text-foreground leading-tight">
                             {item.name
                               .replace("World's First AI Thought Companion ", "")
-                              .replace(" Access to Pocket’s Full Power", "")
-                              .replace(" Access to Pocket's Full Power", "")
                               .replace(" (Launch Special)", "")
                               .replace("-", "")
                               .trim()}

@@ -12,8 +12,6 @@ import {
 } from "@/lib/data/conversationMessage";
 import { addNote } from "@/lib/data/note";
 import { getFullProfileByEmail, getFullProfileById, getUsersWithMailboxAccess } from "@/lib/data/user";
-import { getPocketUserByEmail as fetchPocketUserByEmail, isPocketConfigured } from "@/lib/pocket/client";
-import { PocketApiError, type PocketDevice, type PocketUser } from "@/lib/pocket/types";
 import {
   getCustomerOrdersByEmail as fetchShopifyOrdersByEmail,
   isShopifyConfigured,
@@ -381,44 +379,6 @@ export type HelperShopifyLookupResult = {
   error: string | null;
 };
 
-export type HelperPocketDevice = {
-  id: string;
-  user_id: string;
-  device_id: string | null;
-  serial_number: string | null;
-  mac_address: string | null;
-  model_string: string | null;
-  firmware_version: string | null;
-  wifi_firmware_version: string | null;
-  last_synced_file: string | null;
-  last_synced_folder: string | null;
-  last_sync_time: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-};
-
-export type HelperPocketUser = {
-  id: string;
-  email: string;
-  display_name: string | null;
-  subscription_type: string | null;
-  onboarding_status: string | null;
-  role: string | null;
-  app_version: string | null;
-  deleted_at: string | null;
-  deletion_reason: string | null;
-  devices: HelperPocketDevice[];
-};
-
-export type HelperPocketUserLookupResult = {
-  acting_as: HelperUserSummary;
-  lookup_email: string;
-  configured: boolean;
-  found: boolean;
-  user: HelperPocketUser | null;
-  error: string | null;
-};
-
 const ACTIVE_MAILBOX_CONDITION = isNull(sql`${mailboxes.preferences}->>'disabled'`);
 
 const unique = <T>(values: T[]) => Array.from(new Set(values));
@@ -628,38 +588,6 @@ const mapShopifyOrder = (order: ShopifyOrderWithUrl): HelperShopifyOrder => ({
   admin_url: order.admin_url,
 });
 
-const mapPocketDevice = (device: PocketDevice): HelperPocketDevice => ({
-  id: device.id,
-  user_id: device.user_id,
-  device_id: device.device_id,
-  serial_number: device.serial_number,
-  mac_address: device.mac_address,
-  model_string: device.model_string,
-  firmware_version: device.firmware_version,
-  wifi_firmware_version: device.wifi_firmware_version,
-  last_synced_file: device.last_synced_file,
-  last_synced_folder: device.last_synced_folder,
-  last_sync_time: device.last_sync_time,
-  created_at: device.created_at,
-  updated_at: device.updated_at,
-});
-
-const mapPocketUser = (user: PocketUser | null): HelperPocketUser | null =>
-  user
-    ? {
-        id: user.id,
-        email: user.email,
-        display_name: user.display_name,
-        subscription_type: user.subscription_type,
-        onboarding_status: user.onboarding_status,
-        role: user.role,
-        app_version: user.app_version,
-        deleted_at: user.deleted_at,
-        deletion_reason: user.deletion_reason,
-        devices: user.devices.map(mapPocketDevice),
-      }
-    : null;
-
 const mapShopifyError = (error: unknown, fallback: string) => {
   if (error instanceof ShopifyApiError) {
     if (error.statusCode === 401) {
@@ -676,24 +604,6 @@ const mapShopifyError = (error: unknown, fallback: string) => {
   }
 
   return error instanceof Error ? error.message : fallback;
-};
-
-const mapPocketError = (error: unknown) => {
-  if (error instanceof PocketApiError) {
-    if (error.code === "CONNECTION_ERROR") {
-      return "Could not connect to Pocket database";
-    }
-    if (error.code === "TIMEOUT") {
-      return "Pocket database query timed out";
-    }
-    if (error.code === "TABLE_NOT_FOUND") {
-      return "Users table not found in Pocket database";
-    }
-
-    return error.message;
-  }
-
-  return error instanceof Error ? error.message : "Failed to fetch Pocket user information";
 };
 
 const getActiveMailbox = async () => {
@@ -1018,41 +928,6 @@ export class HelperMcpService {
         orders: [],
         total_orders: 0,
         error: mapShopifyError(error, "Failed to fetch Shopify order"),
-      };
-    }
-  }
-
-  async getPocketUserByEmail(input: { email: string }): Promise<HelperPocketUserLookupResult> {
-    if (!isPocketConfigured()) {
-      return {
-        acting_as: this.actingAs,
-        lookup_email: input.email,
-        configured: false,
-        found: false,
-        user: null,
-        error: null,
-      };
-    }
-
-    try {
-      const { user, found } = await fetchPocketUserByEmail(input.email);
-
-      return {
-        acting_as: this.actingAs,
-        lookup_email: input.email,
-        configured: true,
-        found,
-        user: mapPocketUser(user),
-        error: null,
-      };
-    } catch (error) {
-      return {
-        acting_as: this.actingAs,
-        lookup_email: input.email,
-        configured: true,
-        found: false,
-        user: null,
-        error: mapPocketError(error),
       };
     }
   }

@@ -45,8 +45,7 @@ export async function evaluateCondition({
   const systemPrompt = `You are a condition evaluator. Your job is to determine if a specific condition is met based on customer data.
 
 You have access to tools to look up customer information:
-- shopify_get_customer_orders: Get Shopify customer and order data
-- pocket_user_info: Get Pocket user info (subscription, onboarding status, role)
+- shopify_get_customer_orders: Get Shopify customer and order data (when Shopify is configured)
 
 IMPORTANT: 
 1. Use the tools to gather the necessary information

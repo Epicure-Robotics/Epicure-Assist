@@ -249,7 +249,8 @@ async function sendSlackAlert(post: DiscoursePost, analysis: HelpSeekingAnalysis
     }
 
     // Build the Discourse post URL
-    const discourseUrl = `https://community.heypocket.com${post.post_url}`;
+    const discourseOrigin = process.env.DISCOURSE_ORIGIN ?? "https://epicurerobotics.com";
+    const discourseUrl = new URL(post.post_url, discourseOrigin).href;
 
     // Post to Slack
     await postSlackMessage(mailbox.slackBotToken, {

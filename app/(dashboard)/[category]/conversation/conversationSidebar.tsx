@@ -4,8 +4,6 @@ import {
   CornerUpLeft,
   ExternalLink,
   Mail,
-  Trash2,
-  User,
   UserPlus,
 } from "lucide-react";
 import { useState } from "react";
@@ -22,11 +20,9 @@ import { JsonView } from "@/components/jsonView";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { SimilarityCircle } from "@/components/similarityCircle";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useSession } from "@/components/useSession";
@@ -113,10 +109,7 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
   const { user: currentUser } = useSession() ?? {};
   const [previousExpanded, setPreviousExpanded] = useState(true);
   const [similarExpanded, setSimilarExpanded] = useState(false);
-  const [pocketExpanded, setPocketExpanded] = useState(false);
   const [metadataExpanded, setMetadataExpanded] = useState(false);
-  const [pocketManualEmail, setPocketManualEmail] = useState("");
-  const [pocketActiveEmail, setPocketActiveEmail] = useState("");
 
   const { data: customerConversations, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery(
     { customer: [conversation.emailFrom ?? ""], sort: "oldest" },
@@ -136,46 +129,7 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
     },
   );
 
-  const pocketQueryEmail = pocketActiveEmail || conversation.emailFrom || "";
-  const { data: pocketData, isFetching: isFetchingPocket } = api.mailbox.conversations.pocket.getUserInfo.useQuery(
-    { email: pocketQueryEmail },
-    {
-      enabled: !!pocketQueryEmail && pocketExpanded,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-    },
-  );
-
   const utils = api.useUtils();
-  const updateSubscriptionMutation = api.mailbox.conversations.pocket.updateUserSubscription.useMutation({
-    onSuccess: () => {
-      toast.success("Subscription updated successfully");
-      void utils.mailbox.conversations.pocket.getUserInfo.invalidate();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to update subscription");
-    },
-  });
-  const deleteDeviceMutation = api.mailbox.conversations.pocket.deleteUserDevice.useMutation({
-    onSuccess: () => {
-      toast.success("Device deleted successfully");
-      void utils.mailbox.conversations.pocket.getUserInfo.invalidate();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to delete device");
-    },
-  });
-  const syncSubscriptionMutation = api.mailbox.conversations.pocket.syncUserSubscription.useMutation({
-    onSuccess: () => {
-      toast.success("Subscription synced successfully");
-      void utils.mailbox.conversations.pocket.getUserInfo.invalidate();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Failed to sync subscription");
-    },
-  });
-
-  // Check if customer exists in platform customers
   const { data: customerExistsData } = api.mailbox.customers.exists.useQuery(
     { email: conversation.emailFrom ?? "" },
     {
@@ -365,275 +319,6 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
         </div>
 
         <Accordion type="multiple" defaultValue={["previous"]}>
-          <AccordionItem value="pocket">
-            <AccordionTrigger className="px-4" onClick={() => setPocketExpanded(!pocketExpanded)}>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Pocket User Info
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4">
-              <div className="space-y-3">
-                {isFetchingPocket ? (
-                  <div className="flex items-center justify-center py-4">
-                    <LoadingSpinner size="sm" />
-                  </div>
-                ) : !pocketData?.configured ? (
-                  <div className="text-sm text-muted-foreground">Pocket integration not configured</div>
-                ) : pocketData?.error ? (
-                  <Alert variant="destructive">
-                    <AlertDescription className="text-xs">{pocketData.error}</AlertDescription>
-                  </Alert>
-                ) : !pocketData?.found || !pocketData?.user ? (
-                  <div className="space-y-3">
-                    <div className="text-sm text-muted-foreground">
-                      {pocketActiveEmail ? `No user found for ${pocketActiveEmail}` : "User not found in Pocket"}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        type="email"
-                        placeholder="Search by email..."
-                        value={pocketManualEmail}
-                        onChange={(e) => setPocketManualEmail(e.target.value)}
-                        className="h-8 text-xs"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          if (pocketManualEmail) {
-                            setPocketActiveEmail(pocketManualEmail);
-                          }
-                        }}
-                        disabled={!pocketManualEmail}
-                      >
-                        Search
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-3 text-xs">
-                    {pocketActiveEmail && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-muted-foreground">Showing results for: {pocketActiveEmail}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setPocketActiveEmail("");
-                            setPocketManualEmail("");
-                          }}
-                          className="h-6 text-xs"
-                        >
-                          Clear
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* User ID */}
-                    {pocketData.user?.id && (
-                      <div>
-                        <span className="font-medium">User ID:</span>{" "}
-                        <span className="text-muted-foreground font-mono text-xxs">{pocketData.user.id}</span>
-                      </div>
-                    )}
-
-                    {/* Profile */}
-                    {pocketData.user?.display_name && (
-                      <div>
-                        <span className="font-medium">Name:</span>{" "}
-                        <span className="text-muted-foreground">{pocketData.user.display_name}</span>
-                      </div>
-                    )}
-
-                    {/* Subscription */}
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Subscription:</span>
-                      {pocketData.user?.deleted_at ? (
-                        pocketData.user.subscription_type ? (
-                          <Badge variant="bright">{pocketData.user.subscription_type}</Badge>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )
-                      ) : pocketData.user ? (
-                        <Select
-                          value={pocketData.user.subscription_type || ""}
-                          onValueChange={(value) => {
-                            if (pocketData.user) {
-                              updateSubscriptionMutation.mutate({
-                                userId: pocketData.user.id,
-                                subscriptionType: value as "new_member" | "founding_member" | "black_friday_member",
-                              });
-                            }
-                          }}
-                          disabled={updateSubscriptionMutation.isPending}
-                        >
-                          <SelectTrigger className="h-7 text-xs w-auto min-w-[160px]">
-                            <SelectValue placeholder="Select subscription" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="new_member">new_member</SelectItem>
-                            <SelectItem value="founding_member">founding_member</SelectItem>
-                            <SelectItem value="black_friday_member">black_friday_member</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </div>
-
-                    {/* Sync Subscription Button */}
-                    {pocketData.user && !pocketData.user.deleted_at && (
-                      <div>
-                        <Button
-                          variant="outlined"
-                          size="sm"
-                          onClick={() => {
-                            if (pocketData.user) {
-                              syncSubscriptionMutation.mutate({
-                                userId: pocketData.user.id,
-                              });
-                            }
-                          }}
-                          disabled={syncSubscriptionMutation.isPending}
-                          className="h-7 text-xs"
-                        >
-                          {syncSubscriptionMutation.isPending ? "Syncing..." : "Sync Subscription"}
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Onboarding Status */}
-                    {pocketData.user?.onboarding_status && (
-                      <div>
-                        <span className="font-medium">Onboarding:</span>{" "}
-                        <span className="text-muted-foreground">{pocketData.user.onboarding_status}</span>
-                      </div>
-                    )}
-
-                    {/* Role */}
-                    {pocketData.user?.role && (
-                      <div>
-                        <span className="font-medium">Role:</span>{" "}
-                        <span className="text-muted-foreground">{pocketData.user.role}</span>
-                      </div>
-                    )}
-
-                    {/* App Version */}
-                    {pocketData.user?.app_version && (
-                      <div>
-                        <span className="font-medium">App Version:</span>{" "}
-                        <span className="text-muted-foreground">{pocketData.user.app_version}</span>
-                      </div>
-                    )}
-
-                    {/* Devices */}
-                    <div className="space-y-2">
-                      <div>
-                        <span className="font-medium">All Devices:</span>{" "}
-                        <span className="text-muted-foreground">
-                          {pocketData.user.devices.length} {pocketData.user.devices.length === 1 ? "device" : "devices"}
-                        </span>
-                      </div>
-                      {pocketData.user.devices.length === 0 ? (
-                        <div className="text-muted-foreground">No devices found</div>
-                      ) : (
-                        <div className="space-y-2">
-                          {pocketData.user.devices.map((device) => (
-                            <div key={device.id} className="border rounded p-2 space-y-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="min-w-0">
-                                  <div className="font-medium truncate">
-                                    {device.model_string || device.device_id || "Unknown device"}
-                                  </div>
-                                  <div className="text-muted-foreground font-mono text-xxs break-all">{device.id}</div>
-                                </div>
-                                <Button
-                                  variant="destructive_outlined"
-                                  size="sm"
-                                  onClick={() => {
-                                    if (!pocketData.user) return;
-                                    const shouldDelete = window.confirm(
-                                      `Delete device ${device.model_string || device.device_id || device.id}?`,
-                                    );
-                                    if (!shouldDelete) return;
-                                    deleteDeviceMutation.mutate({
-                                      userId: pocketData.user.id,
-                                      deviceId: device.id,
-                                      conversationId: conversation.id,
-                                      modelString: device.model_string || undefined,
-                                      serialNumber: device.serial_number || undefined,
-                                    });
-                                  }}
-                                  disabled={deleteDeviceMutation.isPending}
-                                  className="h-6 px-2"
-                                >
-                                  <Trash2 className="h-3 w-3 mr-1" />
-                                  Delete
-                                </Button>
-                              </div>
-                              {device.device_id && (
-                                <div>
-                                  <span className="font-medium">Device ID:</span>{" "}
-                                  <span className="text-muted-foreground font-mono text-xxs">{device.device_id}</span>
-                                </div>
-                              )}
-                              {device.serial_number && (
-                                <div>
-                                  <span className="font-medium">Serial:</span>{" "}
-                                  <span className="text-muted-foreground font-mono text-xxs">
-                                    {device.serial_number}
-                                  </span>
-                                </div>
-                              )}
-                              {device.firmware_version && (
-                                <div>
-                                  <span className="font-medium">Firmware:</span>{" "}
-                                  <span className="text-muted-foreground">{device.firmware_version}</span>
-                                  {device.wifi_firmware_version && (
-                                    <span className="text-muted-foreground">
-                                      {" "}
-                                      (WiFi: {device.wifi_firmware_version})
-                                    </span>
-                                  )}
-                                </div>
-                              )}
-                              {device.last_sync_time && (
-                                <div>
-                                  <span className="font-medium">Last Sync:</span>{" "}
-                                  <HumanizedTime time={new Date(device.last_sync_time)} />
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Deletion Info */}
-                    {pocketData.user?.deleted_at && (
-                      <div className="border-t pt-2 mt-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-destructive font-medium">Account Deleted</span>
-                          <Badge variant="destructive">Deleted</Badge>
-                        </div>
-                        <div>
-                          <span className="font-medium">Deleted At:</span>{" "}
-                          <HumanizedTime time={new Date(pocketData.user.deleted_at)} />
-                        </div>
-                        {pocketData.user.deletion_reason && (
-                          <div className="mt-1">
-                            <span className="font-medium">Reason:</span>{" "}
-                            <span className="text-muted-foreground">{pocketData.user.deletion_reason}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
           <AccordionItem value="previous">
             <AccordionTrigger className="px-4" onClick={() => setPreviousExpanded(!previousExpanded)}>
               Previous conversations

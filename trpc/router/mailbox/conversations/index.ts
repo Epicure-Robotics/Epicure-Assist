@@ -23,7 +23,6 @@ import {
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { findSimilarConversations } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
-import { pocketRouter } from "../pocket";
 import { mailboxProcedure } from "../procedure";
 import { filesRouter } from "./files";
 import { messagesRouter } from "./messages";
@@ -320,7 +319,6 @@ export const conversationsRouter = {
   files: filesRouter,
   tools: toolsRouter,
   notes: notesRouter,
-  pocket: pocketRouter,
 
   findSimilar: conversationProcedure.query(async ({ ctx }) => {
     let conversation = ctx.conversation;

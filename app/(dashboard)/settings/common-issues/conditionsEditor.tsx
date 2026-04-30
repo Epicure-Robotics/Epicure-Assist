@@ -148,7 +148,7 @@ export const ConditionsEditor = ({ issueGroupId }: ConditionsEditorProps) => {
             className="text-sm"
           />
           <Textarea
-            placeholder="Condition to test (e.g., 'User is in Pocket database')"
+            placeholder="Condition to test (e.g. 'Customer has recent Shopify order')"
             value={testCondition}
             onChange={(e) => setTestCondition(e.target.value)}
             rows={2}

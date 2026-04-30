@@ -109,8 +109,6 @@ export const ConversationListItemContent = ({ conversation, emailPrefix }: Conve
   let highlightedSubject = escape(
     conversation.subject
       .replace("World's First AI Thought Companion ", "")
-      .replace(" Access to Pocket’s Full Power", "")
-      .replace(" Access to Pocket's Full Power", "")
       .replace(" (Launch Special)", ""),
   );
   let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";

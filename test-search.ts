@@ -7,7 +7,7 @@ import { searchConversations } from "./lib/data/conversation/search";
 async function testSearch() {
   console.log("Testing search functionality...\n");
 
-  // 1. Search for conversations with "Pocket software update" in subject
+  // 1. Search for website form leads in subject
   console.log("1. Direct database query for subject:");
   const directResults = await db
     .select({
@@ -17,7 +17,7 @@ async function testSearch() {
       status: conversations.status,
     })
     .from(conversations)
-    .where(ilike(conversations.subject, "%Pocket software update%"))
+    .where(ilike(conversations.subject, "%New Lead%"))
     .limit(5);
 
   console.log(`Found ${directResults.length} results via direct query:`);
@@ -34,7 +34,7 @@ async function testSearch() {
   }
 
   const searchResult = await searchConversations(mailbox, {
-    search: "Pocket software update",
+    search: "vending",
     limit: 10,
   });
 
@@ -45,9 +45,9 @@ async function testSearch() {
   });
 
   // 3. Try with different keywords
-  console.log("\n3. Searching with 'Pocket freeze':");
+  console.log("\n3. Searching with 'factory':");
   const searchResult2 = await searchConversations(mailbox, {
-    search: "Pocket freeze",
+    search: "factory",
     limit: 10,
   });
 
@@ -58,9 +58,9 @@ async function testSearch() {
   });
 
   // 4. Try searching closed tickets specifically
-  console.log("\n4. Searching closed tickets with 'Pocket':");
+  console.log("\n4. Searching closed tickets with 'Epicure':");
   const searchResult3 = await searchConversations(mailbox, {
-    search: "Pocket",
+    search: "Epicure",
     status: ["closed"],
     limit: 10,
   });

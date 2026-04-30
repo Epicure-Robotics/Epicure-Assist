@@ -452,8 +452,6 @@ const EmailPreviewSidebar = ({ conversation, onClose }: { conversation: ListItem
   const displayEmailFrom = conversation.emailFrom ?? "Anonymous";
   const subject = conversation.subject
     .replace("World's First AI Thought Companion ", "")
-    .replace(" Access to Pocket's Full Power", "")
-    .replace(" Access to Pocket's Full Power", "")
     .replace(" (Launch Special)", "");
 
   // Fetch full conversation data with all messages

@@ -11,7 +11,7 @@ import openai from "@/lib/ai/openai";
 import { replaceTemplateVariables } from "@/lib/utils/templateVariables";
 
 // Sample customer question
-const sampleCustomerQuestion = `I'm having trouble pairing my Pocket device with my Samsung phone. The LED is blue but it won't connect. I've tried restarting both devices. What should I do?`;
+const sampleCustomerQuestion = `We're a factory with about 500 employees and want to explore smart vending for the break room. What's the typical timeline to evaluate a pilot?`;
 
 async function generateAIResponse(question: string): Promise<string> {
   console.log("🤖 Generating real AI response using GPT-4o-mini...\n");
@@ -21,12 +21,11 @@ async function generateAIResponse(question: string): Promise<string> {
     messages: [
       {
         role: "system",
-        content: `You are a helpful customer support agent for Pocket, a smart AI hardware device.
-Provide detailed, step-by-step troubleshooting instructions with proper formatting including:
-- Clear paragraphs separated by blank lines
-- Numbered lists for steps
-- Bullet points for sub-items
-- Keep responses professional and helpful`,
+        content: `You are a helpful B2B sales contact for Epicure Robotics (smart vending / workplace solutions).
+Provide clear, professional replies with:
+- Short paragraphs
+- Numbered lists when steps help
+- No invented pricing or binding commitments`,
       },
       {
         role: "user",
