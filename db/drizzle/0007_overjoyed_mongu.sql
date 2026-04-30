@@ -1,0 +1,1 @@
+ALTER TABLE "conversations_escalation" DROP CONSTRAINT "conversations_escala_conversation_id_6a4dba67_fk_conversat";

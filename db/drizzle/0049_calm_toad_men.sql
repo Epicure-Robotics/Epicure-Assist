@@ -1,0 +1,1 @@
+ALTER TABLE "mailboxes_aiusageevent" ADD COLUMN "cached_tokens_count" integer DEFAULT 0 NOT NULL;

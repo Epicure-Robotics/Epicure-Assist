@@ -1,0 +1,1 @@
+ALTER TABLE "mailboxes_stylelinter" DROP CONSTRAINT "mailboxes_stylelinte_organization_id_bd0f87bd_fk_mailboxes";

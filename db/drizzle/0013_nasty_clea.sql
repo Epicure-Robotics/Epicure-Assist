@@ -1,0 +1,1 @@
+ALTER TABLE "mailboxes_organization" DROP COLUMN IF EXISTS "is_onboarding_completed";

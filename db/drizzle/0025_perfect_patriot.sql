@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "auth_user_username_6821ab7c_like";

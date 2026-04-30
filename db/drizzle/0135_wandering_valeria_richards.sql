@@ -1,0 +1,1 @@
+ALTER TABLE "issue_groups" ADD COLUMN "default_saved_reply_id" bigint;

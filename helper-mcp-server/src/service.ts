@@ -1,0 +1,1607 @@
+import { and, count, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { htmlToText } from "html-to-text";
+import { db } from "@/db/client";
+import { conversationMessages, conversations, mailboxes, type FullUserProfile } from "@/db/schema";
+import { serializeConversationWithMessages, updateConversation } from "@/lib/data/conversation";
+import { searchConversations } from "@/lib/data/conversation/search";
+import {
+  createConversationMessage,
+  generateCleanedUpText,
+  getLastAiGeneratedDraft,
+  serializeResponseAiDraft,
+} from "@/lib/data/conversationMessage";
+import { addNote } from "@/lib/data/note";
+import { getFullProfileByEmail, getFullProfileById, getUsersWithMailboxAccess } from "@/lib/data/user";
+import { getPocketUserByEmail as fetchPocketUserByEmail, isPocketConfigured } from "@/lib/pocket/client";
+import { PocketApiError, type PocketDevice, type PocketUser } from "@/lib/pocket/types";
+import {
+  getCustomerOrdersByEmail as fetchShopifyOrdersByEmail,
+  isShopifyConfigured,
+  searchOrderByName,
+} from "@/lib/shopify/client";
+import {
+  ShopifyApiError,
+  type ShopifyAddress,
+  type ShopifyCustomer,
+  type ShopifyFulfillment,
+  type ShopifyLineItem,
+  type ShopifyOrderWithUrl,
+} from "@/lib/shopify/types";
+import { helperMcpEnv } from "./env.js";
+
+export const HELPER_TICKET_STATUSES = [
+  "open",
+  "waiting_on_customer",
+  "closed",
+  "spam",
+  "check_back_later",
+  "ignored",
+] as const;
+
+export const HELPER_TICKET_LIST_VIEWS = [
+  "active",
+  "mine",
+  "open_unread",
+  "unassigned_open",
+  "awaiting_customer",
+] as const;
+
+export const HELPER_TICKET_LIST_SORTS = [
+  "newest",
+  "oldest",
+  "highest_value",
+  "latest",
+  "created_desc",
+  "created_asc",
+  "updated_desc",
+  "updated_asc",
+] as const;
+
+export type HelperTicketStatus = (typeof HELPER_TICKET_STATUSES)[number];
+export type HelperTicketListView = (typeof HELPER_TICKET_LIST_VIEWS)[number];
+export type HelperTicketListSort = (typeof HELPER_TICKET_LIST_SORTS)[number];
+export type HelperResponseFormat = "markdown" | "json";
+type HelperLegacyTicketCategory = "conversations" | "assigned" | "mine" | "unassigned";
+type HelperSearchConversationSort = Exclude<HelperTicketListSort, "latest">;
+
+const HELPER_ACTIVE_TICKET_STATUSES: HelperTicketStatus[] = ["open", "waiting_on_customer", "check_back_later"];
+const HELPER_HIGHEST_VALUE_SORTABLE_STATUSES = new Set<HelperTicketStatus>([
+  "open",
+  "waiting_on_customer",
+  "check_back_later",
+]);
+
+export type ActingUserSelectors = {
+  userId?: string;
+  userEmail?: string;
+};
+
+export type HelperUserSummary = {
+  id: string;
+  email: string | null;
+  display_name: string;
+  permissions: string;
+  access_role: "afk" | "core" | "nonCore";
+  access_keywords: string[];
+};
+
+export type HelperMailboxSummary = {
+  id: number;
+  name: string;
+  slug: string;
+};
+
+export type HelperCurrentUserResult = {
+  acting_as: HelperUserSummary;
+  mailbox: HelperMailboxSummary;
+};
+
+export type HelperTeamMember = {
+  id: string;
+  email: string | null;
+  display_name: string;
+  role: "afk" | "core" | "nonCore";
+  keywords: string[];
+  permissions: string;
+  open_ticket_count: number;
+  email_on_assignment: boolean;
+};
+
+export type HelperTeamMembersResult = {
+  acting_as: HelperUserSummary;
+  is_admin: boolean;
+  members: HelperTeamMember[];
+};
+
+export type HelperTicketCustomer = {
+  email: string | null;
+  name: string | null;
+  value: string | number | null;
+  is_vip: boolean | null;
+  links: Record<string, string> | null;
+  metadata: Record<string, unknown> | null;
+};
+
+export type HelperTicketFile = {
+  id: number;
+  name: string;
+  mimetype: string;
+  size_human: string | null;
+  url: string | null;
+  preview_url: string | null;
+};
+
+export type HelperTimelineEntry = {
+  id: number;
+  type: "message" | "note" | "event" | "guide_session";
+  created_at: string;
+  author: HelperTeamMember | null;
+  role: string | null;
+  status: string | null;
+  body: string | null;
+  html_body: string | null;
+  body_text: string | null;
+  from: string | null;
+  to: string | null;
+  cc: string[];
+  bcc: string[];
+  files: HelperTicketFile[];
+  slack_url: string | null;
+  metadata: Record<string, unknown> | null;
+  reaction_type: string | null;
+  reaction_feedback: string | null;
+  event_type: string | null;
+  changes: Record<string, unknown> | null;
+  reason: string | null;
+  title: string | null;
+  guide_status: string | null;
+  instructions: string | null;
+};
+
+export type HelperTicketSummary = {
+  id: number;
+  slug: string;
+  status: HelperTicketStatus;
+  subject: string;
+  customer: HelperTicketCustomer;
+  conversation_provider: string | null;
+  source: string | null;
+  assigned_to: HelperTeamMember | null;
+  assigned_to_ai: boolean;
+  issue_group_id: number | null;
+  issue_subgroup_id: number | null;
+  created_at: string;
+  updated_at: string;
+  closed_at: string | null;
+  last_customer_message_at: string | null;
+  last_message_at: string | null;
+  recent_message_text: string | null;
+  matched_message_text: string | null;
+  unread_message_count: number | null;
+};
+
+export type HelperTicketDetail = HelperTicketSummary & {
+  cc_recipients: string[];
+  ai_draft: {
+    id: number;
+    body: string | null;
+    response_to_id: number;
+    is_stale: boolean;
+  } | null;
+  timeline: HelperTimelineEntry[];
+  total_timeline_entries: number;
+  timeline_truncated: boolean;
+};
+
+export type HelperListTicketsInput = {
+  limit: number;
+  cursor?: string | null;
+  category?: HelperLegacyTicketCategory;
+  view?: HelperTicketListView;
+  search?: string;
+  statuses?: HelperTicketStatus[];
+  assigneeIds?: string[];
+  assigneeEmails?: string[];
+  isAssigned?: boolean;
+  customerEmails?: string[];
+  hasUnreadMessages?: boolean;
+  sort?: HelperTicketListSort;
+  createdAfter?: string;
+  createdBefore?: string;
+};
+
+export type HelperListTicketsResult = {
+  acting_as: HelperUserSummary;
+  tickets: HelperTicketSummary[];
+  total_returned: number;
+  next_cursor: string | null;
+  supports_highest_value_sort: boolean;
+  resolved_view: HelperTicketListView | null;
+  resolved_sort: HelperSearchConversationSort;
+  applied_filters: Record<string, unknown>;
+};
+
+export type HelperGetTicketInput = {
+  ticketSlug: string;
+  includeTimeline?: boolean;
+  timelineLimit?: number;
+};
+
+export type HelperReplyInput = {
+  ticketSlug: string;
+  message: string;
+  to?: string[];
+  cc?: string[];
+  bcc?: string[];
+  shouldAutoAssign?: boolean;
+  shouldClose?: boolean;
+  responseToMessageId?: number | null;
+};
+
+export type HelperSetStatusInput = {
+  ticketSlug: string;
+  status: HelperTicketStatus;
+  reason?: string;
+};
+
+export type HelperAssignTicketInput = {
+  ticketSlug: string;
+  assignedToId?: string;
+  assignedToEmail?: string;
+  unassign?: boolean;
+  assignedToAI?: boolean;
+  reason?: string;
+};
+
+export type HelperAddNoteInput = {
+  ticketSlug: string;
+  note: string;
+  slackChannelId?: string;
+};
+
+export type HelperTicketMutationResult = {
+  acting_as: HelperUserSummary;
+  ticket: HelperTicketDetail;
+};
+
+export type HelperReplyResult = HelperTicketMutationResult & {
+  message_id: number;
+};
+
+export type HelperNoteResult = HelperTicketMutationResult & {
+  note_id: number;
+};
+
+export type HelperShopifyLookupMode = "email" | "order_number";
+
+export type HelperShopifyCustomer = {
+  id: number;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  orders_count: number;
+  total_spent: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type HelperShopifyAddress = {
+  address1: string | null;
+  address2: string | null;
+  city: string | null;
+  province: string | null;
+  province_code: string | null;
+  country: string | null;
+  country_code: string | null;
+  zip: string | null;
+  name: string | null;
+  phone: string | null;
+};
+
+export type HelperShopifyLineItem = {
+  id: number;
+  variant_id: number | null;
+  title: string;
+  quantity: number;
+  price: string;
+  sku: string | null;
+  variant_title: string | null;
+  vendor: string | null;
+  product_id: number | null;
+  fulfillment_status: "fulfilled" | "partial" | "unfulfilled" | null;
+  name: string;
+};
+
+export type HelperShopifyFulfillment = {
+  id: number;
+  order_id: number;
+  status: string;
+  created_at: string;
+  service: string | null;
+  updated_at: string;
+  tracking_company: string | null;
+  shipment_status: string | null;
+  tracking_number: string | null;
+  tracking_numbers: string[];
+  tracking_url: string | null;
+  tracking_urls: string[];
+  line_items: HelperShopifyLineItem[];
+  name: string;
+  delivery_date: string | null;
+  delivery_status: string | null;
+  estimated_delivery_date: string | null;
+  latest_event_date: string | null;
+  latest_event_status: string | null;
+};
+
+export type HelperShopifyOrder = {
+  id: number;
+  email: string;
+  created_at: string;
+  updated_at: string;
+  note: string | null;
+  total_price: string;
+  subtotal_price: string;
+  total_weight: number;
+  total_tax: string;
+  taxes_included: boolean;
+  currency: string;
+  financial_status: "pending" | "authorized" | "partially_paid" | "paid" | "partially_refunded" | "refunded" | "voided";
+  confirmed: boolean;
+  total_discounts: string;
+  total_line_items_price: string;
+  name: string;
+  order_number: number;
+  processed_at: string;
+  fulfillment_status: "fulfilled" | "partial" | "unfulfilled" | null;
+  line_items: HelperShopifyLineItem[];
+  shipping_address: HelperShopifyAddress | null;
+  billing_address: HelperShopifyAddress | null;
+  customer: {
+    id: number;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+  };
+  fulfillments: HelperShopifyFulfillment[];
+  admin_url: string;
+};
+
+export type HelperShopifyLookupResult = {
+  acting_as: HelperUserSummary;
+  lookup: {
+    mode: HelperShopifyLookupMode;
+    value: string;
+  };
+  configured: boolean;
+  found: boolean;
+  customer: HelperShopifyCustomer | null;
+  orders: HelperShopifyOrder[];
+  total_orders: number;
+  error: string | null;
+};
+
+export type HelperPocketDevice = {
+  id: string;
+  user_id: string;
+  device_id: string | null;
+  serial_number: string | null;
+  mac_address: string | null;
+  model_string: string | null;
+  firmware_version: string | null;
+  wifi_firmware_version: string | null;
+  last_synced_file: string | null;
+  last_synced_folder: string | null;
+  last_sync_time: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export type HelperPocketUser = {
+  id: string;
+  email: string;
+  display_name: string | null;
+  subscription_type: string | null;
+  onboarding_status: string | null;
+  role: string | null;
+  app_version: string | null;
+  deleted_at: string | null;
+  deletion_reason: string | null;
+  devices: HelperPocketDevice[];
+};
+
+export type HelperPocketUserLookupResult = {
+  acting_as: HelperUserSummary;
+  lookup_email: string;
+  configured: boolean;
+  found: boolean;
+  user: HelperPocketUser | null;
+  error: string | null;
+};
+
+const ACTIVE_MAILBOX_CONDITION = isNull(sql`${mailboxes.preferences}->>'disabled'`);
+
+const unique = <T>(values: T[]) => Array.from(new Set(values));
+
+const toIso = (value: Date | string | null | undefined) => {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  return value.toISOString();
+};
+
+const splitCommaSeparated = (value: string | null | undefined) =>
+  value
+    ? value
+        .split(",")
+        .map((part) => part.trim())
+        .filter(Boolean)
+    : [];
+
+const normalizePlainText = (value: string | null | undefined) => {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
+
+  return trimmed
+    .replace(/\r\n/g, "\n")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+};
+
+const mapCurrentUser = (user: FullUserProfile): HelperUserSummary => ({
+  id: user.id,
+  email: user.email,
+  display_name: user.displayName || user.email || user.id,
+  permissions: user.permissions,
+  access_role: user.access?.role ?? "afk",
+  access_keywords: user.access?.keywords ?? [],
+});
+
+const mapTeamMember = (member: {
+  id: string;
+  email?: string;
+  displayName: string;
+  role: "afk" | "core" | "nonCore";
+  keywords: string[];
+  permissions: string;
+  openCount: number;
+  emailOnAssignment: boolean;
+}): HelperTeamMember => ({
+  id: member.id,
+  email: member.email ?? null,
+  display_name: member.displayName || member.email || member.id,
+  role: member.role,
+  keywords: member.keywords,
+  permissions: member.permissions,
+  open_ticket_count: member.openCount,
+  email_on_assignment: member.emailOnAssignment,
+});
+
+const mapTicketFile = (file: {
+  id: number;
+  name: string;
+  mimetype: string;
+  sizeHuman?: string | null;
+  presignedUrl?: string | null;
+  previewUrl?: string | null;
+}): HelperTicketFile => ({
+  id: Number(file.id),
+  name: file.name,
+  mimetype: file.mimetype,
+  size_human: file.sizeHuman ?? null,
+  url: file.presignedUrl ?? null,
+  preview_url: file.previewUrl ?? null,
+});
+
+const mapCustomerFromSummary = (conversation: {
+  emailFrom: string | null;
+  platformCustomer: {
+    name: string | null;
+    value: string | number | null;
+    isVip: boolean;
+    links: Record<string, string> | null;
+    metadata: Record<string, unknown> | null;
+  } | null;
+}): HelperTicketCustomer => ({
+  email: conversation.emailFrom ?? null,
+  name: conversation.platformCustomer?.name ?? null,
+  value: conversation.platformCustomer?.value ?? null,
+  is_vip: conversation.platformCustomer?.isVip ?? null,
+  links: conversation.platformCustomer?.links ?? null,
+  metadata: conversation.platformCustomer?.metadata ?? null,
+});
+
+const mapCustomerFromDetail = (conversation: {
+  emailFrom: string | null;
+  customerInfo: {
+    name: string | null;
+    value: number | null;
+    isVip: boolean;
+    links: Record<string, string> | null;
+    metadata: Record<string, unknown> | null;
+  } | null;
+}): HelperTicketCustomer => ({
+  email: conversation.emailFrom ?? null,
+  name: conversation.customerInfo?.name ?? null,
+  value: conversation.customerInfo?.value ?? null,
+  is_vip: conversation.customerInfo?.isVip ?? null,
+  links: conversation.customerInfo?.links ?? null,
+  metadata: conversation.customerInfo?.metadata ?? null,
+});
+
+const mapShopifyCustomer = (customer: ShopifyCustomer | null): HelperShopifyCustomer | null =>
+  customer
+    ? {
+        id: customer.id,
+        email: customer.email,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        orders_count: customer.orders_count,
+        total_spent: customer.total_spent,
+        created_at: customer.created_at,
+        updated_at: customer.updated_at,
+      }
+    : null;
+
+const mapShopifyAddress = (address: ShopifyAddress | null): HelperShopifyAddress | null =>
+  address
+    ? {
+        address1: address.address1,
+        address2: address.address2,
+        city: address.city,
+        province: address.province,
+        province_code: address.province_code,
+        country: address.country,
+        country_code: address.country_code,
+        zip: address.zip,
+        name: address.name,
+        phone: address.phone,
+      }
+    : null;
+
+const mapShopifyLineItem = (lineItem: ShopifyLineItem): HelperShopifyLineItem => ({
+  id: lineItem.id,
+  variant_id: lineItem.variant_id,
+  title: lineItem.title,
+  quantity: lineItem.quantity,
+  price: lineItem.price,
+  sku: lineItem.sku,
+  variant_title: lineItem.variant_title,
+  vendor: lineItem.vendor,
+  product_id: lineItem.product_id,
+  fulfillment_status: lineItem.fulfillment_status,
+  name: lineItem.name,
+});
+
+const mapShopifyFulfillment = (fulfillment: ShopifyFulfillment): HelperShopifyFulfillment => ({
+  id: fulfillment.id,
+  order_id: fulfillment.order_id,
+  status: fulfillment.status,
+  created_at: fulfillment.created_at,
+  service: fulfillment.service,
+  updated_at: fulfillment.updated_at,
+  tracking_company: fulfillment.tracking_company,
+  shipment_status: fulfillment.shipment_status,
+  tracking_number: fulfillment.tracking_number,
+  tracking_numbers: fulfillment.tracking_numbers,
+  tracking_url: fulfillment.tracking_url,
+  tracking_urls: fulfillment.tracking_urls,
+  line_items: fulfillment.line_items.map(mapShopifyLineItem),
+  name: fulfillment.name,
+  delivery_date: fulfillment.delivery_date ?? null,
+  delivery_status: fulfillment.delivery_status ?? null,
+  estimated_delivery_date: fulfillment.estimated_delivery_date ?? null,
+  latest_event_date: fulfillment.latest_event_date ?? null,
+  latest_event_status: fulfillment.latest_event_status ?? null,
+});
+
+const mapShopifyOrder = (order: ShopifyOrderWithUrl): HelperShopifyOrder => ({
+  id: order.id,
+  email: order.email,
+  created_at: order.created_at,
+  updated_at: order.updated_at,
+  note: order.note,
+  total_price: order.total_price,
+  subtotal_price: order.subtotal_price,
+  total_weight: order.total_weight,
+  total_tax: order.total_tax,
+  taxes_included: order.taxes_included,
+  currency: order.currency,
+  financial_status: order.financial_status,
+  confirmed: order.confirmed,
+  total_discounts: order.total_discounts,
+  total_line_items_price: order.total_line_items_price,
+  name: order.name,
+  order_number: order.order_number,
+  processed_at: order.processed_at,
+  fulfillment_status: order.fulfillment_status,
+  line_items: order.line_items.map(mapShopifyLineItem),
+  shipping_address: mapShopifyAddress(order.shipping_address),
+  billing_address: mapShopifyAddress(order.billing_address),
+  customer: {
+    id: order.customer.id,
+    email: order.customer.email,
+    first_name: order.customer.first_name,
+    last_name: order.customer.last_name,
+  },
+  fulfillments: (order.fulfillments ?? []).map(mapShopifyFulfillment),
+  admin_url: order.admin_url,
+});
+
+const mapPocketDevice = (device: PocketDevice): HelperPocketDevice => ({
+  id: device.id,
+  user_id: device.user_id,
+  device_id: device.device_id,
+  serial_number: device.serial_number,
+  mac_address: device.mac_address,
+  model_string: device.model_string,
+  firmware_version: device.firmware_version,
+  wifi_firmware_version: device.wifi_firmware_version,
+  last_synced_file: device.last_synced_file,
+  last_synced_folder: device.last_synced_folder,
+  last_sync_time: device.last_sync_time,
+  created_at: device.created_at,
+  updated_at: device.updated_at,
+});
+
+const mapPocketUser = (user: PocketUser | null): HelperPocketUser | null =>
+  user
+    ? {
+        id: user.id,
+        email: user.email,
+        display_name: user.display_name,
+        subscription_type: user.subscription_type,
+        onboarding_status: user.onboarding_status,
+        role: user.role,
+        app_version: user.app_version,
+        deleted_at: user.deleted_at,
+        deletion_reason: user.deletion_reason,
+        devices: user.devices.map(mapPocketDevice),
+      }
+    : null;
+
+const mapShopifyError = (error: unknown, fallback: string) => {
+  if (error instanceof ShopifyApiError) {
+    if (error.statusCode === 401) {
+      return "Invalid Shopify credentials";
+    }
+    if (error.statusCode === 403) {
+      return "Insufficient Shopify API permissions";
+    }
+    if (error.statusCode === 429) {
+      return "Shopify rate limit exceeded. Please try again later.";
+    }
+
+    return error.message;
+  }
+
+  return error instanceof Error ? error.message : fallback;
+};
+
+const mapPocketError = (error: unknown) => {
+  if (error instanceof PocketApiError) {
+    if (error.code === "CONNECTION_ERROR") {
+      return "Could not connect to Pocket database";
+    }
+    if (error.code === "TIMEOUT") {
+      return "Pocket database query timed out";
+    }
+    if (error.code === "TABLE_NOT_FOUND") {
+      return "Users table not found in Pocket database";
+    }
+
+    return error.message;
+  }
+
+  return error instanceof Error ? error.message : "Failed to fetch Pocket user information";
+};
+
+const getActiveMailbox = async () => {
+  const mailbox = await db.query.mailboxes.findFirst({
+    where: ACTIVE_MAILBOX_CONDITION,
+  });
+
+  if (!mailbox) {
+    throw new Error("No active Helper mailbox found.");
+  }
+
+  return mailbox;
+};
+
+const getConversationBySlug = async (ticketSlug: string) => {
+  const conversation = await db.query.conversations.findFirst({
+    where: eq(conversations.slug, ticketSlug),
+  });
+
+  if (!conversation) {
+    throw new Error(`Ticket ${ticketSlug} was not found.`);
+  }
+
+  return conversation;
+};
+
+const getOpenTicketCountsByAssignee = async () => {
+  const rows = await db
+    .select({
+      assignedToId: conversations.assignedToId,
+      count: count(),
+    })
+    .from(conversations)
+    .where(
+      and(eq(conversations.status, "open"), isNotNull(conversations.assignedToId), isNull(conversations.mergedIntoId)),
+    )
+    .groupBy(conversations.assignedToId);
+
+  return new Map(rows.map((row) => [row.assignedToId ?? "", row.count]));
+};
+
+export const resolveActingUserSelection = async (selectors: ActingUserSelectors = {}): Promise<FullUserProfile> => {
+  const userId = selectors.userId ?? helperMcpEnv.HELPER_MCP_USER_ID;
+  const userEmail = selectors.userEmail ?? helperMcpEnv.HELPER_MCP_USER_EMAIL;
+
+  if (userId && userEmail) {
+    throw new Error("Set only one of HELPER_MCP_USER_ID or HELPER_MCP_USER_EMAIL.");
+  }
+
+  if (userId) {
+    const user = await getFullProfileById(userId);
+    if (!user) {
+      throw new Error(`No Helper user matched HELPER_MCP_USER_ID=${userId}.`);
+    }
+    return user;
+  }
+
+  if (userEmail) {
+    const user = await getFullProfileByEmail(userEmail);
+    if (!user) {
+      throw new Error(`No Helper user matched HELPER_MCP_USER_EMAIL=${userEmail}.`);
+    }
+    return user;
+  }
+
+  const members = await getUsersWithMailboxAccess();
+  if (members.length === 0) {
+    throw new Error("No active Helper team members were found. Create a user or set HELPER_MCP_USER_EMAIL.");
+  }
+
+  if (members.length === 1) {
+    const [member] = members;
+    if (!member) {
+      throw new Error("The only active Helper user could not be determined.");
+    }
+    const user = await getFullProfileById(member.id);
+    if (!user) {
+      throw new Error(`The only active Helper user (${member.id}) could not be loaded.`);
+    }
+    return user;
+  }
+
+  const admins = members.filter((member) => member.permissions === "admin");
+  if (admins.length === 1) {
+    const [admin] = admins;
+    if (!admin) {
+      throw new Error("The only admin Helper user could not be determined.");
+    }
+    const user = await getFullProfileById(admin.id);
+    if (!user) {
+      throw new Error(`The only admin Helper user (${admin.id}) could not be loaded.`);
+    }
+    return user;
+  }
+
+  throw new Error(
+    "Helper MCP could not choose an acting user automatically. Set HELPER_MCP_USER_EMAIL or HELPER_MCP_USER_ID.",
+  );
+};
+
+export class HelperMcpService {
+  private readonly actingAs: HelperUserSummary;
+  private teamMembersCache?: HelperTeamMembersResult;
+
+  constructor(private readonly user: FullUserProfile) {
+    this.actingAs = mapCurrentUser(user);
+  }
+
+  static async create(selectors: ActingUserSelectors = {}) {
+    const user = await resolveActingUserSelection(selectors);
+    return new HelperMcpService(user);
+  }
+
+  async getCurrentUser(): Promise<HelperCurrentUserResult> {
+    const mailbox = await getActiveMailbox();
+    return {
+      acting_as: this.actingAs,
+      mailbox: {
+        id: mailbox.id,
+        name: mailbox.name,
+        slug: mailbox.slug,
+      },
+    };
+  }
+
+  async listTeamMembers(): Promise<HelperTeamMembersResult> {
+    if (this.teamMembersCache) {
+      return this.teamMembersCache;
+    }
+
+    const [members, openCounts] = await Promise.all([getUsersWithMailboxAccess(), getOpenTicketCountsByAssignee()]);
+
+    this.teamMembersCache = {
+      acting_as: this.actingAs,
+      is_admin: this.user.permissions === "admin",
+      members: members.map((member) =>
+        mapTeamMember({
+          ...member,
+          openCount: openCounts.get(member.id) ?? 0,
+        }),
+      ),
+    };
+
+    return this.teamMembersCache;
+  }
+
+  async listTickets(input: HelperListTicketsInput): Promise<HelperListTicketsResult> {
+    const [teamMembers, mailbox, anyPlatformCustomer] = await Promise.all([
+      this.listTeamMembers(),
+      getActiveMailbox(),
+      db.query.platformCustomers.findFirst({ columns: { id: true } }),
+    ]);
+    const assigneeIds = this.resolveAssigneeFilters(input.assigneeIds, input.assigneeEmails, teamMembers.members);
+    const normalizedInput = this.normalizeListTicketsInput(input, assigneeIds);
+
+    const result = await searchConversations(
+      mailbox,
+      {
+        cursor: normalizedInput.cursor ?? null,
+        limit: normalizedInput.limit,
+        sort: normalizedInput.sort,
+        category: normalizedInput.category ?? null,
+        search: normalizedInput.search ?? null,
+        status: normalizedInput.statuses,
+        assignee: normalizedInput.assigneeIds.length > 0 ? normalizedInput.assigneeIds : undefined,
+        isAssigned: normalizedInput.isAssigned,
+        createdAfter: normalizedInput.createdAfter,
+        createdBefore: normalizedInput.createdBefore,
+        customer: normalizedInput.customerEmails,
+        hasUnreadMessages: normalizedInput.hasUnreadMessages,
+      },
+      this.user.id,
+    );
+
+    const { results, nextCursor } = await result.list;
+
+    return {
+      acting_as: this.actingAs,
+      tickets: results.map((conversation) => this.mapTicketSummary(conversation, teamMembers.members)),
+      total_returned: results.length,
+      next_cursor: nextCursor ?? null,
+      supports_highest_value_sort: Boolean(anyPlatformCustomer) && this.supportsHighestValueSort(normalizedInput),
+      resolved_view: normalizedInput.view,
+      resolved_sort: normalizedInput.sort,
+      applied_filters: {
+        view: normalizedInput.view,
+        category: normalizedInput.category ?? null,
+        search: normalizedInput.search ?? null,
+        statuses: normalizedInput.statuses ?? [],
+        assignee_ids: normalizedInput.assigneeIds,
+        assignee_emails: input.assigneeEmails ?? [],
+        is_assigned: normalizedInput.isAssigned ?? null,
+        customer_emails: normalizedInput.customerEmails ?? [],
+        has_unread_messages: normalizedInput.hasUnreadMessages ?? null,
+        requested_sort: input.sort ?? null,
+        sort: normalizedInput.sort,
+        created_after: normalizedInput.createdAfter ?? null,
+        created_before: normalizedInput.createdBefore ?? null,
+      },
+    };
+  }
+
+  async getTicket(input: HelperGetTicketInput): Promise<HelperTicketDetail> {
+    const [teamMembers, mailbox, conversation] = await Promise.all([
+      this.listTeamMembers(),
+      getActiveMailbox(),
+      getConversationBySlug(input.ticketSlug),
+    ]);
+    const [ticket, draft] = await Promise.all([
+      serializeConversationWithMessages(mailbox, conversation),
+      getLastAiGeneratedDraft(conversation.id),
+    ]);
+
+    return this.mapTicketDetail(
+      {
+        ...ticket,
+        draft: draft ? serializeResponseAiDraft(draft, mailbox) : null,
+      },
+      teamMembers.members,
+      {
+        includeTimeline: input.includeTimeline ?? true,
+        timelineLimit: input.timelineLimit ?? 25,
+      },
+    );
+  }
+
+  async getShopifyOrdersByEmail(input: { email: string }): Promise<HelperShopifyLookupResult> {
+    if (!isShopifyConfigured()) {
+      return {
+        acting_as: this.actingAs,
+        lookup: {
+          mode: "email",
+          value: input.email,
+        },
+        configured: false,
+        found: false,
+        customer: null,
+        orders: [],
+        total_orders: 0,
+        error: null,
+      };
+    }
+
+    try {
+      const { customer, orders } = await fetchShopifyOrdersByEmail(input.email);
+
+      return {
+        acting_as: this.actingAs,
+        lookup: {
+          mode: "email",
+          value: input.email,
+        },
+        configured: true,
+        found: Boolean(customer) || orders.length > 0,
+        customer: mapShopifyCustomer(customer),
+        orders: orders.map(mapShopifyOrder),
+        total_orders: orders.length,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        acting_as: this.actingAs,
+        lookup: {
+          mode: "email",
+          value: input.email,
+        },
+        configured: true,
+        found: false,
+        customer: null,
+        orders: [],
+        total_orders: 0,
+        error: mapShopifyError(error, "Failed to fetch Shopify orders"),
+      };
+    }
+  }
+
+  async getShopifyOrderByNumber(input: { orderNumber: string }): Promise<HelperShopifyLookupResult> {
+    const orderNumber = input.orderNumber.trim();
+
+    if (!isShopifyConfigured()) {
+      return {
+        acting_as: this.actingAs,
+        lookup: {
+          mode: "order_number",
+          value: orderNumber,
+        },
+        configured: false,
+        found: false,
+        customer: null,
+        orders: [],
+        total_orders: 0,
+        error: null,
+      };
+    }
+
+    try {
+      const { customer, orders } = await searchOrderByName(orderNumber);
+
+      return {
+        acting_as: this.actingAs,
+        lookup: {
+          mode: "order_number",
+          value: orderNumber,
+        },
+        configured: true,
+        found: orders.length > 0,
+        customer: mapShopifyCustomer(customer),
+        orders: orders.map(mapShopifyOrder),
+        total_orders: orders.length,
+        error: null,
+      };
+    } catch (error) {
+      return {
+        acting_as: this.actingAs,
+        lookup: {
+          mode: "order_number",
+          value: orderNumber,
+        },
+        configured: true,
+        found: false,
+        customer: null,
+        orders: [],
+        total_orders: 0,
+        error: mapShopifyError(error, "Failed to fetch Shopify order"),
+      };
+    }
+  }
+
+  async getPocketUserByEmail(input: { email: string }): Promise<HelperPocketUserLookupResult> {
+    if (!isPocketConfigured()) {
+      return {
+        acting_as: this.actingAs,
+        lookup_email: input.email,
+        configured: false,
+        found: false,
+        user: null,
+        error: null,
+      };
+    }
+
+    try {
+      const { user, found } = await fetchPocketUserByEmail(input.email);
+
+      return {
+        acting_as: this.actingAs,
+        lookup_email: input.email,
+        configured: true,
+        found,
+        user: mapPocketUser(user),
+        error: null,
+      };
+    } catch (error) {
+      return {
+        acting_as: this.actingAs,
+        lookup_email: input.email,
+        configured: true,
+        found: false,
+        user: null,
+        error: mapPocketError(error),
+      };
+    }
+  }
+
+  async replyToTicket(input: HelperReplyInput): Promise<HelperReplyResult> {
+    const conversation = await getConversationBySlug(input.ticketSlug);
+
+    const message = await db.transaction(async (tx) => {
+      if (input.shouldAutoAssign && !conversation.assignedToId) {
+        await updateConversation(
+          conversation.id,
+          {
+            set: { assignedToId: this.user.id, assignedToAI: false },
+            byUserId: this.user.id,
+            message: "Auto-assigned by Helper MCP reply",
+          },
+          tx,
+        );
+      }
+
+      if (conversation.assignedToAI) {
+        await updateConversation(
+          conversation.id,
+          {
+            set: { assignedToAI: false },
+            byUserId: this.user.id,
+            message: "AI response disabled after Helper MCP reply",
+          },
+          tx,
+        );
+      }
+
+      const createdMessage = await createConversationMessage(
+        {
+          conversationId: conversation.id,
+          body: input.message,
+          cleanedUpText: generateCleanedUpText(input.message),
+          userId: this.user.id,
+          emailTo: input.to?.[0] ?? conversation.emailFrom ?? null,
+          emailCc: input.cc ?? [],
+          emailBcc: input.bcc ?? [],
+          role: "staff",
+          responseToId: input.responseToMessageId ?? null,
+          status: "queueing",
+          isPerfect: false,
+          isFlaggedAsBad: false,
+        },
+        tx,
+      );
+
+      await tx
+        .update(conversationMessages)
+        .set({ status: "discarded" })
+        .where(
+          and(
+            eq(conversationMessages.conversationId, conversation.id),
+            eq(conversationMessages.role, "ai_assistant"),
+            eq(conversationMessages.status, "draft"),
+          ),
+        );
+
+      if (input.shouldClose && conversation.status !== "spam") {
+        await updateConversation(
+          conversation.id,
+          {
+            set: { status: "closed" },
+            byUserId: this.user.id,
+            message: "Reply sent",
+          },
+          tx,
+        );
+      }
+
+      return createdMessage;
+    });
+
+    return {
+      acting_as: this.actingAs,
+      message_id: message.id,
+      ticket: await this.getTicket({
+        ticketSlug: input.ticketSlug,
+        includeTimeline: true,
+        timelineLimit: 10,
+      }),
+    };
+  }
+
+  async setTicketStatus(input: HelperSetStatusInput): Promise<HelperTicketMutationResult> {
+    const conversation = await getConversationBySlug(input.ticketSlug);
+
+    await updateConversation(conversation.id, {
+      set: { status: input.status },
+      byUserId: this.user.id,
+      message: input.reason ?? null,
+    });
+
+    return {
+      acting_as: this.actingAs,
+      ticket: await this.getTicket({
+        ticketSlug: input.ticketSlug,
+        includeTimeline: true,
+        timelineLimit: 10,
+      }),
+    };
+  }
+
+  async assignTicket(input: HelperAssignTicketInput): Promise<HelperTicketMutationResult> {
+    if (!input.unassign && !input.assignedToId && !input.assignedToEmail && input.assignedToAI === undefined) {
+      throw new Error("Provide assigned_to_id, assigned_to_email, unassign, or assigned_to_ai.");
+    }
+
+    const [conversation, teamMembers] = await Promise.all([
+      getConversationBySlug(input.ticketSlug),
+      this.listTeamMembers(),
+    ]);
+    const assignedToId = this.resolveSingleAssigneeId(
+      {
+        assignedToId: input.assignedToId,
+        assignedToEmail: input.assignedToEmail,
+        unassign: input.unassign ?? false,
+      },
+      teamMembers.members,
+    );
+
+    await updateConversation(conversation.id, {
+      set: {
+        ...(assignedToId !== undefined ? { assignedToId } : {}),
+        ...(input.assignedToAI !== undefined ? { assignedToAI: input.assignedToAI } : {}),
+      },
+      byUserId: this.user.id,
+      message: input.reason ?? null,
+    });
+
+    return {
+      acting_as: this.actingAs,
+      ticket: await this.getTicket({
+        ticketSlug: input.ticketSlug,
+        includeTimeline: true,
+        timelineLimit: 10,
+      }),
+    };
+  }
+
+  async addInternalNote(input: HelperAddNoteInput): Promise<HelperNoteResult> {
+    const conversation = await getConversationBySlug(input.ticketSlug);
+
+    const note = await addNote({
+      conversationId: conversation.id,
+      message: input.note,
+      fileSlugs: [],
+      user: {
+        id: this.user.id,
+        displayName: this.user.displayName,
+        email: this.user.email,
+      },
+      slackChannelId: input.slackChannelId,
+    });
+
+    return {
+      acting_as: this.actingAs,
+      note_id: note.id,
+      ticket: await this.getTicket({
+        ticketSlug: input.ticketSlug,
+        includeTimeline: true,
+        timelineLimit: 10,
+      }),
+    };
+  }
+
+  private resolveAssigneeFilters(
+    assigneeIds: string[] | undefined,
+    assigneeEmails: string[] | undefined,
+    teamMembers: HelperTeamMember[],
+  ) {
+    const resolvedIds = assigneeIds ? [...assigneeIds] : [];
+
+    if (!assigneeEmails?.length) {
+      return unique(resolvedIds);
+    }
+
+    const lookup = new Map(teamMembers.map((member) => [member.email?.toLowerCase(), member.id]));
+
+    for (const email of assigneeEmails) {
+      const match = lookup.get(email.toLowerCase());
+      if (!match) {
+        throw new Error(`No Helper team member matched assignee email ${email}.`);
+      }
+      resolvedIds.push(match);
+    }
+
+    return unique(resolvedIds);
+  }
+
+  private resolveSingleAssigneeId(
+    input: {
+      assignedToId?: string;
+      assignedToEmail?: string;
+      unassign: boolean;
+    },
+    teamMembers: HelperTeamMember[],
+  ) {
+    if (input.unassign) {
+      if (input.assignedToId || input.assignedToEmail) {
+        throw new Error("Do not combine unassign with assigned_to_id or assigned_to_email.");
+      }
+      return null;
+    }
+
+    if (input.assignedToId && input.assignedToEmail) {
+      throw new Error("Provide either assigned_to_id or assigned_to_email, not both.");
+    }
+
+    if (input.assignedToId) {
+      const exists = teamMembers.some((member) => member.id === input.assignedToId);
+      if (!exists) {
+        throw new Error(`No Helper team member matched assigned_to_id ${input.assignedToId}.`);
+      }
+      return input.assignedToId;
+    }
+
+    if (input.assignedToEmail) {
+      const match = teamMembers.find((member) => member.email?.toLowerCase() === input.assignedToEmail?.toLowerCase());
+      if (!match) {
+        throw new Error(`No Helper team member matched assigned_to_email ${input.assignedToEmail}.`);
+      }
+      return match.id;
+    }
+
+    return undefined;
+  }
+
+  private mapTicketSummary(
+    conversation: {
+      id: number;
+      slug: string;
+      status: HelperTicketStatus | null;
+      subject: string;
+      emailFrom: string | null;
+      conversationProvider: string | null;
+      source: string | null;
+      assignedToId: string | null;
+      assignedToAI: boolean;
+      issueGroupId: number | null;
+      issueSubgroupId: number | null;
+      createdAt: Date;
+      updatedAt: Date;
+      closedAt: Date | null;
+      lastUserEmailCreatedAt: Date | null;
+      lastMessageAt: Date | null;
+      recentMessageText: string | null;
+      matchedMessageText: string | null;
+      unreadMessageCount?: number;
+      platformCustomer: {
+        name: string | null;
+        value: string | number | null;
+        isVip: boolean;
+        links: Record<string, string> | null;
+        metadata: Record<string, unknown> | null;
+      } | null;
+    },
+    teamMembers: HelperTeamMember[],
+  ): HelperTicketSummary {
+    return {
+      id: conversation.id,
+      slug: conversation.slug,
+      status: conversation.status ?? "open",
+      subject: conversation.subject,
+      customer: mapCustomerFromSummary(conversation),
+      conversation_provider: conversation.conversationProvider ?? null,
+      source: conversation.source ?? null,
+      assigned_to: this.findTeamMember(conversation.assignedToId, teamMembers),
+      assigned_to_ai: conversation.assignedToAI,
+      issue_group_id: conversation.issueGroupId ?? null,
+      issue_subgroup_id: conversation.issueSubgroupId ?? null,
+      created_at: toIso(conversation.createdAt) ?? "",
+      updated_at: toIso(conversation.updatedAt) ?? "",
+      closed_at: toIso(conversation.closedAt),
+      last_customer_message_at: toIso(conversation.lastUserEmailCreatedAt),
+      last_message_at: toIso(conversation.lastMessageAt),
+      recent_message_text: conversation.recentMessageText ?? null,
+      matched_message_text: conversation.matchedMessageText ?? null,
+      unread_message_count: conversation.unreadMessageCount ?? null,
+    };
+  }
+
+  private mapTicketDetail(
+    conversation: {
+      id: number;
+      slug: string;
+      status: HelperTicketStatus | null;
+      subject: string;
+      emailFrom: string | null;
+      conversationProvider: string | null;
+      source: string | null;
+      assignedToId: string | null;
+      assignedToAI: boolean;
+      issueGroupId: number | null;
+      issueSubgroupId: number | null;
+      createdAt: Date;
+      updatedAt: Date;
+      closedAt: Date | null;
+      lastUserEmailCreatedAt: Date | null;
+      lastMessageAt: Date | null;
+      customerInfo: {
+        name: string | null;
+        value: number | null;
+        isVip: boolean;
+        links: Record<string, string> | null;
+        metadata: Record<string, unknown> | null;
+      } | null;
+      messages: Record<string, unknown>[];
+      cc: string;
+      draft: {
+        id: number;
+        body: string | null;
+        responseToId: number;
+        isStale: boolean;
+      } | null;
+    },
+    teamMembers: HelperTeamMember[],
+    options: {
+      includeTimeline: boolean;
+      timelineLimit: number;
+    },
+  ): HelperTicketDetail {
+    const summary = {
+      id: conversation.id,
+      slug: conversation.slug,
+      status: conversation.status ?? "open",
+      subject: conversation.subject,
+      customer: mapCustomerFromDetail(conversation),
+      conversation_provider: conversation.conversationProvider ?? null,
+      source: conversation.source ?? null,
+      assigned_to: this.findTeamMember(conversation.assignedToId, teamMembers),
+      assigned_to_ai: conversation.assignedToAI,
+      issue_group_id: conversation.issueGroupId ?? null,
+      issue_subgroup_id: conversation.issueSubgroupId ?? null,
+      created_at: toIso(conversation.createdAt) ?? "",
+      updated_at: toIso(conversation.updatedAt) ?? "",
+      closed_at: toIso(conversation.closedAt),
+      last_customer_message_at: toIso(conversation.lastUserEmailCreatedAt),
+      last_message_at: toIso(conversation.lastMessageAt),
+      recent_message_text: null,
+      matched_message_text: null,
+      unread_message_count: null,
+    } satisfies HelperTicketSummary;
+
+    const timeline = options.includeTimeline
+      ? conversation.messages
+          .map((entry) => this.mapTimelineEntry(entry, teamMembers))
+          .slice(-Math.max(1, options.timelineLimit))
+      : [];
+
+    return {
+      ...summary,
+      cc_recipients: splitCommaSeparated(conversation.cc),
+      ai_draft: conversation.draft
+        ? {
+            id: conversation.draft.id,
+            body: conversation.draft.body ?? null,
+            response_to_id: conversation.draft.responseToId,
+            is_stale: conversation.draft.isStale,
+          }
+        : null,
+      timeline,
+      total_timeline_entries: conversation.messages.length,
+      timeline_truncated: options.includeTimeline ? conversation.messages.length > timeline.length : false,
+    };
+  }
+
+  private mapTimelineEntry(entry: Record<string, unknown>, teamMembers: HelperTeamMember[]): HelperTimelineEntry {
+    const entryType = entry.type;
+
+    if (entryType !== "message" && entryType !== "note" && entryType !== "event" && entryType !== "guide_session") {
+      throw new Error(`Unsupported timeline entry type: ${String(entryType)}`);
+    }
+
+    return {
+      id: Number(entry.id),
+      type: entryType,
+      created_at: toIso(entry.createdAt as Date | string | null | undefined) ?? "",
+      author: this.findTeamMember(
+        (entry.userId as string | null | undefined) ?? (entry.byUserId as string | null | undefined) ?? null,
+        teamMembers,
+      ),
+      role: (entry.role as string | null | undefined) ?? null,
+      status: (entry.status as string | null | undefined) ?? null,
+      body: (entry.body as string | null | undefined) ?? null,
+      html_body: (entry.htmlBody as string | null | undefined) ?? null,
+      body_text: this.getTimelineBodyText(entryType, entry),
+      from: (entry.from as string | null | undefined) ?? null,
+      to: (entry.emailTo as string | null | undefined) ?? null,
+      cc: Array.isArray(entry.cc) ? (entry.cc as string[]) : [],
+      bcc: Array.isArray(entry.bcc) ? (entry.bcc as string[]) : [],
+      files: Array.isArray(entry.files)
+        ? entry.files.map((file) =>
+            mapTicketFile(
+              file as {
+                id: number;
+                name: string;
+                mimetype: string;
+                sizeHuman?: string | null;
+                presignedUrl?: string | null;
+                previewUrl?: string | null;
+              },
+            ),
+          )
+        : [],
+      slack_url: (entry.slackUrl as string | null | undefined) ?? null,
+      metadata: (entry.metadata as Record<string, unknown> | null | undefined) ?? null,
+      reaction_type: (entry.reactionType as string | null | undefined) ?? null,
+      reaction_feedback: (entry.reactionFeedback as string | null | undefined) ?? null,
+      event_type: (entry.eventType as string | null | undefined) ?? null,
+      changes: (entry.changes as Record<string, unknown> | null | undefined) ?? null,
+      reason: (entry.reason as string | null | undefined) ?? null,
+      title: (entry.title as string | null | undefined) ?? null,
+      guide_status: entryType === "guide_session" ? ((entry.status as string | null | undefined) ?? null) : null,
+      instructions: (entry.instructions as string | null | undefined) ?? null,
+    };
+  }
+
+  private findTeamMember(userId: string | null | undefined, teamMembers: HelperTeamMember[]) {
+    if (!userId) return null;
+    return teamMembers.find((member) => member.id === userId) ?? null;
+  }
+
+  private normalizeListTicketsInput(input: HelperListTicketsInput, assigneeIds: string[]) {
+    const hasExplicitStatuses = Boolean(input.statuses?.length);
+    const hasExplicitAssigneeFilter = assigneeIds.length > 0;
+    const sort = this.normalizeListTicketSort(input.sort);
+    let view = input.view ?? null;
+    let category = input.view ? undefined : input.category;
+    let statuses = input.statuses ? [...input.statuses] : undefined;
+    let isAssigned = input.isAssigned;
+    let hasUnreadMessages = input.hasUnreadMessages;
+    let resolvedAssigneeIds = [...assigneeIds];
+
+    if (!view && !category && !hasExplicitStatuses) {
+      view = "active";
+      statuses = [...HELPER_ACTIVE_TICKET_STATUSES];
+    }
+
+    if (view) {
+      switch (view) {
+        case "active":
+          if (!hasExplicitStatuses) {
+            statuses = [...HELPER_ACTIVE_TICKET_STATUSES];
+          }
+          break;
+        case "mine":
+          category = undefined;
+          if (!hasExplicitStatuses) {
+            statuses = [...HELPER_ACTIVE_TICKET_STATUSES];
+          }
+          if (!hasExplicitAssigneeFilter) {
+            resolvedAssigneeIds = unique([...resolvedAssigneeIds, this.user.id]);
+          }
+          if (input.isAssigned === undefined) {
+            isAssigned = true;
+          }
+          break;
+        case "open_unread":
+          category = undefined;
+          if (!hasExplicitStatuses) {
+            statuses = ["open"];
+          }
+          if (input.hasUnreadMessages === undefined) {
+            hasUnreadMessages = true;
+          }
+          break;
+        case "unassigned_open":
+          category = undefined;
+          if (!hasExplicitStatuses) {
+            statuses = ["open"];
+          }
+          if (input.isAssigned === undefined && !hasExplicitAssigneeFilter) {
+            isAssigned = false;
+          }
+          break;
+        case "awaiting_customer":
+          category = undefined;
+          if (!hasExplicitStatuses) {
+            statuses = ["waiting_on_customer"];
+          }
+          break;
+      }
+    }
+
+    return {
+      ...input,
+      assigneeIds: unique(resolvedAssigneeIds),
+      category,
+      hasUnreadMessages,
+      isAssigned,
+      sort,
+      statuses,
+      view,
+    };
+  }
+
+  private normalizeListTicketSort(sort: HelperTicketListSort | undefined): HelperSearchConversationSort {
+    if (!sort || sort === "latest") {
+      return "newest";
+    }
+
+    return sort;
+  }
+
+  private supportsHighestValueSort(input: {
+    category?: HelperLegacyTicketCategory;
+    search?: string;
+    statuses?: HelperTicketStatus[];
+  }) {
+    if (input.search) {
+      return false;
+    }
+
+    if (input.statuses?.length === 1) {
+      const [status] = input.statuses;
+      return status ? HELPER_HIGHEST_VALUE_SORTABLE_STATUSES.has(status) : false;
+    }
+
+    return Boolean(input.category && !input.statuses?.length);
+  }
+
+  private getTimelineBodyText(entryType: HelperTimelineEntry["type"], entry: Record<string, unknown>) {
+    if (entryType === "event") {
+      return null;
+    }
+
+    if (entryType === "message") {
+      const explicitText = normalizePlainText((entry.bodyText as string | null | undefined) ?? null);
+      if (explicitText) {
+        return explicitText;
+      }
+
+      return normalizePlainText(
+        htmlToText((entry.htmlBody as string | null | undefined) ?? (entry.body as string | null | undefined) ?? "", {
+          wordwrap: false,
+        }),
+      );
+    }
+
+    if (entryType === "guide_session") {
+      return normalizePlainText(
+        (entry.instructions as string | null | undefined) ?? (entry.title as string | null | undefined) ?? null,
+      );
+    }
+
+    return normalizePlainText((entry.body as string | null | undefined) ?? null);
+  }
+}

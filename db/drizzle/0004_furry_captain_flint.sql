@@ -1,0 +1,1 @@
+DROP TABLE "authtoken_token";

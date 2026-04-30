@@ -1,0 +1,1 @@
+ALTER TABLE "saved_replies" ADD COLUMN "template_type" varchar(20) DEFAULT 'rich_text' NOT NULL;

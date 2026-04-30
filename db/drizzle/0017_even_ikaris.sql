@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS "mailboxes_transactionalemailaddressregex_regex_cc8d0d78_like";

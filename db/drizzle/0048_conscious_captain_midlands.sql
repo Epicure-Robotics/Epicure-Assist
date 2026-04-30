@@ -1,0 +1,1 @@
+ALTER TABLE "mailboxes_mailbox" ADD COLUMN "disable_auto_response_for_vips" boolean DEFAULT false NOT NULL;

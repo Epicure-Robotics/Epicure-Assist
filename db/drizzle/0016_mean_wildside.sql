@@ -1,0 +1,1 @@
+ALTER TABLE "mailboxes_subscription" DROP CONSTRAINT "mailboxes_subscripti_organization_id_375a29f9_fk_mailboxes";

@@ -1,0 +1,1 @@
+ALTER TABLE "mailboxes_mailbox" ADD COLUMN "closed_thread_email_enabled" boolean DEFAULT false NOT NULL;

@@ -1,0 +1,99 @@
+import { and, eq } from "drizzle-orm";
+import { takeUniqueOrThrow } from "@/components/utils/arrays";
+import { db } from "@/db/client";
+import { BasicUserProfile } from "@/db/schema";
+import { notes } from "@/db/schema/notes";
+import { triggerEvent } from "@/jobs/trigger";
+import { finishFileUpload } from "./files";
+
+export const addNote = async ({
+  conversationId,
+  message,
+  user,
+  slackChannel,
+  slackMessageTs,
+  fileSlugs = [],
+  slackChannelId,
+}: {
+  conversationId: number;
+  message: string;
+  user: BasicUserProfile | null;
+  slackChannel?: string | null;
+  slackMessageTs?: string | null;
+  fileSlugs?: string[];
+  slackChannelId?: string | null;
+}) => {
+  return await db.transaction(async (tx) => {
+    const note = await tx
+      .insert(notes)
+      .values({
+        conversationId,
+        body: message,
+        userId: user?.id,
+        role: "staff",
+        slackChannel,
+        slackMessageTs,
+      })
+      .returning()
+      .then(takeUniqueOrThrow);
+
+    await finishFileUpload({ fileSlugs, noteId: note.id }, tx);
+    if (user?.id) {
+      await triggerEvent("conversations/send-follower-notification", {
+        conversationId,
+        eventType: "note_added" as const,
+        triggeredByUserId: user.id,
+        eventDetails: { note: note.body },
+      });
+
+      // Send web notification to assigned team member for internal notes
+      await triggerEvent("notifications/create-web-notification", {
+        conversationId,
+        type: "internal_note" as const,
+        noteId: note.id,
+        triggeredByUserId: user.id,
+      });
+
+      // Post internal note to Slack alert channel (same channel as daily notifications)
+      // This is independent of user notification settings - all notes go to Slack
+      await triggerEvent("notes/post-to-slack", {
+        noteId: note.id,
+        conversationId,
+        triggeredByUserId: user.id,
+        slackChannelId: slackChannelId ?? undefined,
+      });
+    }
+
+    return note;
+  });
+};
+
+export const updateNote = async ({ noteId, message, userId }: { noteId: number; message: string; userId: string }) => {
+  const [updatedNote] = await db
+    .update(notes)
+    .set({
+      body: message,
+      updatedAt: new Date(),
+    })
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .returning();
+
+  if (!updatedNote) {
+    throw new Error("Note not found or unauthorized");
+  }
+
+  return updatedNote;
+};
+
+export const deleteNote = async ({ noteId, userId }: { noteId: number; userId: string }) => {
+  const [deletedNote] = await db
+    .delete(notes)
+    .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
+    .returning();
+
+  if (!deletedNote) {
+    throw new Error("Note not found or unauthorized");
+  }
+
+  return deletedNote;
+};
