@@ -16,7 +16,7 @@ import {
   type TextStreamPart,
   type Tool,
 } from "ai";
-import { and, desc, eq, inArray, isNull } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
@@ -35,6 +35,7 @@ import { Conversation, updateOriginalConversation } from "@/lib/data/conversatio
 import {
   createAiDraft,
   createConversationMessage,
+  findLatestUserMessageForConversation,
   getLastAiGeneratedDraft,
   getMessagesOnly,
 } from "@/lib/data/conversationMessage";
@@ -860,21 +861,7 @@ export const generateDraftResponse = async (
   const categoryTitle = conversation?.issueGroup?.title ?? null;
   console.log(`[generateDraft] Conversation category: ${categoryTitle || "none"}`);
 
-  const lastUserMessage = await db.query.conversationMessages.findFirst({
-    where: and(
-      eq(conversationMessages.conversationId, conversationId),
-      eq(conversationMessages.role, "user"),
-      isNull(conversationMessages.deletedAt),
-    ),
-    orderBy: desc(conversationMessages.createdAt),
-    with: {
-      conversation: {
-        columns: {
-          subject: true,
-        },
-      },
-    },
-  });
+  const lastUserMessage = await findLatestUserMessageForConversation(conversationId);
 
   if (!lastUserMessage) {
     console.log(`[generateDraft] No user message found for conversation ${conversationId}`);

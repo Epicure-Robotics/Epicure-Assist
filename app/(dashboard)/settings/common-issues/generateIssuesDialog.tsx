@@ -4,7 +4,7 @@ import { Edit2, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/trpc/react";
@@ -71,14 +71,14 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="text-left">
           <DialogTitle>Review generated common issues</DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <DialogDescription>
             Review and edit the AI-generated common issues before creating them. You can modify titles, descriptions, or
             remove issues you don't want.
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">

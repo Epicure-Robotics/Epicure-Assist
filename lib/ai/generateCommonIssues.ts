@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema";
 import type { mailboxes } from "@/db/schema/mailboxes";
 import { runAIObjectQuery } from "@/lib/ai";
+import { DRAFT_MODEL } from "@/lib/ai/core";
 import { searchConversations } from "@/lib/data/conversation/search";
 
 const commonIssuesGenerationSchema = z.object({
@@ -57,6 +58,10 @@ export const generateCommonIssuesSuggestions = async (
     }))
     .filter((conv) => conv.subject || conv.firstMessage || conv.recentMessage);
 
+  if (conversationSummaries.length === 0) {
+    return { issues: [] };
+  }
+
   const systemPrompt = `
 You are analyzing customer support conversations to identify common issue patterns that should be grouped together.
 
@@ -102,6 +107,8 @@ Based on these conversations, what are the most common issue categories that wou
 `;
 
   const result = await runAIObjectQuery({
+    model: DRAFT_MODEL,
+    functionId: "generate-common-issues-suggestions",
     system: systemPrompt,
     messages: [{ role: "user", content: userPrompt }],
     mailbox,

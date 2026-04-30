@@ -65,16 +65,45 @@ export const findOriginalAndMergedMessages = async <T>(
 };
 
 export const getMessagesOnly = async (conversationId: number) => {
-  const messages = await db.query.conversationMessages.findMany({
-    where: and(
-      isNull(conversationMessages.deletedAt),
-      eq(conversationMessages.conversationId, conversationId),
-      or(eq(conversationMessages.role, "user"), notInArray(conversationMessages.status, DRAFT_STATUSES)),
-    ),
-    orderBy: [asc(conversationMessages.createdAt)],
-  });
+  const findMessages = (where: SQL) =>
+    db.query.conversationMessages.findMany({
+      where: and(
+        where,
+        isNull(conversationMessages.deletedAt),
+        or(eq(conversationMessages.role, "user"), notInArray(conversationMessages.status, DRAFT_STATUSES)),
+      ),
+      orderBy: [asc(conversationMessages.createdAt)],
+    });
 
-  return messages;
+  const merged = await findOriginalAndMergedMessages(conversationId, findMessages);
+  return merged.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+};
+
+/** Latest inbound customer message for draft/replies, including threads merged into this conversation. */
+export const findLatestUserMessageForConversation = async (conversationId: number) => {
+  const mergedChildIds = db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .where(eq(conversations.mergedIntoId, conversationId));
+
+  return db.query.conversationMessages.findFirst({
+    where: and(
+      or(
+        eq(conversationMessages.conversationId, conversationId),
+        inArray(conversationMessages.conversationId, mergedChildIds),
+      ),
+      eq(conversationMessages.role, "user"),
+      isNull(conversationMessages.deletedAt),
+    ),
+    orderBy: desc(conversationMessages.createdAt),
+    with: {
+      conversation: {
+        columns: {
+          subject: true,
+        },
+      },
+    },
+  });
 };
 
 export const getMessages = async (conversationId: number, mailbox: typeof mailboxes.$inferSelect) => {

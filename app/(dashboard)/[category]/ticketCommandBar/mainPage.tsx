@@ -304,6 +304,10 @@ export const useGenerateDraft = () => {
     },
     onError: (error) => {
       dismissToastRef.current?.();
+      if (error.data?.code === "BAD_REQUEST") {
+        toast.warning("Can't generate draft yet", { description: error.message });
+        return;
+      }
       toast.error("Couldn't generate draft", { description: error.message });
     },
   });
