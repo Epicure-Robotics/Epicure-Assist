@@ -26,7 +26,7 @@ export function OnboardingForm({ className, ...props }: React.ComponentPropsWith
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: data.otp,
-        type: "email",
+        type: "recovery",
       });
 
       if (error) {

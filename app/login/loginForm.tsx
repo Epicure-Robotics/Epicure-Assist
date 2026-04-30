@@ -92,7 +92,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       const { error } = await supabase.auth.verifyOtp({
         email,
         token: otp,
-        type: "email",
+        type: "recovery",
       });
 
       if (error) throw error;

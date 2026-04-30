@@ -30,7 +30,7 @@ export const userRouter = {
       }
 
       throw new TRPCError({
-        code: "NOT_FOUND",
+        code: "BAD_REQUEST",
         message: "User not found",
       });
     }
