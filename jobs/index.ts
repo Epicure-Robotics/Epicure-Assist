@@ -9,7 +9,6 @@ import { categorizeConversationToIssueGroup } from "./categorizeConversationToIs
 import { categorizeConversationToIssueSubgroup } from "./categorizeConversationToIssueSubgroup";
 import { checkAssignedTicketResponseTimes } from "./checkAssignedTicketResponseTimes";
 import { checkConditionTemplates } from "./checkConditionTemplates";
-import { checkRedditPosts } from "./checkRedditPosts";
 import { checkStaleJobs } from "./checkStaleJobs";
 import { checkVipResponseTimes } from "./checkVipResponseTimes";
 import { cleanupDanglingFiles } from "./cleanupDanglingFiles";
@@ -94,7 +93,6 @@ export const eventJobs = {
 
 export const cronJobs = {
   "*/5 * * * *": { checkStaleJobs },
-  "0 */2 * * *": { checkRedditPosts },
   "0 19 * * *": { bulkEmbeddingClosedConversations },
   "0 2 * * *": { autoFollowUpTickets },
   "0 * * * *": {

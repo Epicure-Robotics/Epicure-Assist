@@ -384,7 +384,7 @@ export const generateAIResponse = async ({
     conversationId,
     email,
     includeHumanSupport: true,
-    includeShopifyTools: true,
+    includeShopifyTools: false,
     guideEnabled,
   });
   if (readPageTool) {
@@ -854,7 +854,7 @@ export const generateDraftResponse = async (
 
   const conversation = await db.query.conversations.findFirst({
     where: eq(conversations.id, conversationId),
-    columns: { issueGroupId: true },
+    columns: { issueGroupId: true, createdAt: true },
     with: { issueGroup: { columns: { title: true } } },
   });
   const categoryTitle = conversation?.issueGroup?.title ?? null;
@@ -899,6 +899,12 @@ export const generateDraftResponse = async (
   const startTime = Date.now();
 
   const categoryPrompt = getDraftPromptForCategory(categoryTitle);
+  const staleLead =
+    conversation?.createdAt &&
+    Date.now() - new Date(conversation.createdAt).getTime() > 7 * 24 * 60 * 60 * 1000;
+  const staleNote = staleLead
+    ? "\n\nNote: This thread is more than a week old. Open with a brief, warm acknowledgement of the delay before addressing their request."
+    : "";
 
   const { messages: systemMessages, customerInfo } = await buildPromptMessages(
     mailbox,
@@ -907,7 +913,7 @@ export const generateDraftResponse = async (
     false,
     undefined,
     true,
-    categoryPrompt,
+    categoryPrompt + staleNote,
   );
 
   if (lastUserMessage.emailFrom && customerInfo)

@@ -16,7 +16,6 @@ import HolidayAutoReplySetting from "../customers/holidayAutoReplySetting";
 import WeekendAutoReplySetting from "../customers/weekendAutoReplySetting";
 import EmailFinderSetting from "../email-finder/emailFinderSetting";
 import ConnectSupportEmail from "../integrations/connectSupportEmail";
-import GitHubSetting from "../integrations/githubSetting";
 import GmailArchiveSetting from "../integrations/gmailArchiveSetting";
 import ImportOldEmail from "../integrations/importOldEmail";
 import SlackSetting from "../integrations/slackSetting";
@@ -76,7 +75,6 @@ export default function TabsPage() {
         <>
           <ToolSetting />
           <SlackSetting mailbox={mailbox} />
-          <GitHubSetting mailbox={mailbox} />
           <ConnectSupportEmail />
           <GmailArchiveSetting mailbox={mailbox} />
           <ImportOldEmail />

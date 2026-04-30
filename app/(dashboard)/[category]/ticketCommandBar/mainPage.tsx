@@ -20,14 +20,13 @@ import { replaceTemplateVariables } from "@/lib/utils/templateVariables";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
-import GitHubSvg from "../icons/github.svg";
 import { CommandGroup } from "./types";
 
 type SavedReply = RouterOutputs["mailbox"]["savedReplies"]["list"][number];
 
 type MainPageProps = {
   onOpenChange: (open: boolean) => void;
-  setPage: (page: "main" | "previous-replies" | "assignees" | "notes" | "github-issue") => void;
+  setPage: (page: "main" | "previous-replies" | "assignees" | "notes") => void;
   setSelectedItemId: (id: string | null) => void;
   onToggleCc: () => void;
   setSelectedTool: (tool: Tool) => void;
@@ -60,14 +59,6 @@ export const useMainPage = ({
   );
 
   const { mutate: incrementSavedReplyUsage } = api.mailbox.savedReplies.incrementUsage.useMutation();
-
-  const { data: mailbox } = api.mailbox.get.useQuery(undefined, {
-    staleTime: Infinity,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
-
-  const isGitHubConnected = mailbox?.githubConnected && mailbox.githubRepoOwner && mailbox.githubRepoName;
 
   useHotkeys(
     "n",
@@ -224,17 +215,6 @@ export const useMainPage = ({
             },
             shortcut: "N",
           },
-          {
-            id: "github-issue",
-            label: conversation?.githubIssueNumber ? "Manage GitHub Issue" : "Link GitHub Issue",
-            icon: GitHubSvg,
-            onSelect: () => {
-              setPage("github-issue");
-              setSelectedItemId(null);
-            },
-            shortcut: "G",
-            hidden: !isGitHubConnected,
-          },
         ],
       },
       {
@@ -296,7 +276,7 @@ export const useMainPage = ({
           ]
         : []),
     ],
-    [onOpenChange, conversation, tools?.suggested, onToggleCc, isGitHubConnected, savedReplies, handleSavedReplySelect],
+    [onOpenChange, conversation, tools?.suggested, onToggleCc, savedReplies, handleSavedReplySelect],
   );
 
   return { commandGroups };

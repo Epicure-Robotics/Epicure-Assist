@@ -26,8 +26,11 @@ import { createConversationMessage, createReply } from "@/lib/data/conversationM
 import { createAndUploadFile, finishFileUpload, generateKey, uploadFile } from "@/lib/data/files";
 import { matchesTransactionalEmailAddress } from "@/lib/data/transactionalEmailAddressRegex";
 import { getBasicProfileByEmail } from "@/lib/data/user";
+import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { extractAddresses, parseEmailAddress } from "@/lib/emails";
 import { env } from "@/lib/env";
+import { parseFormLeadHtml } from "@/lib/leads/parseFormBody";
+import { getPrimaryMailboxFromRelation } from "@/lib/tenant";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
 import { extractEmailPartsFromDocument } from "@/lib/shared/html";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
@@ -158,7 +161,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       mailboxes: true,
     },
   });
-  const mailbox = gmailSupportEmail?.mailboxes[0];
+  const mailbox = getPrimaryMailboxFromRelation(gmailSupportEmail);
   if (!mailbox || !gmailSupportEmail?.accessToken || !gmailSupportEmail.refreshToken) {
     return `Valid gmail support email record not found for ${data.emailAddress}`;
   }
@@ -230,8 +233,13 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       );
       const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
 
-      const emailSentFromMailbox = parsedEmailFrom.address === gmailSupportEmail.email;
-      if (emailSentFromMailbox) {
+      const isFormLead =
+        Boolean(parsedEmail.subject?.includes("New Lead")) &&
+        parsedEmailFrom.address.toLowerCase() === gmailSupportEmail.email.toLowerCase();
+
+      const emailSentFromMailbox =
+        parsedEmailFrom.address.toLowerCase() === gmailSupportEmail.email.toLowerCase();
+      if (emailSentFromMailbox && !isFormLead) {
         results.push({
           message: `Skipped - message ${gmailMessageId} sent from mailbox`,
           gmailMessageId,
@@ -248,9 +256,15 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       const staffUser = await getBasicProfileByEmail(parsedEmailFrom.address);
       const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
 
+      const formParsed = isFormLead ? parseFormLeadHtml(processedHtml) : null;
+
       let ignoreReason: string | undefined;
       if (!!staffUser && !isFirstMessage) {
         ignoreReason = "Message is from staff";
+      } else if (!isFormLead && !staffUser) {
+        ignoreReason ??= "Not a website form lead";
+      } else if (isFormLead && !formParsed) {
+        ignoreReason ??= "Could not parse website form lead body";
       } else if (labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id))) {
         ignoreReason = `Message is in an ignored category (${labelIds.filter((id) => IGNORED_GMAIL_CATEGORIES.includes(id)).join(", ")})`;
       } else if (matchesTransactionalEmailAddress(parsedEmailFrom.address)) {
@@ -264,13 +278,14 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         tx
           .insert(conversations)
           .values({
-            emailFrom: parsedEmailFrom.address,
-            emailFromName: parsedEmailFrom.name,
-            subject: parsedEmail.subject,
+            emailFrom: formParsed?.email ?? parsedEmailFrom.address,
+            emailFromName: formParsed?.name ?? parsedEmailFrom.name,
+            subject:
+              formParsed && isFormLead ? `🚀 New Lead: ${formParsed.name}` : (parsedEmail.subject ?? null),
             status: ignoreReason ? "closed" : "open",
             closedAt: ignoreReason ? new Date() : null,
             conversationProvider: "gmail",
-            source: "email",
+            source: formParsed && isFormLead ? "form" : "email",
             isPrompt: false,
             isVisitor: false,
             assignedToAI: false,
@@ -359,6 +374,20 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       if (txResult.skipped) {
         results.push({ message: `Skipped - message ${gmailMessageId} already exists`, gmailMessageId, gmailThreadId });
         continue;
+      }
+
+      if (!ignoreReason && formParsed) {
+        await upsertPlatformCustomer({
+          email: formParsed.email,
+          customerInfo: {
+            name: formParsed.name,
+            metadata: {
+              phone: formParsed.phone,
+              message: formParsed.message,
+              source: "website_form",
+            },
+          },
+        });
       }
 
       if (!ignoreReason) {

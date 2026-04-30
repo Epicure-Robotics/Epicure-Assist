@@ -109,6 +109,7 @@ const events = {
       gmailSupportEmailId: z.number(),
       fromInclusive: z.string().datetime(),
       toInclusive: z.string().datetime(),
+      gmailQuerySuffix: z.string().optional(),
     }),
     jobs: ["importGmailThreads"],
   },

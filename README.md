@@ -1,8 +1,18 @@
-# Helper
+# Epicure Inbox
 
-In-app customer support center + live chat powered by API.
+Internal **draft-first** inbox for **Epicure Robotics**: website contact-form leads arrive in Gmail (`connect@`), are categorized, and get AI **drafts** for human review before send. Forked from Helper (MIT).
+
+## Epicure-specific behavior
+
+- **Form-only ingestion:** Gmail webhooks process messages that match the website lead pattern (subject includes `New Lead`, sent from the support mailbox to itself). Other mail is ignored as “Not a website form lead” unless the sender is staff.
+- **Landing page auto-reply:** If your public site’s contact API already sends an automatic “Thank you” on submit, **do not** duplicate that in the first human-approved reply—write a substantive response instead.
+- **Optional issue-group seed:** Set `EPICURE_SEED=1` before `pnpm db:seed` (or run the Epicure seed helper) to load default lead categories and FAQ stubs. See [`db/seeds/epicureLeadContent.ts`](db/seeds/epicureLeadContent.ts).
+- **Backlog Gmail import:** `importGmailThreads` accepts an optional `gmailQuerySuffix` (e.g. `subject:\"🚀 New Lead\" newer_than:90d`) to scope imports.
+- **Send throttle:** Outbound mail is capped at **30 sends/hour** (see [`lib/leads/sendThrottle.ts`](lib/leads/sendThrottle.ts)).
 
 ## Quick Start
+
+In-app customer support center + live chat powered by API (upstream Helper capabilities; Epicure may disable unused integrations).
 
 ### Install dependencies
 

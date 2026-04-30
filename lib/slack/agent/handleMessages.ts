@@ -7,6 +7,7 @@ import { agentMessages, agentThreads } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { Mailbox } from "@/lib/data/mailbox";
 import { SlackMailboxInfo } from "@/lib/slack/agent/findMailboxForEvent";
+import { getPrimaryMailboxFromRelation } from "@/lib/tenant";
 
 export async function handleMessage(event: GenericMessageEvent | AppMentionEvent, mailbox: Mailbox) {
   if (event.bot_id || event.bot_profile) return;
@@ -57,13 +58,14 @@ export async function handleMessage(event: GenericMessageEvent | AppMentionEvent
 }
 
 export async function handleAssistantThreadMessage(event: AssistantThreadStartedEvent, mailboxInfo: SlackMailboxInfo) {
-  const client = new WebClient(assertDefined(mailboxInfo.mailboxes[0]?.slackBotToken));
+  const primaryMb = getPrimaryMailboxFromRelation(mailboxInfo);
+  const client = new WebClient(assertDefined(primaryMb?.slackBotToken));
   const { channel_id, thread_ts } = event.assistant_thread;
 
   await client.chat.postMessage({
     channel: channel_id,
     thread_ts,
-    text: "Hello, I'm an AI assistant to help you work with tickets in Helper!",
+    text: "Hello, I'm an AI assistant to help you work with Epicure Robotics leads and tickets in this inbox!",
   });
 
   await client.assistant.threads.setSuggestedPrompts({
@@ -87,7 +89,7 @@ export async function handleAssistantThreadMessage(event: AssistantThreadStarted
 }
 
 export const isAgentThread = (event: GenericMessageEvent, mailboxInfo: SlackMailboxInfo) => {
-  const mailbox = mailboxInfo.mailboxes[0];
+  const mailbox = getPrimaryMailboxFromRelation(mailboxInfo);
   if (!mailbox?.slackBotToken || !mailbox.slackBotUserId || !event.thread_ts || event.thread_ts === event.ts) {
     return false;
   }

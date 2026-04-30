@@ -25,9 +25,7 @@ import { findSimilarConversations } from "@/lib/data/retrieval";
 import { env } from "@/lib/env";
 import { pocketRouter } from "../pocket";
 import { mailboxProcedure } from "../procedure";
-import { shopifyRouter } from "../shopify";
 import { filesRouter } from "./files";
-import { githubRouter } from "./github";
 import { messagesRouter } from "./messages";
 import { notesRouter } from "./notes";
 import { conversationProcedure } from "./procedure";
@@ -322,8 +320,6 @@ export const conversationsRouter = {
   files: filesRouter,
   tools: toolsRouter,
   notes: notesRouter,
-  github: githubRouter,
-  shopify: shopifyRouter,
   pocket: pocketRouter,
 
   findSimilar: conversationProcedure.query(async ({ ctx }) => {

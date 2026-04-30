@@ -48,11 +48,30 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
 
   const platformCustomer = await getPlatformCustomer(conversation.emailFrom);
 
-  // Early return if not VIP or Slack config missing
-  if (!platformCustomer?.isVip) return "Not posted, not a VIP customer";
+  const cleanedUpTextForAlert = await ensureCleanedUpText(message);
+  const keywordPriorityLead =
+    /\b(factory|manufactur|500\s+employees)\b/i.test(cleanedUpTextForAlert) ||
+    /\benterprise\b/i.test(cleanedUpTextForAlert);
+
+  if (!platformCustomer?.isVip && !keywordPriorityLead) return "Not posted, not a VIP customer";
   if (!mailbox.slackBotToken || !mailbox.vipChannelId) {
     return "Not posted, mailbox not linked to Slack";
   }
+
+  const slackPlatformCustomer = platformCustomer
+    ? { ...platformCustomer, isVip: platformCustomer.isVip || keywordPriorityLead }
+    : ({
+        id: 0,
+        unused_mailboxId: mailbox.id,
+        email: assertDefinedOrRaiseNonRetriableError(conversation.emailFrom),
+        name: null,
+        value: null,
+        links: null,
+        metadata: { highPriorityKeyword: true },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isVip: true,
+      } as Awaited<ReturnType<typeof getPlatformCustomer>> & { isVip: boolean });
 
   // If it's an agent reply updating an existing Slack message
   if (message.role !== "user" && message.responseToId) {
@@ -90,7 +109,7 @@ async function handleVipSlackMessage(message: MessageWithConversationAndMailbox)
     conversation,
     mailbox,
     message: cleanedUpText,
-    platformCustomer,
+    platformCustomer: slackPlatformCustomer,
     slackBotToken: mailbox.slackBotToken,
     slackChannel: mailbox.vipChannelId,
   });

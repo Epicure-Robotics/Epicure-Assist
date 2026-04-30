@@ -5,7 +5,6 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, issueGroups, issueSubgroups, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
-import { getGuideSessionsForMailbox } from "@/lib/data/guide";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { findSimilarConversations } from "@/lib/data/retrieval";
 import { getMemberStats } from "@/lib/data/stats";
@@ -13,7 +12,6 @@ import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
 import { knowledgeGapsRouter } from "./knowledgeGaps";
-import { githubRouter } from "./github";
 import { issueGroupsRouter } from "./issueGroups";
 import { membersRouter } from "./members";
 import { mailboxProcedure } from "./procedure";
@@ -166,35 +164,11 @@ export const mailboxRouter = {
         .where(eq(mailboxes.id, ctx.mailbox.id));
     }),
 
-  getSessionsPaginated: mailboxProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(50).default(10),
-        cursor: z.number().nullish(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const { limit, cursor } = input;
-      const page = cursor || 1;
-
-      const result = await getGuideSessionsForMailbox(page, limit);
-      const sessions = Array.isArray(result?.sessions) ? result.sessions : [];
-      const totalCount = result?.totalCount ?? 0;
-
-      const nextCursor = sessions.length === limit ? page + 1 : null;
-
-      return {
-        items: sessions,
-        totalCount,
-        nextCursor,
-      };
-    }),
   conversations: conversationsRouter,
   faqs: faqsRouter,
   knowledgeGaps: knowledgeGapsRouter,
   members: membersRouter,
   slack: slackRouter,
-  github: githubRouter,
   tools: toolsRouter,
   customers: customersRouter,
   websites: websitesRouter,

@@ -5,7 +5,6 @@ import {
   formatCurrentUser,
   formatListTickets,
   formatPocketUserLookup,
-  formatShopifyLookup,
   formatTeamMembers,
   formatTicket,
   formatTicketMutation,
@@ -229,52 +228,6 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
           }),
         response_format,
         formatTicket,
-      ),
-  );
-
-  server.registerTool(
-    "helper_get_shopify_orders",
-    {
-      title: "Get Shopify Orders By Email",
-      description:
-        "Fetch Shopify customer details and order history for a customer email. Returns a graceful configured/found/error result so agents can handle missing integrations or no-match lookups cleanly.",
-      inputSchema: {
-        email: z.string().email().describe("Customer email address to look up in Shopify."),
-        response_format: RESPONSE_FORMAT,
-      },
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    },
-    ({ email, response_format }) =>
-      handleWithFormatting(() => service.getShopifyOrdersByEmail({ email }), response_format, formatShopifyLookup),
-  );
-
-  server.registerTool(
-    "helper_get_shopify_order",
-    {
-      title: "Get Shopify Order By Number",
-      description:
-        "Fetch a Shopify order by order number or order name. Accepts values with or without a leading # and returns order, customer, and fulfillment details when found.",
-      inputSchema: {
-        order_number: z.string().min(1).describe("Shopify order number or order name, for example 1001 or #1001."),
-        response_format: RESPONSE_FORMAT,
-      },
-      annotations: {
-        readOnlyHint: true,
-        destructiveHint: false,
-        idempotentHint: true,
-        openWorldHint: true,
-      },
-    },
-    ({ order_number, response_format }) =>
-      handleWithFormatting(
-        () => service.getShopifyOrderByNumber({ orderNumber: order_number }),
-        response_format,
-        formatShopifyLookup,
       ),
   );
 

@@ -82,7 +82,7 @@ export const handleAutoResponse = async ({
 
   // For first messages, check if any conditions match for issue groups
   // This runs BEFORE the assignedToAI check so templates work regardless of AI assignment
-  if (isFirstMessage && conversation.issueGroupId) {
+  if (isFirstMessage && conversation.issueGroupId && mailbox.preferences?.autoRespondEmailToChat !== "draft") {
     const conditions = await db
       .select({
         id: issueGroupConditions.id,

@@ -18,21 +18,31 @@ export const importGmailThreads = async ({
   gmailSupportEmailId,
   fromInclusive,
   toInclusive,
+  gmailQuerySuffix,
 }: {
   gmailSupportEmailId: number;
   fromInclusive: string;
   toInclusive: string;
+  /** Appended to Gmail `q` (e.g. subject:"🚀 New Lead" newer_than:90d). */
+  gmailQuerySuffix?: string;
 }) => {
   const fromInclusiveDate = new Date(fromInclusive);
   const toInclusiveDate = new Date(toInclusive);
   const weekStartDates = generateStartDates(fromInclusiveDate, toInclusiveDate);
 
-  const steps = weekStartDates.map((date) => processGmailThreads(gmailSupportEmailId, date, toInclusiveDate));
+  const steps = weekStartDates.map((date) =>
+    processGmailThreads(gmailSupportEmailId, date, toInclusiveDate, gmailQuerySuffix),
+  );
 
   return await Promise.all(steps);
 };
 
-export const processGmailThreads = async (gmailSupportEmailId: number, weekStartDate: Date, toInclusiveDate: Date) => {
+export const processGmailThreads = async (
+  gmailSupportEmailId: number,
+  weekStartDate: Date,
+  toInclusiveDate: Date,
+  gmailQuerySuffix?: string,
+) => {
   const gmailSupportEmail = await db.query.gmailSupportEmails
     .findFirst({
       where: eq(gmailSupportEmails.id, gmailSupportEmailId),
@@ -45,10 +55,11 @@ export const processGmailThreads = async (gmailSupportEmailId: number, weekStart
   const weekStartSeconds = Math.floor(weekStartDate.getTime() / 1000);
   const beforeSeconds = Math.floor(addDays(before, 1).getTime() / 1000);
 
+  const q = `after:${weekStartSeconds} before:${beforeSeconds}${gmailQuerySuffix ? ` ${gmailQuerySuffix}` : ""}`;
   const result = await listGmailThreads(client, {
     maxResults: 500,
     // `after` is inclusive, `before` is exclusive
-    q: `after:${weekStartSeconds} before:${beforeSeconds}`,
+    q,
     includeSpamTrash: false,
   });
   assertSuccessResponseOrThrow(result);

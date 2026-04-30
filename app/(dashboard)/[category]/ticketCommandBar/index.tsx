@@ -19,7 +19,6 @@ import { api } from "@/trpc/react";
 import { useAssigneesPage } from "./assigneesPage";
 import { CommandList } from "./commandList";
 import { GenerateDraftDialog } from "./generateDraftDialog";
-import { GitHubIssuePage } from "./githubIssuePage";
 import { useGenerateDraft, useMainPage } from "./mainPage";
 import { NotesPage } from "./notesPage";
 import { usePreviousRepliesPage } from "./previousRepliesPage";
@@ -41,7 +40,7 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   const [inputValue, setInputValue] = useState("");
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [selectedTool, setSelectedTool] = useState<Tool | null>(null);
-  const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes" | "github-issue">("main");
+  const [page, setPage] = useState<"main" | "previous-replies" | "assignees" | "notes">("main");
   const [generateDraftDialogOpen, setGenerateDraftDialogOpen] = useState(false);
   const [variableDialogOpen, setVariableDialogOpen] = useState(false);
   const [selectedSavedReply, setSelectedSavedReply] = useState<SavedReply | null>(null);
@@ -150,8 +149,6 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
         return assigneesGroups;
       case "notes":
         return [];
-      case "github-issue":
-        return [];
       default:
         return mainPageGroups;
     }
@@ -220,9 +217,6 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
     } else if (selectedItem?.id === "add-note") {
       setPage("notes");
       setSelectedItemId(null);
-    } else if (selectedItem?.id === "github-issue") {
-      setPage("github-issue");
-      setSelectedItemId(null);
     } else {
       selectedItem?.onSelect();
     }
@@ -286,10 +280,6 @@ export function TicketCommandBar({ open, onOpenChange, onInsertReply, onToggleCc
   ) : open && selectedTool ? (
     <FormPage onOpenChange={onOpenChange}>
       <ToolForm tool={selectedTool} onOpenChange={onOpenChange} />
-    </FormPage>
-  ) : open && page === "github-issue" ? (
-    <FormPage onOpenChange={onOpenChange}>
-      <GitHubIssuePage onOpenChange={onOpenChange} />
     </FormPage>
   ) : (
     <>

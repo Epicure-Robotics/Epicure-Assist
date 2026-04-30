@@ -4,6 +4,7 @@ import { conversationMessages, conversations, gmailSupportEmails } from "@/db/sc
 import { EMAIL_UNDO_COUNTDOWN_SECONDS } from "@/components/constants";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMailbox } from "@/lib/data/mailbox";
+import { assertWithinSendThrottle } from "@/lib/leads/sendThrottle";
 import { getGmailService, getMessageMetadataById, sendGmailEmail } from "@/lib/gmail/client";
 import { formatGmailFromAddress } from "@/lib/gmail/format";
 import { convertConversationMessageToRaw } from "@/lib/gmail/lib";
@@ -38,6 +39,8 @@ export const postEmailToGmail = async ({ messageId: emailId }: { messageId: numb
   if (!email) {
     return null;
   }
+
+  await assertWithinSendThrottle();
 
   const conversation = email.conversation;
   if (!conversation) {

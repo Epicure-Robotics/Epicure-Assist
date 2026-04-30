@@ -4,7 +4,6 @@ import {
   CornerUpLeft,
   ExternalLink,
   Mail,
-  ShoppingBag,
   Trash2,
   User,
   UserPlus,
@@ -15,7 +14,6 @@ import { toast } from "sonner";
 import { AssignPopoverButton } from "@/app/(dashboard)/[category]/conversation/assignPopoverButton";
 import { useConversationContext } from "@/app/(dashboard)/[category]/conversation/conversationContext";
 import { IssueAssignButton } from "@/app/(dashboard)/[category]/conversation/issueAssignButton";
-import { ShopifyOrderItem } from "@/app/(dashboard)/[category]/conversation/shopifyOrderItem";
 import { useAssignTicket } from "@/app/(dashboard)/[category]/conversation/useAssignTicket";
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
 import { Conversation } from "@/app/types/global";
@@ -115,26 +113,10 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
   const { user: currentUser } = useSession() ?? {};
   const [previousExpanded, setPreviousExpanded] = useState(true);
   const [similarExpanded, setSimilarExpanded] = useState(false);
-  const [shopifyExpanded, setShopifyExpanded] = useState(false);
   const [pocketExpanded, setPocketExpanded] = useState(false);
   const [metadataExpanded, setMetadataExpanded] = useState(false);
-  const [shopifyManualInput, setShopifyManualInput] = useState("");
-  const [shopifyActiveInput, setShopifyActiveInput] = useState("");
   const [pocketManualEmail, setPocketManualEmail] = useState("");
   const [pocketActiveEmail, setPocketActiveEmail] = useState("");
-
-  // Auto-detect if input is email or order number
-  const detectShopifySearchType = (input: string): "email" | "order" => {
-    if (!input) return "email";
-    // If contains @, it's an email
-    if (input.includes("@")) return "email";
-    // If starts with # or is all digits, it's an order number
-    if (input.startsWith("#") || /^\d+$/.test(input)) return "order";
-    // Default to order for other cases (like order names)
-    return "order";
-  };
-
-  const shopifySearchType = detectShopifySearchType(shopifyActiveInput);
 
   const { data: customerConversations, isFetching: isFetchingPrevious } = api.mailbox.conversations.list.useQuery(
     { customer: [conversation.emailFrom ?? ""], sort: "oldest" },
@@ -153,32 +135,6 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
       refetchOnWindowFocus: false,
     },
   );
-
-  const shopifyQueryInput = shopifyActiveInput || conversation.emailFrom || "";
-  const shopifyQueryType = detectShopifySearchType(shopifyQueryInput);
-
-  const { data: shopifyDataByEmail, isFetching: isFetchingShopifyByEmail } =
-    api.mailbox.conversations.shopify.getCustomerOrders.useQuery(
-      { email: shopifyQueryInput },
-      {
-        enabled: !!shopifyQueryInput && shopifyExpanded && shopifyQueryType === "email",
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        refetchOnWindowFocus: false,
-      },
-    );
-
-  const { data: shopifyDataByOrder, isFetching: isFetchingShopifyByOrder } =
-    api.mailbox.conversations.shopify.getOrderByName.useQuery(
-      { orderName: shopifyQueryInput },
-      {
-        enabled: !!shopifyQueryInput && shopifyExpanded && shopifyQueryType === "order",
-        staleTime: 5 * 60 * 1000, // 5 minutes
-        refetchOnWindowFocus: false,
-      },
-    );
-
-  const shopifyData = shopifyQueryType === "email" ? shopifyDataByEmail : shopifyDataByOrder;
-  const isFetchingShopify = shopifyQueryType === "email" ? isFetchingShopifyByEmail : isFetchingShopifyByOrder;
 
   const pocketQueryEmail = pocketActiveEmail || conversation.emailFrom || "";
   const { data: pocketData, isFetching: isFetchingPocket } = api.mailbox.conversations.pocket.getUserInfo.useQuery(
@@ -409,119 +365,6 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
         </div>
 
         <Accordion type="multiple" defaultValue={["previous"]}>
-          <AccordionItem value="shopify">
-            <AccordionTrigger className="px-4" onClick={() => setShopifyExpanded(!shopifyExpanded)}>
-              <div className="flex items-center gap-2">
-                <ShoppingBag className="h-4 w-4" />
-                Shopify Orders
-              </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4">
-              <div className="space-y-3">
-                {isFetchingShopify ? (
-                  <div className="flex items-center justify-center py-4">
-                    <LoadingSpinner size="sm" />
-                  </div>
-                ) : shopifyData?.configured === false ? (
-                  <div className="text-sm text-muted-foreground">Shopify integration not configured</div>
-                ) : shopifyData?.error ? (
-                  <Alert variant="destructive">
-                    <AlertDescription className="text-xs">{shopifyData.error}</AlertDescription>
-                  </Alert>
-                ) : !shopifyData?.customer ? (
-                  <div className="space-y-3">
-                    <div className="text-sm text-muted-foreground">
-                      {shopifyActiveInput
-                        ? shopifySearchType === "email"
-                          ? `No customer found for ${shopifyActiveInput}`
-                          : `No order found: ${shopifyActiveInput}`
-                        : "Customer not found in Shopify"}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        type="text"
-                        placeholder="Search by email or order #..."
-                        value={shopifyManualInput}
-                        onChange={(e) => setShopifyManualInput(e.target.value)}
-                        className="h-8 text-xs flex-1"
-                      />
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          if (shopifyManualInput) {
-                            setShopifyActiveInput(shopifyManualInput);
-                          }
-                        }}
-                        disabled={!shopifyManualInput}
-                      >
-                        Search
-                      </Button>
-                    </div>
-                  </div>
-                ) : shopifyData.orders.length === 0 ? (
-                  <div className="space-y-3">
-                    <div className="text-sm text-muted-foreground">No Shopify orders found</div>
-                    {!shopifyActiveInput && (
-                      <div className="flex gap-2">
-                        <Input
-                          type="text"
-                          placeholder="Search by email or order #..."
-                          value={shopifyManualInput}
-                          onChange={(e) => setShopifyManualInput(e.target.value)}
-                          className="h-8 text-xs flex-1"
-                        />
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            if (shopifyManualInput) {
-                              setShopifyActiveInput(shopifyManualInput);
-                            }
-                          }}
-                          disabled={!shopifyManualInput}
-                        >
-                          Search
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <>
-                    {shopifyActiveInput && (
-                      <div className="flex items-center gap-2 mb-2 text-xs">
-                        <span className="text-muted-foreground">
-                          Showing {shopifySearchType === "order" ? "order" : "results for"}: {shopifyActiveInput}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setShopifyActiveInput("");
-                            setShopifyManualInput("");
-                          }}
-                          className="h-6 text-xs"
-                        >
-                          Clear
-                        </Button>
-                      </div>
-                    )}
-                    <div className="text-xs text-muted-foreground mb-2">
-                      {shopifyData.customer.first_name && shopifyData.customer.last_name
-                        ? `${shopifyData.customer.first_name} ${shopifyData.customer.last_name} • `
-                        : ""}
-                      {shopifyData.orders.length} {shopifyData.orders.length === 1 ? "order" : "orders"}
-                      {shopifyData.customer.total_spent &&
-                        parseFloat(shopifyData.customer.total_spent) > 0 &&
-                        ` • Total: $${parseFloat(shopifyData.customer.total_spent).toFixed(2)}`}
-                    </div>
-                    {shopifyData.orders.map((order) => (
-                      <ShopifyOrderItem key={order.id} order={order} />
-                    ))}
-                  </>
-                )}
-              </div>
-            </AccordionContent>
-          </AccordionItem>
-
           <AccordionItem value="pocket">
             <AccordionTrigger className="px-4" onClick={() => setPocketExpanded(!pocketExpanded)}>
               <div className="flex items-center gap-2">
@@ -592,19 +435,6 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
                         <span className="font-medium">User ID:</span>{" "}
                         <span className="text-muted-foreground font-mono text-xxs">{pocketData.user.id}</span>
                       </div>
-                    )}
-
-                    {/* RevenueCat Link */}
-                    {pocketData.user?.id && (
-                      <a
-                        className="flex items-center gap-2 text-primary hover:underline"
-                        href={`https://app.revenuecat.com/projects/d770554c/customers/${pocketData.user.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Open in RevenueCat
-                      </a>
                     )}
 
                     {/* Profile */}
