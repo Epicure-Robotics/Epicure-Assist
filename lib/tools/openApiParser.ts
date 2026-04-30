@@ -7,10 +7,16 @@ type ToolParameters = Tool["parameters"];
 type HttpMethod = "get" | "post" | "put" | "delete";
 
 const validateJsonSpec = (spec: string): any => {
+  const trimmed = spec.trimStart();
+  if (trimmed.startsWith("<")) {
+    throw new Error(
+      "This URL returned HTML (a web page), not an OpenAPI specification. Use a direct link to your OpenAPI 3 JSON file (for example …/openapi.json or …/swagger.json), or paste the raw JSON schema below.",
+    );
+  }
   try {
     return JSON.parse(spec);
   } catch (error) {
-    throw new Error(`Invalid JSON: ${(error as Error).message}`);
+    throw new Error(`Invalid JSON (expected OpenAPI 3.x JSON): ${(error as Error).message}`);
   }
 };
 

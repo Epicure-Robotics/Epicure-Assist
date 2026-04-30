@@ -130,7 +130,9 @@ describe("processGmailThreads", () => {
 
     await processGmailThreads(gmailSupportEmail.id, weekStartDate, endDate);
 
-    expect(getGmailService).toHaveBeenCalledWith(gmailSupportEmail);
+    expect(getGmailService).toHaveBeenCalledWith(
+      expect.objectContaining({ id: gmailSupportEmail.id, mailboxes: expect.any(Array) }),
+    );
     expect(listGmailThreads).toHaveBeenCalledWith(expect.anything(), {
       maxResults: 500,
       q: "after:1682899200 before:1683590400",
@@ -141,9 +143,12 @@ describe("processGmailThreads", () => {
     mockThreads
       .filter((thread) => thread.id !== "existing-thread")
       .forEach((thread) => {
-        expect(processGmailThreadWithClient).toHaveBeenCalledWith(expect.anything(), gmailSupportEmail, thread.id, {
-          status: "closed",
-        });
+        expect(processGmailThreadWithClient).toHaveBeenCalledWith(
+          expect.anything(),
+          expect.objectContaining({ id: gmailSupportEmail.id }),
+          thread.id,
+          { status: "closed" },
+        );
       });
 
     expect(createConversationEmbedding).toHaveBeenCalledTimes(6);

@@ -6,6 +6,7 @@ import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { toolApis, tools as toolsTable } from "@/db/schema";
 import { fetchOpenApiSpec, importToolsFromSpec } from "@/lib/data/tools";
+import { parseToolsFromOpenAPISpec } from "@/lib/tools/openApiParser";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import type { ToolFormatted } from "@/types/tools";
 import { mailboxProcedure } from "./procedure";
@@ -84,12 +85,35 @@ export const toolsRouter = {
       }
 
       try {
-        const openApiSpec = input.url ? await fetchOpenApiSpec(input.url, input.apiKey) : input.schema;
-
-        if (!openApiSpec) {
+        let openApiSpec: string;
+        try {
+          openApiSpec = input.url
+            ? await fetchOpenApiSpec(input.url, input.apiKey)
+            : (input.schema ?? "");
+        } catch (error) {
           throw new TRPCError({
             code: "BAD_REQUEST",
-            message: "Failed to fetch API spec",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Could not download the OpenAPI URL. Check the URL and try again.",
+          });
+        }
+
+        if (!openApiSpec.trim()) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "OpenAPI spec is empty",
+          });
+        }
+
+        let preparsedTools;
+        try {
+          preparsedTools = await parseToolsFromOpenAPISpec(openApiSpec, input.apiKey);
+        } catch (error) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: error instanceof Error ? error.message : "Could not parse OpenAPI document",
           });
         }
 
@@ -108,10 +132,12 @@ export const toolsRouter = {
           toolApiId: toolApi.id,
           openApiSpec,
           apiKey: input.apiKey,
+          preparsedTools,
         });
 
         return { success: true };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         captureExceptionAndLog(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -187,12 +213,36 @@ export const toolsRouter = {
       if (schema && !api.schema) throw new TRPCError({ code: "BAD_REQUEST", message: "API is not schema-based" });
 
       try {
-        const openApiSpec = api.baseUrl ? await fetchOpenApiSpec(api.baseUrl, api.authenticationToken) : schema;
+        let openApiSpec: string;
+        try {
+          openApiSpec = api.baseUrl
+            ? await fetchOpenApiSpec(api.baseUrl, api.authenticationToken)
+            : assertDefined(schema);
+        } catch (error) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              error instanceof Error
+                ? error.message
+                : "Could not refresh the OpenAPI URL. Check the stored URL and token.",
+          });
+        }
+
+        let preparsedTools;
+        try {
+          preparsedTools = await parseToolsFromOpenAPISpec(openApiSpec, api.authenticationToken ?? "");
+        } catch (error) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: error instanceof Error ? error.message : "Could not parse OpenAPI document",
+          });
+        }
 
         await importToolsFromSpec({
           toolApiId: api.id,
-          openApiSpec: assertDefined(openApiSpec),
+          openApiSpec,
           apiKey: api.authenticationToken ?? "",
+          preparsedTools,
         });
 
         if (schema) {
@@ -201,6 +251,7 @@ export const toolsRouter = {
 
         return { success: true };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         captureExceptionAndLog(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",

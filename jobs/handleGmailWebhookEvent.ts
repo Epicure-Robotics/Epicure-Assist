@@ -281,6 +281,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         tx
           .insert(conversations)
           .values({
+            unused_mailboxId: mailbox.id,
             emailFrom: formParsed?.email ?? parsedEmailFrom.address,
             emailFromName: formParsed?.name ?? parsedEmailFrom.name,
             subject:

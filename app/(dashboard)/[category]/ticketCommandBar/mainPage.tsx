@@ -302,9 +302,9 @@ export const useGenerateDraft = () => {
         toast.error("Error generating draft");
       }
     },
-    onError: () => {
+    onError: (error) => {
       dismissToastRef.current?.();
-      toast.error("Error generating draft");
+      toast.error("Couldn't generate draft", { description: error.message });
     },
   });
 

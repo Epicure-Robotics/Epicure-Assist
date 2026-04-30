@@ -1,4 +1,4 @@
-import { and, cosineDistance, desc, eq, gt, isNull, sql } from "drizzle-orm";
+import { and, cosineDistance, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, faqs } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
@@ -30,7 +30,7 @@ export const findSimilarConversations = async (
   }
 
   const similarConversations = await db.query.conversations.findMany({
-    where: and(where, isNull(conversations.mergedIntoId)),
+    where: and(where, isNull(conversations.mergedIntoId), isNotNull(conversations.embedding)),
     extras: {
       similarity: similarity.as("similarity"),
     },

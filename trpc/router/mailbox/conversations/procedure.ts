@@ -12,7 +12,7 @@ export const conversationProcedure = mailboxProcedure
       where: eq(conversations.slug, input.conversationSlug),
     });
 
-    if (!conversation) throw new TRPCError({ code: "NOT_FOUND" });
+    if (!conversation) throw new TRPCError({ code: "NOT_FOUND", message: "Conversation not found" });
 
     return next({ ctx: { ...ctx, conversation } });
   });

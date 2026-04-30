@@ -16,7 +16,7 @@ import {
   type TextStreamPart,
   type Tool,
 } from "ai";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
@@ -861,7 +861,11 @@ export const generateDraftResponse = async (
   console.log(`[generateDraft] Conversation category: ${categoryTitle || "none"}`);
 
   const lastUserMessage = await db.query.conversationMessages.findFirst({
-    where: and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.role, "user")),
+    where: and(
+      eq(conversationMessages.conversationId, conversationId),
+      eq(conversationMessages.role, "user"),
+      isNull(conversationMessages.deletedAt),
+    ),
     orderBy: desc(conversationMessages.createdAt),
     with: {
       conversation: {
@@ -874,7 +878,11 @@ export const generateDraftResponse = async (
 
   if (!lastUserMessage) {
     console.log(`[generateDraft] No user message found for conversation ${conversationId}`);
-    throw new TRPCError({ code: "NOT_FOUND", message: "No user message found" });
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message:
+        "There is no recent customer message in this conversation (only staff or internal messages, or inbound messages were removed). Add an inbound thread or reopen the sidebar after the customer sends a message.",
+    });
   }
 
   console.log(

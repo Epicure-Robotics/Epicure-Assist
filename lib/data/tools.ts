@@ -5,6 +5,8 @@ import { tools as toolsTable } from "@/db/schema";
 import type { Tool } from "@/db/schema/tools";
 import { parseToolsFromOpenAPISpec } from "@/lib/tools/openApiParser";
 
+type ParsedToolForImport = Awaited<ReturnType<typeof parseToolsFromOpenAPISpec>>;
+
 export const getMailboxToolsForChat = async (tx: Transaction | typeof db = db): Promise<Tool[]> => {
   return await tx.query.tools.findMany({
     where: and(eq(toolsTable.enabled, true), eq(toolsTable.availableInChat, true)),
@@ -21,7 +23,9 @@ export const fetchOpenApiSpec = async (url: string, apiKey: string | null): Prom
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch API spec from URL: ${response.statusText}`);
+    throw new Error(
+      `Could not fetch URL (HTTP ${response.status} ${response.statusText}). Use a direct link that returns OpenAPI 3 JSON (not an HTML page).`,
+    );
   }
 
   return response.text();
@@ -31,12 +35,15 @@ export const importToolsFromSpec = async ({
   toolApiId,
   openApiSpec,
   apiKey,
+  preparsedTools,
 }: {
   toolApiId: number;
   openApiSpec: string;
   apiKey: string;
+  /** When set (e.g. after validating before DB insert), skip parsing `openApiSpec`. */
+  preparsedTools?: ParsedToolForImport;
 }) => {
-  const tools = await parseToolsFromOpenAPISpec(openApiSpec, apiKey);
+  const tools = preparsedTools ?? (await parseToolsFromOpenAPISpec(openApiSpec, apiKey));
   const existingTools = await db.query.tools.findMany({
     where: eq(toolsTable.toolApiId, toolApiId),
   });

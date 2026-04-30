@@ -3,9 +3,11 @@ import { gmail_v1 } from "googleapis";
 import { htmlToText } from "html-to-text";
 import { simpleParser } from "mailparser";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
+import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, gmailSupportEmails } from "@/db/schema";
 import { getBasicProfileByEmail } from "@/lib/data/user";
+import { getPrimaryMailboxFromRelation } from "@/lib/tenant";
 import { parseEmailAddress } from "@/lib/emails";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread, GmailClient } from "@/lib/gmail/client";
 import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
@@ -62,6 +64,7 @@ export const processGmailThread = async (
   const gmailSupportEmail = await db.query.gmailSupportEmails
     .findFirst({
       where: eq(gmailSupportEmails.id, gmailSupportEmailId),
+      with: { mailboxes: true },
     })
     .then(assertDefinedOrRaiseNonRetriableError);
   const client = getGmailService(gmailSupportEmail);
@@ -70,7 +73,7 @@ export const processGmailThread = async (
 
 export const processGmailThreadWithClient = async (
   client: GmailClient,
-  gmailSupportEmail: typeof gmailSupportEmails.$inferSelect,
+  gmailSupportEmail: typeof gmailSupportEmails.$inferSelect & { mailboxes?: { id: number }[] },
   gmailThreadId: string,
   conversationOverrides?: Partial<typeof conversations.$inferSelect>,
 ) => {
@@ -88,9 +91,11 @@ export const processGmailThreadWithClient = async (
     parseEmailAddress(firstMessageHeaders?.find((h) => h.name?.toLowerCase() === "from")?.value ?? ""),
   );
   const subject = firstMessageHeaders?.find((h) => h.name?.toLowerCase() === "subject")?.value ?? "";
+  const primaryMailbox = getPrimaryMailboxFromRelation(gmailSupportEmail);
   const conversation = await db
     .insert(conversations)
     .values({
+      unused_mailboxId: assertDefined(primaryMailbox, "mailbox linked to Gmail account").id,
       emailFrom: parsedEmailFrom.address,
       emailFromName: parsedEmailFrom.name,
       subject,

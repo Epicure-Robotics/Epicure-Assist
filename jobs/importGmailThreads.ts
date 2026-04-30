@@ -46,6 +46,7 @@ export const processGmailThreads = async (
   const gmailSupportEmail = await db.query.gmailSupportEmails
     .findFirst({
       where: eq(gmailSupportEmails.id, gmailSupportEmailId),
+      with: { mailboxes: true },
     })
     .then(assertDefinedOrRaiseNonRetriableError);
   const client = getGmailService(gmailSupportEmail);

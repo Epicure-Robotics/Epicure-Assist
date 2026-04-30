@@ -76,11 +76,14 @@ const ApiForm = ({ onCancel }: ApiFormProps) => {
               type="url"
               value={apiUrl}
               onChange={(e) => setApiUrl(e.target.value)}
-              placeholder="https://yourapp.com/api"
+              placeholder="https://api.example.com/openapi.json"
               hint={
-                <button className="underline" onClick={toggleInputType}>
-                  Enter OpenAPI schema instead
-                </button>
+                <>
+                  Direct URL to OpenAPI <strong className="font-medium">3.x JSON</strong> (not your marketing site).{" "}
+                  <button type="button" className="underline" onClick={toggleInputType}>
+                    Enter OpenAPI schema instead
+                  </button>
+                </>
               }
               disabled={importMutation.isPending}
             />
@@ -103,7 +106,12 @@ const ApiForm = ({ onCancel }: ApiFormProps) => {
               rows={10}
               disabled={importMutation.isPending}
             />
-            <button className="underline text-sm" onClick={toggleInputType} disabled={importMutation.isPending}>
+            <button
+              type="button"
+              className="underline text-sm"
+              onClick={toggleInputType}
+              disabled={importMutation.isPending}
+            >
               Enter OpenAPI URL instead
             </button>
           </>
