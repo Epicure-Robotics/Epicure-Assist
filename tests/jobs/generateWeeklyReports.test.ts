@@ -17,9 +17,8 @@ vi.mock("@/lib/slack/client", () => ({
 
 vi.mock("@/lib/data/user", async (importOriginal) => ({
   ...(await importOriginal()),
-  UserRoles: {
-    CORE: "core",
-    NON_CORE: "nonCore",
+  UserPresence: {
+    ACTIVE: "active",
     AFK: "afk",
   },
 }));

@@ -13,7 +13,7 @@ export const setupMailboxForNewUser = async (user: DbOrAuthUser) => {
   const mailbox = await db.transaction(async (tx) => {
     const mailbox = await createInitialMailbox(tx);
     await updateUserMailboxData(user.id, {
-      role: "core",
+      role: "active",
       keywords: [],
     });
     return mailbox;

@@ -18,16 +18,16 @@ export function TeamSettingLoadingSkeleton() {
             <div className="h-5 w-[100px] rounded bg-secondary animate-skeleton" />
           </TableCell>
           <TableCell>
-            <div className="flex gap-2">
-              <div className="h-5 w-[80px] rounded bg-secondary animate-skeleton" />
-              <div className="h-5 w-[90px] rounded bg-secondary animate-skeleton" />
-            </div>
+            <div className="h-5 w-[200px] rounded bg-secondary animate-skeleton" />
           </TableCell>
           <TableCell>
-            <div className="flex gap-2">
-              <div className="h-8 w-8 rounded bg-secondary animate-skeleton" />
-              <div className="h-8 w-8 rounded bg-secondary animate-skeleton" />
-            </div>
+            <div className="h-5 w-[80px] rounded bg-secondary animate-skeleton" />
+          </TableCell>
+          <TableCell>
+            <div className="h-8 w-10 rounded bg-secondary animate-skeleton" />
+          </TableCell>
+          <TableCell>
+            <div className="h-8 w-10 rounded bg-secondary animate-skeleton" />
           </TableCell>
           <TableCell>
             <div className="h-5 w-[60px] rounded bg-secondary animate-skeleton" />

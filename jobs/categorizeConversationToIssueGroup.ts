@@ -1,12 +1,18 @@
 import { eq } from "drizzle-orm";
-import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { issueGroups } from "@/db/schema/issueGroups";
 import { runAIObjectQuery } from "@/lib/ai";
 import { DRAFT_MODEL } from "@/lib/ai/core";
-import { getMailbox, Mailbox } from "@/lib/data/mailbox";
+import { getMailbox } from "@/lib/data/mailbox";
+import {
+  assignedToAiFromTriage,
+  inboundTriageAISchema,
+  inboundTriageFromAi,
+  STARTER_INBOUND_CATEGORY_LABELS,
+  starterInboundCategoryKeys,
+} from "@/lib/leads/inboundTriage";
 import { triggerEvent } from "./trigger";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
@@ -25,7 +31,6 @@ const getConversationContent = (conversationData: {
     .filter((msg) => msg.role === "user")
     .map((msg) => {
       if (!msg.cleanedUpText) return "";
-      // cleanedUpText is already decrypted by Drizzle's custom type
       return msg.cleanedUpText;
     })
     .filter(Boolean);
@@ -39,77 +44,63 @@ const getConversationContent = (conversationData: {
   return contentParts.join(" ");
 };
 
-const categorizeWithAI = async (
+const triageWithAi = async (
   conversationContent: string,
   availableIssueGroups: { id: number; title: string; description: string | null }[],
-  mailbox: Mailbox,
+  mailbox: NonNullable<Awaited<ReturnType<typeof getMailbox>>>,
 ) => {
-  if (availableIssueGroups.length === 0) {
-    return { matchedGroupId: null, reasoning: "No issue groups available for categorization" };
-  }
+  const starterSection = starterInboundCategoryKeys
+    .map((k) => `- **${k}**: ${STARTER_INBOUND_CATEGORY_LABELS[k]}`)
+    .join("\n");
+
+  const groupsSection =
+    availableIssueGroups.length === 0
+      ? "No saved issue groups for this mailbox. Set matchedIssueGroupId to null."
+      : `OPTIONAL issue groups (use matchedIssueGroupId only with high confidence):\n${availableIssueGroups
+          .map((g) => `ID ${g.id}: ${g.title}${g.description ? ` — ${g.description}` : ""}`)
+          .join("\n")}`;
 
   const result = await runAIObjectQuery({
     mailbox,
     model: DRAFT_MODEL,
-    functionId: "categorize-conversation-issue-group",
+    functionId: "inbound-triage-and-issue-group",
     queryType: "auto_assign_conversation",
-    schema: z.object({
-      matchedGroupId: z.number().nullable(),
-      reasoning: z.string(),
-      confidenceScore: z.number().min(0).max(1).optional(),
-    }),
-    system: `You categorize inbound email for Epicure Robotics (industrial automation / food-line equipment, B2B). Website leads often include vending or cafeteria projects, factory scale (e.g. employee count), integration questions, or procurement.
+    schema: inboundTriageAISchema,
+    system: `You triage inbound messages for Epicure Robotics (industrial automation, food-line equipment, B2B).
 
-Issue groups mean:
-- **Business Lead**: End customer or operator wanting to buy, evaluate, pilot, quote, or deploy Epicure solutions (factories, vending, food service at scale).
-- **Vendor / Manufacturer Pitch**: Suppliers, OEMs, or manufacturers pitching components, outsourcing, or "use our product for lower cost" — not the end buyer of Epicure equipment.
-- **Partnership / Distributor**: Distribution, reseller, territory, or strategic partnership (not a simple product quote).
-- **Hiring**: Jobs, careers, recruiting, candidates, staffing agencies.
-- **Press / Media**: Journalists, podcasts, PR, events.
-- **Other**: Anything that does not clearly fit above (internal, unclear, or mixed).
+STARTER categories — pick the closest starter when it reasonably fits:
+${starterSection}
 
-Match the conversation to the **single best** issue group by title and description. Prefer **Vendor / Manufacturer Pitch** when the sender is selling *to* Epicure rather than buying *from* Epicure.
+If none of the starters fit well, use categorySource "proposed": provide a new snake_case key, a short human label, and confidence (0-1).
 
-Return null if there is no strong fit (do not guess).`,
+Always output:
+- importance: "low" | "med" | "high" using company/org size signals, specificity (e.g. named site, volumes, budget), urgency, and buying intent. Business leads from large or strategic accounts skew "high".
+- geography: country/region string or null if unknown.
+- summaryLine: one line (under ~200 characters).
+- reasoning: short internal rationale.
+
+Optional matchedIssueGroupId: only from the provided ID list when the thread clearly belongs in that group; otherwise null. Do not invent IDs.
+
+Routing intent (for your reasoning; do not output separate fields):
+- Business + high importance → priority human / founder-sales path; not for generic auto-reply.
+- Business + low/med → suitable for templated or AI-first reply.
+- Vendor pitch → procurement / technical evaluation.
+- Hiring → HR.
+- Press, partnership, investor-style → founders / leadership.
+- Generic / spam → low-touch or core round-robin.`,
     messages: [
       {
         role: "user",
-        content: `CUSTOMER CONVERSATION: "${conversationContent}"
-
-AVAILABLE ISSUE GROUPS:
-${availableIssueGroups
-  .map(
-    (group) =>
-      `ID: ${group.id}
-Title: ${group.title}
-Description: ${group.description || "No description"}`,
-  )
-  .join("\n\n")}
-
-TASK:
-Analyze this customer conversation and determine which issue group (if any) best matches the customer's problem.
-
-Consider:
-- What is the customer's main issue or request?
-- Which issue group's title and description most closely aligns with this problem?
-- Is there a clear, strong match, or would this be a forced categorization?
-
-Return:
-1. "matchedGroupId": The ID of the best matching issue group, or null if no good match
-2. "reasoning": Brief explanation of your decision
-3. "confidenceScore": Your confidence level (0-1) in this categorization
-
-Remember: It's better to return null than to force a poor match.`,
+        content: `MESSAGE / THREAD (subject + body):\n${conversationContent.slice(0, 24_000)}\n\n${groupsSection}`,
       },
     ],
-    temperature: 0.1, // Low temperature for consistent categorization
+    temperature: 0.1,
   });
 
   return result;
 };
 
 export const categorizeConversationToIssueGroup = async ({ messageId }: { messageId: number }) => {
-  // First get the conversationId from the message
   const message = await db.query.conversationMessages.findFirst({
     where: eq(conversationMessages.id, messageId),
     columns: {
@@ -128,6 +119,7 @@ export const categorizeConversationToIssueGroup = async ({ messageId }: { messag
         id: true,
         subject: true,
         issueGroupId: true,
+        inboundTriage: true,
       },
       with: {
         messages: {
@@ -139,6 +131,13 @@ export const categorizeConversationToIssueGroup = async ({ messageId }: { messag
       },
     }),
   );
+
+  if (conversation.inboundTriage) {
+    return {
+      message: "Conversation already triaged",
+      conversationId: conversation.id,
+    };
+  }
 
   if (conversation.issueGroupId) {
     return {
@@ -155,18 +154,9 @@ export const categorizeConversationToIssueGroup = async ({ messageId }: { messag
       id: issueGroups.id,
       title: issueGroups.title,
       description: issueGroups.description,
-      autoResponseEnabled: issueGroups.autoResponseEnabled,
     })
     .from(issueGroups);
 
-  if (availableIssueGroups.length === 0) {
-    return {
-      message: "No issue groups available for categorization",
-      conversationId: conversation.id,
-    };
-  }
-
-  // Extract conversation content
   const conversationContent = getConversationContent(conversation);
 
   if (!conversationContent.trim()) {
@@ -176,66 +166,51 @@ export const categorizeConversationToIssueGroup = async ({ messageId }: { messag
     };
   }
 
-  const aiResult = await categorizeWithAI(conversationContent, availableIssueGroups, mailbox);
+  const aiRaw = await triageWithAi(conversationContent, availableIssueGroups, mailbox);
+  const triage = inboundTriageFromAi(aiRaw);
 
-  if (aiResult.matchedGroupId) {
-    const matchedGroup = availableIssueGroups.find((group) => group.id === aiResult.matchedGroupId);
-    
-    await db
-      .update(conversations)
-      .set({ 
-        issueGroupId: aiResult.matchedGroupId,
-        assignedToAI: matchedGroup?.autoResponseEnabled === 1,
-      })
-      .where(eq(conversations.id, conversation.id));
+  const allowedIds = new Set(availableIssueGroups.map((g) => g.id));
+  const resolvedGroupId =
+    triage.matchedIssueGroupId != null && allowedIds.has(triage.matchedIssueGroupId)
+      ? triage.matchedIssueGroupId
+      : null;
 
-    // Check if the matched issue group has assignees configured
-    const issueGroupWithAssignees = await db.query.issueGroups.findFirst({
-      where: eq(issueGroups.id, aiResult.matchedGroupId),
-      columns: {
-        assignees: true,
+  const assignedToAI = assignedToAiFromTriage(triage);
+
+  await db
+    .update(conversations)
+    .set({
+      inboundTriage: {
+        ...triage,
+        matchedIssueGroupId: resolvedGroupId,
       },
-    });
+      issueGroupId: resolvedGroupId,
+      assignedToAI,
+    })
+    .where(eq(conversations.id, conversation.id));
 
-    // If issue group has assignees and conversation is not already assigned, trigger auto-assignment
-    if (issueGroupWithAssignees?.assignees && issueGroupWithAssignees.assignees.length > 0) {
-      const conversationToCheck = await db.query.conversations.findFirst({
-        where: eq(conversations.id, conversation.id),
-        columns: {
-          assignedToId: true,
-        },
-      });
+  const matchedTitle = resolvedGroupId ? availableIssueGroups.find((g) => g.id === resolvedGroupId)?.title : undefined;
 
-      if (!conversationToCheck?.assignedToId) {
-        // Trigger auto-assignment in the background
-        await triggerEvent("conversations/issue-group.assigned", {
-          conversationId: conversation.id,
-          messageId,
-        });
-      }
-    } else {
-      // No assignees configured - still trigger condition template check
-      await triggerEvent("conversations/issue-group.assigned", {
-        conversationId: conversation.id,
-        messageId,
-      });
-    }
+  const conversationBeforeAssign = await db.query.conversations.findFirst({
+    where: eq(conversations.id, conversation.id),
+    columns: { assignedToId: true },
+  });
 
-    return {
-      message: `Conversation ${conversation.id} categorized to issue group: ${matchedGroup?.title}`,
+  if (!conversationBeforeAssign?.assignedToId) {
+    await triggerEvent("conversations/issue-group.assigned", {
       conversationId: conversation.id,
-      assignedIssueGroupId: aiResult.matchedGroupId,
-      issueGroupTitle: matchedGroup?.title,
-      aiReasoning: aiResult.reasoning,
-      confidenceScore: aiResult.confidenceScore,
-    };
+      messageId,
+    });
   }
 
   return {
-    message: "No suitable issue group found for this conversation",
+    message: resolvedGroupId
+      ? `Triage complete; matched issue group: ${matchedTitle ?? resolvedGroupId}`
+      : "Triage complete (no issue group match)",
     conversationId: conversation.id,
-    aiReasoning: aiResult.reasoning,
-    confidenceScore: aiResult.confidenceScore,
-    availableGroupsCount: availableIssueGroups.length,
+    assignedIssueGroupId: resolvedGroupId,
+    issueGroupTitle: matchedTitle,
+    triageSummary: triage.summaryLine,
+    assignedToAI,
   };
 };

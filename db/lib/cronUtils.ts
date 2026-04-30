@@ -3,6 +3,29 @@ import { db } from "@/db/client";
 import { env } from "@/lib/env";
 import { getOrCreateSecret, SECRET_NAMES } from "@/lib/secrets";
 
+/**
+ * Base URL for POST /api/job. pg_cron runs on the database host (e.g. Supabase Cloud), so it must
+ * call a URL that is reachable from *there*, not from the developer laptop.
+ *
+ * Previously this used host.docker.internal whenever NODE_ENV was development, which broke the
+ * common setup: hosted Supabase + .env.local + locally run setupCron.ts (NODE_ENV defaults to
+ * development) — jobs were never delivered and Gmail sync / auto-assign appeared "stuck".
+ */
+const jobWorkerBaseUrl = (): string => {
+  if (env.JOB_WORKER_URL) {
+    return env.JOB_WORKER_URL.replace(/\/$/, "");
+  }
+
+  const postgresUrl = env.POSTGRES_URL;
+  const isLocalPostgres = /127\.0\.0\.1|localhost|host\.docker\.internal/.test(postgresUrl);
+
+  if (isLocalPostgres) {
+    return "http://host.docker.internal:3010";
+  }
+
+  return env.AUTH_URL.replace(/\/$/, "");
+};
+
 export const setupCron = async (job: string, schedule: string) => {
   // eslint-disable-next-line no-console
   console.log(`Scheduling cron job: ${job} with schedule: ${schedule}`);
@@ -43,7 +66,7 @@ export const setupJobFunctions = async () => {
     sql.raw(`
       create or replace function call_job_endpoint(job_body text, queue_message_id text) returns text as $$
       declare
-        endpoint_url text := '${env.NODE_ENV === "development" ? "http://host.docker.internal:3010" : env.AUTH_URL}/api/job';
+        endpoint_url text := '${jobWorkerBaseUrl()}/api/job';
         hmac_secret text;
         timestamp_str text;
         hmac_payload text;
@@ -103,6 +126,18 @@ export const setupJobFunctions = async () => {
       return format('Processed %s jobs in %s seconds', job_count, round(extract(epoch from (clock_timestamp() - start_time))::numeric, 2));
     end;
     $$ language plpgsql;
+  `);
+
+  await db.execute(sql`
+    do $cron$
+    declare jid bigint;
+    begin
+      select jobid into jid from cron.job where jobname = 'process-jobs' limit 1;
+      if jid is not null then
+        perform cron.unschedule(jid);
+      end if;
+    end
+    $cron$;
   `);
 
   await db.execute(sql`

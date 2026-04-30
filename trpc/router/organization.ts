@@ -27,7 +27,7 @@ export const organizationRouter = {
       displayName: user.displayName || "",
       email: user.email || "",
       permissions: user.permissions,
-      access: user.access || { role: "afk", keywords: [] },
+      access: user.access || { role: "active", keywords: [], routingRoles: [] },
     }));
   }),
   addMember: protectedProcedure

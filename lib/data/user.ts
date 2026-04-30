@@ -4,32 +4,78 @@ import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
 import { FullUserProfile, userProfiles } from "@/db/schema/userProfiles";
 import { authUsers } from "@/db/supabaseSchema/auth";
+import type { LeadRoutingRole } from "@/lib/leads/inboundTriage";
 import { createAdminClient } from "@/lib/supabase/server";
 import { getFirstName, getFullName } from "../auth/authUtils";
 import { getSlackUser } from "../slack/client";
 
-export const UserRoles = {
-  CORE: "core",
-  NON_CORE: "nonCore",
-  AFK: "afk",
-} as const;
+/** Assignment presence: active members receive auto-assign; away members do not. Legacy `core` / `nonCore` normalize to active. */
+export type UserPresence = "active" | "afk";
 
-export type UserRole = (typeof UserRoles)[keyof typeof UserRoles];
+export const UserPresence = {
+  ACTIVE: "active" as const,
+  AFK: "afk" as const,
+};
 
-type MailboxAccess = {
-  role: UserRole;
-  keywords: string[];
-  updatedAt: string;
+type AccessRow = NonNullable<(typeof userProfiles.$inferSelect)["access"]>;
+
+export const normalizeMailboxPresence = (raw: string | undefined): UserPresence => {
+  if (raw === UserPresence.AFK) return UserPresence.AFK;
+  return UserPresence.ACTIVE;
+};
+
+export const normalizeRoutingRoles = (access: AccessRow | null | undefined): LeadRoutingRole[] => {
+  if (!access) return [];
+  if (access.routingRoles?.length) {
+    return [...new Set(access.routingRoles)];
+  }
+  if (access.routingRole) {
+    return [access.routingRole];
+  }
+  return [];
+};
+
+export const memberMatchesInboundTarget = (
+  member: { permissions: string; routingRoles: LeadRoutingRole[] },
+  target: LeadRoutingRole,
+): boolean => {
+  if (member.permissions === "admin") return true;
+  return member.routingRoles.includes(target);
 };
 
 export type UserWithMailboxAccessData = {
   id: string;
   displayName: string;
   email: string | undefined;
-  role: UserRole;
-  keywords: MailboxAccess["keywords"];
+  /** Active = eligible for assignment; away = excluded. */
+  role: UserPresence;
+  keywords: string[];
+  routingRoles: LeadRoutingRole[];
   permissions: string;
   emailOnAssignment: boolean;
+};
+
+const rowToMember = (user: {
+  id: string;
+  displayName: string | null;
+  email: string | null;
+  permissions: string | null;
+  access: AccessRow | null;
+  preferences: (typeof userProfiles.$inferSelect)["preferences"];
+}): UserWithMailboxAccessData => {
+  const access = user.access ?? { keywords: [] };
+  const permissions = user.permissions ?? "member";
+
+  return {
+    id: user.id,
+    displayName: getFullName({ displayName: user.displayName, email: user.email }),
+    email: user.email ?? undefined,
+    role: normalizeMailboxPresence(access.role),
+    keywords: access.keywords ?? [],
+    routingRoles: normalizeRoutingRoles(access),
+    permissions,
+    emailOnAssignment: user.preferences?.notifications?.emailOnAssignment ?? false,
+  };
 };
 
 export const getProfile = cache(
@@ -115,33 +161,20 @@ export const getUsersWithMailboxAccess = async (): Promise<UserWithMailboxAccess
     .innerJoin(userProfiles, eq(authUsers.id, userProfiles.id))
     .where(isNull(userProfiles.deletedAt));
 
-  return users.map((user) => {
-    const access = user.access ?? { role: "afk", keywords: [] };
-    const permissions = user.permissions ?? "member";
-
-    return {
-      id: user.id,
-      displayName: user.displayName ?? "",
-      email: user.email ?? undefined,
-      role: access.role,
-      keywords: access?.keywords ?? [],
-      permissions,
-      emailOnAssignment: user.preferences?.notifications?.emailOnAssignment ?? false,
-    };
-  });
+  return users.map(rowToMember);
 };
 
 export const updateUserMailboxData = async (
   userId: string,
   updates: {
     displayName?: string;
-    role?: UserRole;
-    keywords?: MailboxAccess["keywords"];
+    role?: UserPresence;
+    keywords?: string[];
+    routingRoles?: LeadRoutingRole[];
     permissions?: string;
     emailOnAssignment?: boolean;
   },
 ): Promise<UserWithMailboxAccessData> => {
-  // Fetch current user data to preserve existing values
   const currentUser = await db.query.userProfiles.findFirst({
     where: eq(userProfiles.id, userId),
     columns: {
@@ -150,20 +183,21 @@ export const updateUserMailboxData = async (
     },
   });
 
-  const currentAccess = currentUser?.access ?? { role: "afk", keywords: [] };
+  const currentAccess = currentUser?.access ?? { keywords: [] };
   const currentPreferences = currentUser?.preferences ?? {};
 
-  // Prepare update object with conditional fields
-  const updateData: any = {};
+  const updateData: Record<string, unknown> = {};
 
   if (updates.displayName !== undefined) {
     updateData.displayName = updates.displayName;
   }
 
-  if (updates.role !== undefined || updates.keywords !== undefined) {
+  if (updates.role !== undefined || updates.keywords !== undefined || updates.routingRoles !== undefined) {
     updateData.access = {
-      role: updates.role ?? currentAccess.role,
-      keywords: updates.keywords ?? currentAccess.keywords,
+      ...currentAccess,
+      ...(updates.role !== undefined ? { role: updates.role } : {}),
+      ...(updates.keywords !== undefined ? { keywords: updates.keywords } : {}),
+      ...(updates.routingRoles !== undefined ? { routingRoles: updates.routingRoles, routingRole: null } : {}),
     };
   }
 
@@ -191,8 +225,6 @@ export const updateUserMailboxData = async (
       access: userProfiles.access,
       permissions: userProfiles.permissions,
       preferences: userProfiles.preferences,
-      createdAt: userProfiles.createdAt,
-      updatedAt: userProfiles.updatedAt,
       email: authUsers.email,
     })
     .from(userProfiles)
@@ -200,15 +232,7 @@ export const updateUserMailboxData = async (
     .where(eq(userProfiles.id, userId))
     .then(takeUniqueOrThrow);
 
-  return {
-    id: updatedProfile?.id ?? userId,
-    displayName: getFullName(updatedProfile),
-    email: updatedProfile?.email ?? undefined,
-    role: updatedProfile?.access?.role || "afk",
-    keywords: updatedProfile?.access?.keywords || [],
-    permissions: updatedProfile?.permissions ?? "",
-    emailOnAssignment: updatedProfile?.preferences?.notifications?.emailOnAssignment ?? false,
-  };
+  return rowToMember(updatedProfile);
 };
 
 export const findUserViaSlack = cache(async (token: string, slackUserId: string): Promise<FullUserProfile | null> => {

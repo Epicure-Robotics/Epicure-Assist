@@ -8,7 +8,7 @@ import { useSession } from "@/components/useSession";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 import { AddMember } from "./addMember";
-import TeamMemberRow, { ROLE_DISPLAY_NAMES } from "./teamMemberRow";
+import TeamMemberRow, { PRESENCE_DISPLAY_NAMES } from "./teamMemberRow";
 import { TeamSettingLoadingSkeleton } from "./teamSettingLoadingSkeleton";
 
 const TeamSetting = () => {
@@ -20,9 +20,7 @@ const TeamSetting = () => {
   const filteredTeamMembers = teamMembers.filter((member) => {
     const searchString = searchTerm.toLowerCase();
     return (
-      member.email?.toLowerCase().includes(searchString) ||
-      member.displayName?.toLowerCase().includes(searchString) ||
-      member.keywords.some((keyword) => keyword.toLowerCase().includes(searchString))
+      member.email?.toLowerCase().includes(searchString) || member.displayName?.toLowerCase().includes(searchString)
     );
   });
 
@@ -51,8 +49,8 @@ const TeamSetting = () => {
                 <TableHead>Email</TableHead>
                 <TableHead className="min-w-[140px]">Name</TableHead>
                 <TableHead className="w-[100px]">Permissions</TableHead>
-                <TableHead className="w-[100px]">Support role</TableHead>
-                <TableHead className="min-w-[180px]">Auto-assign keywords</TableHead>
+                <TableHead className="w-[100px]">Status</TableHead>
+                <TableHead className="min-w-[260px]">Inbox categories</TableHead>
                 <TableHead className="w-[100px]">Email on assign</TableHead>
                 <TableHead>Actions</TableHead>
                 <TableHead className="w-[120px]">Status</TableHead>
@@ -81,10 +79,15 @@ const TeamSetting = () => {
         <div className="text-sm text-muted-foreground space-y-1">
           <p>Note:</p>
           <ul className="list-disc list-inside space-y-1">
-            <li>{ROLE_DISPLAY_NAMES.core} members are assigned tickets in a round-robin style.</li>
-            <li>{ROLE_DISPLAY_NAMES.nonCore} members are only assigned if the ticket tags match their keywords.</li>
-            <li>{ROLE_DISPLAY_NAMES.afk} members do not receive any ticket assignments.</li>
-            <li>Only {ROLE_DISPLAY_NAMES.core} support team members will be mentioned explicitly in weekly reports.</li>
+            <li>
+              <strong>Inbox categories:</strong> Admins receive inbound tickets from <em>all</em> triage categories.
+              Other members are only auto-assigned tickets matching at least one category you select (or via issue-group
+              / round-robin fallbacks).
+            </li>
+            <li>
+              <strong>Status:</strong> {PRESENCE_DISPLAY_NAMES.active} members receive assignments;{" "}
+              {PRESENCE_DISPLAY_NAMES.afk} members are skipped.
+            </li>
           </ul>
         </div>
       </div>

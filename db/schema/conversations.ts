@@ -10,6 +10,7 @@ import { conversationMessages } from "./conversationMessages";
 import { issueGroups } from "./issueGroups";
 import { issueSubgroups } from "./issueSubgroups";
 import { platformCustomers } from "./platformCustomers";
+import type { InboundTriage } from "@/lib/leads/inboundTriage";
 
 export const conversations = pgTable(
   "conversations_conversation",
@@ -48,6 +49,8 @@ export const conversations = pgTable(
     issueSubgroupId: bigint("issue_subgroup_id", { mode: "number" }).references(() => issueSubgroups.id, {
       onDelete: "set null",
     }),
+    /** Model-extracted lead triage: category, importance, geography, summary, optional issue-group match. */
+    inboundTriage: jsonb("inbound_triage").$type<InboundTriage | null>(),
     suggestedActions: jsonb().$type<
       (
         | { type: "close" | "spam" }

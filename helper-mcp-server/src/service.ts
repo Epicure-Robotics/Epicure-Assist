@@ -79,7 +79,7 @@ export type HelperUserSummary = {
   email: string | null;
   display_name: string;
   permissions: string;
-  access_role: "afk" | "core" | "nonCore";
+  access_role: "afk" | "active";
   access_keywords: string[];
 };
 
@@ -98,7 +98,7 @@ export type HelperTeamMember = {
   id: string;
   email: string | null;
   display_name: string;
-  role: "afk" | "core" | "nonCore";
+  role: "afk" | "active";
   keywords: string[];
   permissions: string;
   open_ticket_count: number;
@@ -413,7 +413,7 @@ const mapCurrentUser = (user: FullUserProfile): HelperUserSummary => ({
   email: user.email,
   display_name: user.displayName || user.email || user.id,
   permissions: user.permissions,
-  access_role: user.access?.role ?? "afk",
+  access_role: user.access?.role === "afk" ? "afk" : "active",
   access_keywords: user.access?.keywords ?? [],
 });
 
@@ -421,7 +421,7 @@ const mapTeamMember = (member: {
   id: string;
   email?: string;
   displayName: string;
-  role: "afk" | "core" | "nonCore";
+  role: "afk" | "active";
   keywords: string[];
   permissions: string;
   openCount: number;

@@ -10,11 +10,9 @@ import { createCaller } from "@/trpc";
 
 vi.mock("@/lib/data/user", async (importOriginal) => ({
   ...(await importOriginal()),
-  UserRoles: {
-    CORE: "core",
-    NON_CORE: "nonCore",
+  UserPresence: {
+    ACTIVE: "active",
     AFK: "afk",
-    ADMIN: "admin",
   },
   updateUserMailboxData: vi.fn(),
   getUsersWithMailboxAccess: vi.fn(),

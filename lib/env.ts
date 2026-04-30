@@ -164,6 +164,13 @@ export const env = createEnv({
      * Should match the inbox you connect via OAuth (e.g. prod: connect@epicurerobotics.com, dev: your test Gmail).
      */
     EPICURE_PRIMARY_SUPPORT_EMAIL: emptyUnsetOptEmail(),
+
+    /**
+     * Optional: public base URL Supabase pg_cron should POST job payloads to (no trailing slash).
+     * Use when the app is not reachable at AUTH_URL from the database (rare). Local Docker Supabase
+     * uses host.docker.internal automatically when POSTGRES_URL points at localhost.
+     */
+    JOB_WORKER_URL: emptyUnsetOptUrl(),
   },
 
   /**

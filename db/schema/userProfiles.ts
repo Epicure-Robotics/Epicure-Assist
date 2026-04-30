@@ -1,8 +1,10 @@
 import { relations } from "drizzle-orm";
 import { jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { authUsers } from "../supabaseSchema/auth";
+import type { LeadRoutingRole } from "@/lib/leads/inboundTriage";
 
-export type AccessRole = "afk" | "core" | "nonCore";
+/** Legacy JSON may still contain "core" | "nonCore" — normalize to active/afk when reading. */
+export type MailboxAccessRole = "active" | "afk" | "core" | "nonCore";
 
 // Created automatically when a user is inserted via a Postgres trigger. See db/drizzle/0101_complete_wraith.sql
 export const userProfiles = pgTable("user_profiles", {
@@ -18,10 +20,14 @@ export const userProfiles = pgTable("user_profiles", {
     .$onUpdate(() => new Date()),
   access: jsonb("access")
     .$type<{
-      role: AccessRole;
+      role?: MailboxAccessRole;
       keywords: string[];
+      /** @deprecated use routingRoles */
+      routingRole?: LeadRoutingRole | null;
+      /** Inbox categories this member handles (inbound triage). Admins match all categories regardless. */
+      routingRoles?: LeadRoutingRole[];
     }>()
-    .default({ role: "afk", keywords: [] }),
+    .default({ role: "active", keywords: [], routingRoles: [] }),
   pinnedIssueGroupIds: jsonb("pinned_issue_group_ids").$type<number[]>().default([]),
   preferences: jsonb()
     .$type<{

@@ -1,11 +1,12 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import { and, count, eq, isNotNull, isNull } from "drizzle-orm";
 import { subHours } from "date-fns";
+import { and, count, eq, isNotNull, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
 import { conversations } from "@/db/schema";
 import { getMemberStats } from "@/lib/data/stats";
 import { banUser, getProfile, getUsersWithMailboxAccess, isAdmin, updateUserMailboxData } from "@/lib/data/user";
+import { leadRoutingRoleSchema } from "@/lib/leads/inboundTriage";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { mailboxProcedure } from "./procedure";
 
@@ -15,10 +16,11 @@ export const membersRouter = {
       z.object({
         userId: z.string(),
         displayName: z.string().optional(),
-        role: z.enum(["core", "nonCore", "afk"]).optional(),
+        role: z.enum(["active", "afk"]).optional(),
         keywords: z.array(z.string()).optional(),
         permissions: z.string().optional(),
         emailOnAssignment: z.boolean().optional(),
+        routingRoles: z.array(leadRoutingRoleSchema).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -46,6 +48,9 @@ export const membersRouter = {
         updatePayload.keywords = input.keywords;
         updatePayload.permissions = input.permissions;
         updatePayload.emailOnAssignment = input.emailOnAssignment;
+        if (input.routingRoles !== undefined) {
+          updatePayload.routingRoles = input.routingRoles;
+        }
       } else {
         updatePayload.displayName = input.displayName;
       }
@@ -80,7 +85,13 @@ export const membersRouter = {
         count: count(),
       })
       .from(conversations)
-      .where(and(eq(conversations.status, "open"), isNotNull(conversations.assignedToId), isNull(conversations.mergedIntoId)))
+      .where(
+        and(
+          eq(conversations.status, "open"),
+          isNotNull(conversations.assignedToId),
+          isNull(conversations.mergedIntoId),
+        ),
+      )
       .groupBy(conversations.assignedToId);
 
     const membersWithCounts = members.map((member) => ({
