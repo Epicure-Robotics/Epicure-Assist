@@ -47,7 +47,9 @@ export const publishNewMessageEvent = async ({ messageId }: { messageId: number 
     });
     published.push("conversation.message");
   }
-  if (message?.role === "user" && message.conversation.status === "open") {
+  // Refresh inbox lists for any inbound customer message. The client filters by status/category;
+  // gating on status === "open" missed reopen flows and left the dashboard stale.
+  if (message?.role === "user") {
     await publishToRealtime({
       channel: conversationsListChannelId(),
       event: "conversation.new",

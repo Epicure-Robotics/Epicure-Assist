@@ -241,59 +241,22 @@ export const List = () => {
   useRealtimeEvent(conversationsListChannelId(), "conversation.new", (message) => {
     const newConversation = message.data as ConversationItem;
     if (newConversation.status !== (searchParams.status ?? "open")) return;
-    const sort = searchParams.sort ?? defaultSort;
-    if (!sort) return;
 
-    utils.mailbox.conversations.list.setInfiniteData(input, (data) => {
-      if (!data) return undefined;
-      const firstPage = data.pages[0];
-      if (!firstPage) return data;
-
-      switch (input.category) {
-        case "all":
-          break;
-        case "assigned":
-          if (!newConversation.assignedToId) return data;
-          break;
-        case "mine":
-          if (newConversation.assignedToId !== firstPage.assignedToIds?.[0]) return data;
-          break;
+    switch (input.category) {
+      case "assigned":
+        if (!newConversation.assignedToId) return;
+        break;
+      case "mine": {
+        const firstAssignedId = conversationListData?.assignedToIds?.[0];
+        if (firstAssignedId !== undefined && newConversation.assignedToId !== firstAssignedId) return;
+        break;
       }
+      default:
+        break;
+    }
 
-      const existingConversationIndex = firstPage.conversations.findIndex(
-        (conversation) => conversation.slug === newConversation.slug,
-      );
-
-      const newConversations: ListItem[] = [...firstPage.conversations];
-      if (existingConversationIndex >= 0) newConversations.splice(existingConversationIndex, 1);
-
-      switch (sort) {
-        case "newest":
-          newConversations.unshift({ ...newConversation, isNew: true });
-          break;
-        case "oldest":
-          // Only add to first page if no other pages exist
-          if (data.pages.length === 1) {
-            newConversations.push({ ...newConversation, isNew: true });
-          }
-          break;
-        case "highest_value":
-          const indexToInsert =
-            existingConversationIndex >= 0
-              ? existingConversationIndex
-              : newConversations.findIndex(
-                  (c) => (c.platformCustomer?.value ?? 0) < (newConversation.platformCustomer?.value ?? 0),
-                );
-          if (indexToInsert < 0) return data;
-          newConversations.splice(indexToInsert, 0, { ...newConversation, isNew: true });
-          break;
-      }
-
-      return {
-        ...data,
-        pages: [{ ...firstPage, conversations: newConversations }, ...data.pages.slice(1)],
-      };
-    });
+    void utils.mailbox.conversations.list.invalidate();
+    void utils.mailbox.openCount.invalidate();
   });
 
   const conversationsText = allConversationsSelected

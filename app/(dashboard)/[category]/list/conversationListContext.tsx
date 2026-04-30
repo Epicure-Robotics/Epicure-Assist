@@ -42,7 +42,9 @@ export const ConversationListContextProvider = ({
   const { data, isPending, isFetching, isFetchingNextPage, fetchNextPage, hasNextPage } =
     api.mailbox.conversations.list.useInfiniteQuery(input, {
       getNextPageParam: (lastPage) => lastPage.nextCursor ?? null,
-      refetchOnWindowFocus: false,
+      // Realtime can miss events (private channel auth, mobile background); refetch when the tab wakes up.
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
     });
   const { data: issueGroupsData } = api.mailbox.issueGroups.listAll.useQuery();
   const [, setId] = useQueryState("id", { history: "push" });
