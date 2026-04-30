@@ -7,6 +7,13 @@ import { api } from "@/trpc/server";
 
 export async function GET(request: Request) {
   const searchParams = new URL(request.url).searchParams;
+
+  const oauthError = searchParams.get("error");
+  if (oauthError) {
+    const q = new URLSearchParams({ error: oauthError });
+    return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?${q}`);
+  }
+
   const code = searchParams.get("code");
 
   if (!code) return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=missing_oauth_code`);
@@ -35,6 +42,9 @@ export async function GET(request: Request) {
     });
     return NextResponse.redirect(`${getBaseUrl()}/settings/integrations`);
   } catch (error) {
-    return NextResponse.redirect(`${getBaseUrl()}/settings/integrations?error=${error}`);
+    const message = error instanceof Error ? error.message : String(error);
+    return NextResponse.redirect(
+      `${getBaseUrl()}/settings/integrations?error=callback_failed&detail=${encodeURIComponent(message)}`,
+    );
   }
 }
