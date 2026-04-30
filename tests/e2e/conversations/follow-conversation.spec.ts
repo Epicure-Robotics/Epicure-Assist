@@ -3,6 +3,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "../../../db/client";
 import { conversationFollowers, conversations } from "../../../db/schema";
 import { authUsers } from "../../../db/supabaseSchema/auth";
+import { SEED_ADMIN_EMAIL } from "../constants";
 import { takeDebugScreenshot } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
@@ -125,7 +126,7 @@ test.describe("Working Conversation Follow/Unfollow", () => {
     const [user] = await db
       .select({ id: authUsers.id })
       .from(authUsers)
-      .where(eq(authUsers.email, "support@gumroad.com"))
+      .where(eq(authUsers.email, SEED_ADMIN_EMAIL))
       .limit(1);
 
     const unfollowedConversation = await db

@@ -50,9 +50,15 @@ const checkIfAllTablesAreEmpty = async () => {
 export const seedDatabase = async () => {
   if (await checkIfAllTablesAreEmpty()) {
     console.log("All tables are empty. Starting seed process...");
+    if (env.INITIAL_USER_EMAILS.length === 0) {
+      throw new Error(
+        "INITIAL_USER_EMAILS must list at least one admin email (comma-separated) before db:seed. Use your Epicure team inboxes, not any legacy Helper mailbox.",
+      );
+    }
+
     await mailboxFactory.create({
-      name: "Gumroad",
-      slug: "gumroad",
+      name: "Epicure Robotics",
+      slug: "epicure",
       promptUpdatedAt: addDays(new Date(), 1),
       widgetHMACSecret: "9cff9d28-7333-4e29-8f01-c2945f1a887f",
     });
@@ -258,8 +264,8 @@ const seedHelpArticles = async () => {
   const helperDocsWebsite = await db
     .insert(websites)
     .values({
-      name: "Helper AI Documentation",
-      url: "https://helper.ai/docs",
+      name: "Epicure Robotics (seed placeholder)",
+      url: "https://epicurerobotics.com/",
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -270,7 +276,7 @@ const seedHelpArticles = async () => {
     .insert(websiteCrawls)
     .values({
       websiteId: helperDocsWebsite.id,
-      name: "Placeholder crawl for Helper AI Documentation",
+      name: "Placeholder crawl for Epicure site (replace via Firecrawl in real use)",
       status: "success",
       startedAt: subDays(new Date(), 1),
       completedAt: new Date(),
@@ -305,14 +311,15 @@ const seedHelpArticles = async () => {
 };
 
 const createSettingsPageRecords = async () => {
-  const gumroadDevToken = "36a9bb0b88ad771ead2ada56a9be84e4";
+  // Non-routable seed-only URLs — replace with your real internal tools when wiring Epicure.
+  const seedPlaceholderToken = "epicure-seed-placeholder-token";
 
   await toolsFactory.create({
     name: "Send reset password",
-    description: "Send reset password email to the user",
+    description: "Send reset password email to the user (seed placeholder — point to your API)",
     slug: "reset_password",
     requestMethod: "POST",
-    url: "http://app.gumroad.dev/internal/helper/users/send_reset_password_instructions",
+    url: "https://example.invalid/epicure-seed/reset_password",
     parameters: [
       {
         in: "body",
@@ -322,15 +329,15 @@ const createSettingsPageRecords = async () => {
       },
     ],
     authenticationMethod: "bearer_token",
-    authenticationToken: gumroadDevToken,
+    authenticationToken: seedPlaceholderToken,
   });
 
   await toolsFactory.create({
     name: "Resend last receipt",
-    description: "Resend the last receipt email to the user",
+    description: "Resend the last receipt email (seed placeholder — point to your API)",
     slug: "resend_last_receipt",
     requestMethod: "POST",
-    url: "http://app.gumroad.dev/internal/helper/purchases/resend_last_receipt",
+    url: "https://example.invalid/epicure-seed/resend_receipt",
     parameters: [
       {
         in: "body",
@@ -340,7 +347,7 @@ const createSettingsPageRecords = async () => {
       },
     ],
     authenticationMethod: "bearer_token",
-    authenticationToken: gumroadDevToken,
+    authenticationToken: seedPlaceholderToken,
   });
 
   await faqsFactory.create({

@@ -93,10 +93,10 @@ export default function NotFound() {
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center">
             <div className="flex flex-col items-start">
-              <a href="https://helper.ai/" target="_blank" rel="noopener noreferrer">
+              <a href="https://epicurerobotics.com/" target="_blank" rel="noopener noreferrer">
                 <Image
                   src="/logo.svg"
-                  alt="Helper"
+                  alt="Epicure Robotics"
                   width={100}
                   height={32}
                   className="transition-opacity duration-300 ease-in-out opacity-100"

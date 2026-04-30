@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { SEED_ADMIN_EMAIL } from "../constants";
 import { takeDebugScreenshot } from "../utils/test-helpers";
 
 test.describe("Working Authentication", () => {
@@ -16,7 +17,7 @@ test.describe("Working Authentication", () => {
     await page.goto("/login");
     await expect(page).toHaveTitle(/Helper/);
 
-    await page.fill("#email", "support@gumroad.com");
+    await page.fill("#email", SEED_ADMIN_EMAIL);
     await page.click('button[type="submit"]');
 
     await expect(page).toHaveURL(/.*mine.*/, { timeout: 40000 });
@@ -59,7 +60,7 @@ test.describe("Working Authentication", () => {
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
 
-    await page.fill("#email", "support@gumroad.com");
+    await page.fill("#email", SEED_ADMIN_EMAIL);
     await page.click('button[type="submit"]');
 
     await page.waitForLoadState("networkidle");

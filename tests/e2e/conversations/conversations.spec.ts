@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { SEED_ADMIN_EMAIL } from "../constants";
 import { endOfDay, startOfDay } from "date-fns";
 import { takeDebugScreenshot } from "../utils/test-helpers";
 
@@ -20,10 +21,10 @@ test.describe("Working Conversation Management", () => {
   }
 
   test("should show account information", async ({ page }) => {
-    const gumroadButton = page.locator('button:has-text("Gumroad")').first();
-    await expect(gumroadButton).toBeVisible();
+    const mailboxButton = page.locator('button:has-text("Epicure Robotics")').first();
+    await expect(mailboxButton).toBeVisible();
 
-    const emailButton = page.locator('button:has-text("@gumroad.com"), button:has-text("support@")').first();
+    const emailButton = page.locator(`button:has-text("${SEED_ADMIN_EMAIL}")`).first();
     await expect(emailButton).toBeVisible();
   });
 

@@ -122,11 +122,11 @@ export const env = createEnv({
       .default("false")
       .transform((v) => v === "true"),
 
-    // For running database seeds
+    // For running database seeds (comma-separated). Override in production — do not reuse upstream Helper mailboxes.
     INITIAL_USER_EMAILS: z
       .string()
-      .default("support@gumroad.com")
-      .transform((v) => v.split(",")),
+      .default("epicure-seed@example.com")
+      .transform((v) => v.split(",").map((s) => s.trim()).filter(Boolean)),
   },
 
   /**

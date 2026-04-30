@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { SEED_ADMIN_EMAIL } from "../constants";
 import { takeDebugScreenshot, waitForNetworkIdle } from "../utils/test-helpers";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
@@ -68,7 +69,7 @@ test.describe("Stats Dashboard", () => {
   test("should display team leaderboard", async ({ page }) => {
     const leaderboardEntries = page.locator('[data-testid="leaderboard-entry"]');
 
-    const supportEmailEntry = leaderboardEntries.filter({ hasText: "support@gumroad.com" });
+    const supportEmailEntry = leaderboardEntries.filter({ hasText: SEED_ADMIN_EMAIL });
     await expect(supportEmailEntry).toBeVisible();
 
     await takeDebugScreenshot(page, "stats-leaderboard.png");

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { SEED_ADMIN_EMAIL } from "../constants";
 import { cleanupTestMembers } from "../utils/cleaupTestMembers";
 import { generateTestEmail, takeDebugScreenshot } from "../utils/test-helpers";
 
@@ -200,7 +201,7 @@ test.describe("Team Settings", () => {
       throw new Error("No member rows found");
     } catch (error) {
       console.warn(`Failed to get current user email: ${error}. Using fallback.`);
-      return "support@gumroad.com";
+      return SEED_ADMIN_EMAIL;
     }
   }
 

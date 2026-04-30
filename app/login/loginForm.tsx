@@ -11,14 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Label } from "@/components/ui/label";
-import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
 export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState(env.NODE_ENV === "development" ? "support@gumroad.com" : "");
+  const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<"email" | "displayName" | "otp">("email");

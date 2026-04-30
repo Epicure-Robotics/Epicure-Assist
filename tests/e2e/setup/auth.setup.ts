@@ -1,5 +1,6 @@
 import { join } from "path";
 import { expect, test as setup } from "@playwright/test";
+import { SEED_ADMIN_EMAIL } from "../constants";
 import { takeDebugScreenshot } from "../utils/test-helpers";
 
 const authFile = join(process.cwd(), "tests/e2e/.auth/user.json");
@@ -11,8 +12,7 @@ setup("authenticate", async ({ page }) => {
   // Verify we're on the login page
   await expect(page).toHaveTitle(/Helper/);
 
-  // Fill in email (using support@gumroad.com which works)
-  await page.fill("#email", "support@gumroad.com");
+  await page.fill("#email", SEED_ADMIN_EMAIL);
 
   // Submit email form
   await page.click('button[type="submit"]');

@@ -4,6 +4,7 @@ import { db } from "../../../db/client";
 import { conversationEvents } from "../../../db/schema";
 import { getOpenConversation, openCommandBar } from "../utils/conversationHelpers";
 import { waitForSettingsSaved } from "../utils/settingsHelpers";
+import { SEED_ADMIN_EMAIL } from "../constants";
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
@@ -328,7 +329,7 @@ test.describe("Conversation Actions", () => {
 
       await sendReplyMessage(page, "Auto-assign on test reply message");
       await expect(page.getByTestId("message-thread")).toContainText("Auto-assign on test reply message");
-      await expect(page.getByRole("button", { name: "support@gumroad.com" })).toBeVisible();
+      await expect(page.getByRole("button", { name: SEED_ADMIN_EMAIL })).toBeVisible();
     });
   });
 });

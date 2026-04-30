@@ -2,6 +2,10 @@
 
 Internal **draft-first** inbox for **Epicure Robotics**: website contact-form leads arrive in Gmail (`connect@`), are categorized, and get AI **drafts** for human review before send. Forked from Helper (MIT).
 
+## Greenfield deployment (no legacy Helper data)
+
+Epicure Inbox is meant to run on **its own** Supabase project, Postgres, Gmail OAuth, and Google Cloud Pub/Sub — **not** the Helper/Gumroad production database, API keys, or mailbox rows. After `pnpm db:reset`, set `INITIAL_USER_EMAILS` to your real Epicure admin addresses (comma-separated); the default `epicure-seed@example.com` is only for local seeds and Playwright (`tests/e2e/constants.ts` must stay in sync if you change it).
+
 ## Epicure-specific behavior
 
 - **Form-only ingestion:** Gmail webhooks process messages that match the website lead pattern (subject includes `New Lead`, sent from the support mailbox to itself). Other mail is ignored as “Not a website form lead” unless the sender is staff.
@@ -53,9 +57,7 @@ Copy `.env.local.sample` to `.env.local`, then fill in values for:
 
 </details>
 
-_The app will start with placeholder values for other services - you can follow the instructions in the [development guide](https://helper.ai/docs/development#optional-integrations) to enable them later._
-
-### Install dependencies
+_The app will start with placeholder values for other services; wire Gmail, Slack, and Resend using your **Epicure** project credentials (do not point at upstream Helper production)._
 
 ```sh
 pnpm install
