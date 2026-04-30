@@ -1,13 +1,11 @@
 import { TRPCError, type TRPCRouterRecord } from "@trpc/server";
-import { subDays } from "date-fns";
 import { and, count, eq, inArray, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db/client";
-import { conversationMessages, conversations, issueGroups, issueSubgroups, mailboxes } from "@/db/schema";
+import { conversationMessages, conversations, mailboxes } from "@/db/schema";
 import { triggerEvent } from "@/jobs/trigger";
 import { getMailboxInfo } from "@/lib/data/mailbox";
 import { findSimilarConversations } from "@/lib/data/retrieval";
-import { getMemberStats } from "@/lib/data/stats";
 import { conversationsRouter } from "./conversations/index";
 import { customersRouter } from "./customers";
 import { faqsRouter } from "./faqs";
@@ -110,7 +108,6 @@ export const mailboxRouter = {
       all: Number(counts.openAll || 0),
       mine: Number(counts.openMine || 0),
       assigned: Number(counts.openAssigned || 0),
-      unassigned: Number(counts.openAll || 0) - Number(counts.openAssigned || 0),
 
       open: getCategoryCounts("open"),
       openClassified: Number(counts.openClassified || 0),
@@ -188,162 +185,6 @@ export const mailboxRouter = {
     return {
       success: true,
       message: "Auto-close job triggered successfully",
-    };
-  }),
-
-  leaderboard: mailboxProcedure
-    .input(
-      z.object({
-        days: z.number().min(1).max(365).default(7),
-      }),
-    )
-    .query(async ({ input }) => {
-      const stats = await getMemberStats({
-        startDate: subDays(new Date(), input.days),
-        endDate: new Date(),
-      });
-
-      return {
-        leaderboard: stats.map((member) => ({
-          userId: member.id,
-          displayName: member.displayName || "Unknown",
-          email: member.email,
-          replyCount: member.replyCount,
-        })),
-      };
-    }),
-
-  commonIssuesStats: mailboxProcedure
-    .input(
-      z.object({
-        days: z.number().min(1).max(365).default(7),
-      }),
-    )
-    .query(async ({ input }) => {
-      const startDate = subDays(new Date(), input.days);
-
-      // Get all issue groups with their closed conversation counts
-      const issueGroupStats = await db
-        .select({
-          id: issueGroups.id,
-          title: issueGroups.title,
-          color: issueGroups.color,
-          closedCount: count(
-            sql`CASE WHEN ${conversations.status} = 'closed' AND ${conversations.closedAt} >= ${startDate.toISOString()} THEN 1 END`,
-          ),
-          totalCount: count(conversations.id),
-        })
-        .from(issueGroups)
-        .leftJoin(conversations, eq(conversations.issueGroupId, issueGroups.id))
-        .groupBy(issueGroups.id, issueGroups.title, issueGroups.color)
-        .orderBy(
-          sql`count(CASE WHEN ${conversations.status} = 'closed' AND ${conversations.closedAt} >= ${startDate.toISOString()} THEN 1 END) DESC`,
-        );
-
-      return {
-        issueGroups: issueGroupStats.map((group) => ({
-          id: group.id,
-          title: group.title,
-          color: group.color,
-          closedCount: Number(group.closedCount || 0),
-          totalCount: Number(group.totalCount || 0),
-        })),
-      };
-    }),
-
-  commonIssueSubcategoryStats: mailboxProcedure
-    .input(
-      z.object({
-        days: z.number().min(1).max(365).default(7),
-        issueGroupId: z.number().optional(),
-      }),
-    )
-    .query(async ({ input }) => {
-      const startDate = subDays(new Date(), input.days);
-
-      const rows = await db
-        .select({
-          id: issueSubgroups.id,
-          title: issueSubgroups.title,
-          issueGroupId: issueSubgroups.issueGroupId,
-          issueGroupTitle: issueGroups.title,
-          issueGroupColor: issueGroups.color,
-          closedCount: count(
-            sql`CASE WHEN ${conversations.status} = 'closed' AND ${conversations.closedAt} >= ${startDate.toISOString()} THEN 1 END`,
-          ),
-          totalCount: count(conversations.id),
-        })
-        .from(issueSubgroups)
-        .leftJoin(issueGroups, eq(issueSubgroups.issueGroupId, issueGroups.id))
-        .leftJoin(conversations, eq(conversations.issueSubgroupId, issueSubgroups.id))
-        .where(
-          and(eq(issueSubgroups.isArchived, false), input.issueGroupId ? eq(issueSubgroups.issueGroupId, input.issueGroupId) : undefined),
-        )
-        .groupBy(
-          issueSubgroups.id,
-          issueSubgroups.title,
-          issueSubgroups.issueGroupId,
-          issueGroups.title,
-          issueGroups.color,
-        )
-        .orderBy(
-          sql`count(CASE WHEN ${conversations.status} = 'closed' AND ${conversations.closedAt} >= ${startDate.toISOString()} THEN 1 END) DESC`,
-        );
-
-      return {
-        subcategories: rows.map((row) => ({
-          id: row.id,
-          title: row.title,
-          issueGroupId: row.issueGroupId,
-          issueGroupTitle: row.issueGroupTitle,
-          issueGroupColor: row.issueGroupColor,
-          closedCount: Number(row.closedCount || 0),
-          totalCount: Number(row.totalCount || 0),
-        })),
-      };
-    }),
-
-  notRepliedStats: mailboxProcedure.query(async ({ ctx }) => {
-    const twentyFourHoursAgo = subDays(new Date(), 1);
-
-    // Get conversations where:
-    // 1. Status is 'open'
-    // 2. Last message from customer (role='user') was more than 24 hours ago
-    // 3. No staff reply since that customer message
-    const notRepliedConversations = await db
-      .select({
-        conversationId: conversations.id,
-        assignedToId: conversations.assignedToId,
-        lastUserMessageAt: conversations.lastUserEmailCreatedAt,
-      })
-      .from(conversations)
-      .where(
-        and(
-          eq(conversations.status, "open"),
-          isNull(conversations.mergedIntoId),
-          sql`${conversations.lastUserEmailCreatedAt} < ${twentyFourHoursAgo.toISOString()}`,
-          // Check that there's no staff message after the last user message
-          sql`NOT EXISTS (
-            SELECT 1 FROM ${conversationMessages}
-            WHERE ${conversationMessages.conversationId} = ${conversations.id}
-            AND ${conversationMessages.role} = 'staff'
-            AND ${conversationMessages.createdAt} > ${conversations.lastUserEmailCreatedAt}
-            AND ${conversationMessages.deletedAt} IS NULL
-          )`,
-        ),
-      );
-
-    // Group by category
-    const mine = notRepliedConversations.filter((c) => c.assignedToId === ctx.user.id).length;
-    const assigned = notRepliedConversations.filter((c) => c.assignedToId !== null).length;
-    const unassigned = notRepliedConversations.filter((c) => c.assignedToId === null).length;
-    const all = notRepliedConversations.length;
-
-    return {
-      all,
-      mine,
-      assigned,
-      unassigned,
     };
   }),
 

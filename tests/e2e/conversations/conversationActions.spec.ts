@@ -313,7 +313,7 @@ test.describe("Conversation Actions", () => {
         await waitForSettingsSaved(page);
       }
 
-      await page.goto("/unassigned");
+      await page.goto("/all?isAssigned=false");
       await page.locator("a[href*='/conversations?id=']").first().click();
 
       await sendReplyMessage(page, "Auto-assign off test reply message");
@@ -324,7 +324,7 @@ test.describe("Conversation Actions", () => {
       await page.locator('[aria-label="Auto-assign on reply Switch"]').click();
       await waitForSettingsSaved(page);
 
-      await page.goto("/unassigned");
+      await page.goto("/all?isAssigned=false");
       await page.locator("a[href*='/conversations?id=']").first().click();
 
       await sendReplyMessage(page, "Auto-assign on test reply message");

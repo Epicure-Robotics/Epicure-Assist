@@ -59,7 +59,7 @@ export type HelperTicketStatus = (typeof HELPER_TICKET_STATUSES)[number];
 export type HelperTicketListView = (typeof HELPER_TICKET_LIST_VIEWS)[number];
 export type HelperTicketListSort = (typeof HELPER_TICKET_LIST_SORTS)[number];
 export type HelperResponseFormat = "markdown" | "json";
-type HelperLegacyTicketCategory = "conversations" | "assigned" | "mine" | "unassigned";
+type HelperLegacyTicketCategory = "conversations" | "assigned" | "mine";
 type HelperSearchConversationSort = Exclude<HelperTicketListSort, "latest">;
 
 const HELPER_ACTIVE_TICKET_STATUSES: HelperTicketStatus[] = ["open", "waiting_on_customer", "check_back_later"];

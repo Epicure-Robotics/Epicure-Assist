@@ -255,9 +255,6 @@ export const List = () => {
         case "assigned":
           if (!newConversation.assignedToId) return data;
           break;
-        case "unassigned":
-          if (newConversation.assignedToId) return data;
-          break;
         case "mine":
           if (newConversation.assignedToId !== firstPage.assignedToIds?.[0]) return data;
           break;

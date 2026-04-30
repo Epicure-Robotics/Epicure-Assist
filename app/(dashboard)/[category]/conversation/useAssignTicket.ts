@@ -29,7 +29,6 @@ export const useAssignTicket = () => {
     toast.success(assignedTo ? `Assigned ${assignedTo.displayName}` : "Unassigned ticket");
     if (
       (input.category === "mine" && assignedToId !== conversationListData?.assignedToIds?.[0]) ||
-      (input.category === "unassigned" && assignedToId) ||
       (input.category === "assigned" && !assignedToId)
     ) {
       removeConversation({ moveToNext: false });

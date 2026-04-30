@@ -31,7 +31,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
     },
     onError: (error) => {
       savingIndicator.setState("error");
-      toast.error("Error updating VIP settings", {
+      toast.error("Error updating priority location settings", {
         description: error.message,
       });
     },
@@ -73,13 +73,13 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
 
   const updateCustomerMutation = api.mailbox.customers.update.useMutation({
     onSuccess: () => {
-      toast.success("Customer updated successfully");
+      toast.success("Location updated successfully");
       void utils.mailbox.customers.listAll.invalidate();
       setEditingCustomerId(null);
       setEditValues({});
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to update customer");
+      toast.error(error.message || "Failed to update location");
     },
   });
 
@@ -101,8 +101,8 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
           <SavingIndicator state={savingIndicator.state} />
         </div>
         <SwitchSectionWrapper
-          title="VIP Customers"
-          description="Configure settings for high-value customers"
+          title="Priority locations"
+          description="Configure alerting for partner locations hosting your deployments that merit faster follow-up"
           initialSwitchChecked={isEnabled}
           onSwitchChange={setIsEnabled}
         >
@@ -114,7 +114,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                   VIP Priority Threshold
                 </Label>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  Customers with a priority value above this threshold will be marked as VIP
+                  Locations with a priority value above this threshold are flagged as VIP in the inbox
                 </p>
                 <Input
                   id="vipThreshold"
@@ -133,7 +133,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                     Response Time Target
                   </Label>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Set a target response time for VIP customers. You'll be alerted if responses exceed this timeframe.
+                    Target response window for flagged locations. You'll be alerted if replies exceed this timeframe.
                   </p>
                   <div className="mt-2 flex items-center gap-2 w-36">
                     <Input
@@ -157,7 +157,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                     Slack Notifications
                   </Label>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Choose a Slack channel to receive notifications about VIP customer messages
+                    Choose a Slack channel for alerts on new messages from flagged locations
                   </p>
                   <div className="mt-4">
                     {mailbox.slackConnected ? (
@@ -170,8 +170,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                     ) : (
                       <Alert>
                         <AlertDescription>
-                          Slack integration is required for VIP channel notifications. Please configure Slack in the
-                          Integrations tab.
+                          Slack integration is required for these alerts. Configure Slack under Integrations.
                         </AlertDescription>
                       </Alert>
                     )}
@@ -185,14 +184,16 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
 
       <div className="space-y-4">
         <div>
-          <h3 className="text-lg font-medium">Manage Customers</h3>
-          <p className="text-sm text-muted-foreground">View and edit customer information and priority values</p>
+          <h3 className="text-lg font-medium">Partner locations</h3>
+          <p className="text-sm text-muted-foreground">
+            Venues and partners that email about hosting placements—edit names and priority values to organize follow-up
+          </p>
         </div>
 
         <div className="relative max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search customers by email..."
+            placeholder="Search by email address..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
@@ -207,8 +208,8 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
             <table className="w-full">
               <thead className="border-b bg-muted/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Email</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">Name</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Contact email</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium">Venue name</th>
                   <th className="px-4 py-3 text-left text-sm font-medium">Priority Value</th>
                   <th className="px-4 py-3 text-left text-sm font-medium">Status</th>
                   <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
@@ -218,7 +219,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                 {isLoadingCustomers ? (
                   <tr>
                     <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      Loading customers...
+                      Loading locations...
                     </td>
                   </tr>
                 ) : customers && customers.length > 0 ? (
@@ -242,7 +243,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                                   },
                                 })
                               }
-                              placeholder="Customer name"
+                              placeholder="Location or venue name"
                               className="h-8"
                             />
                           ) : (
@@ -321,7 +322,7 @@ const CustomerSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get"]
                 ) : (
                   <tr>
                     <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                      {searchTerm ? "No customers found matching your search" : "No customers yet"}
+                      {searchTerm ? "No locations match your search" : "No partner locations recorded yet"}
                     </td>
                   </tr>
                 )}

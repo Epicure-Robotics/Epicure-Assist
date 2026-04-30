@@ -13,7 +13,7 @@ export const searchSchema = z.object({
     .enum(["newest", "oldest", "highest_value", "created_desc", "created_asc", "updated_desc", "updated_asc"])
     .catch("oldest")
     .nullish(),
-  category: z.enum(["conversations", "assigned", "mine", "unassigned"]).catch("conversations").nullish(),
+  category: z.enum(["conversations", "assigned", "mine"]).catch("conversations").nullish(),
   search: z.string().nullish().describe("Search term to look for in tickets"),
   status: z
     .array(z.enum(["open", "waiting_on_customer", "closed", "spam", "check_back_later", "ignored"]).catch("open"))

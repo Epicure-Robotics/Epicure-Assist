@@ -54,14 +54,14 @@ export default function WeekendAutoReplySetting({ mailbox }: { mailbox: RouterOu
       </div>
       <SectionWrapper
         title="Weekend Auto-Reply"
-        description="Automatically reply to customers who email during off-hours (Friday 5 PM EST to Monday 10 AM IST)."
+        description="Automatically reply when partners or venues email during off-hours (Friday 5 PM EST to Monday 10 AM IST)."
       >
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="weekend-auto-reply-toggle">Enable weekend auto-reply</Label>
               <p className="text-sm text-muted-foreground">
-                When enabled, customers who email on weekends will receive an automatic response.
+                When enabled, weekend senders get an automatic response until you're back.
               </p>
             </div>
             <Switch id="weekend-auto-reply-toggle" checked={isEnabled} onCheckedChange={setIsEnabled} />
@@ -75,11 +75,11 @@ export default function WeekendAutoReplySetting({ mailbox }: { mailbox: RouterOu
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={5}
-                placeholder="Enter the message to send to customers on weekends..."
+                placeholder="Message to send for weekend inquiries..."
                 className="resize-none"
               />
               <p className="text-sm text-muted-foreground">
-                This message will be sent automatically from Friday 5 PM EST to Monday 10 AM IST.
+                This message will be sent automatically from Friday 5 PM IST to Monday 10 AM IST.
               </p>
             </div>
           )}

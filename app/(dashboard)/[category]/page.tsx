@@ -3,7 +3,7 @@ import { api } from "@/trpc/server";
 
 type PageProps = {
   params: Promise<{
-    category: "all" | "assigned" | "unassigned" | "mine";
+    category: "all" | "assigned" | "mine";
   }>;
   searchParams: Promise<{
     status?: "open" | "waiting_on_customer" | "closed" | "spam" | "check_back_later" | "ignored";

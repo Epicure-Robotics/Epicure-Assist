@@ -25,7 +25,6 @@ const CATEGORY_LABELS = {
   all: "Open",
   mine: "Mine",
   assigned: "Assigned",
-  unassigned: "Up for grabs",
 } as const;
 
 type Category = keyof typeof CATEGORY_LABELS;

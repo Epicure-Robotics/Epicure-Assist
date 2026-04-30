@@ -51,7 +51,7 @@ export default function TabsPage() {
       content: <CommonIssuesSetting />,
     },
     {
-      label: "Customers",
+      label: "Partner locations",
       id: "customers",
       content: (
         <>

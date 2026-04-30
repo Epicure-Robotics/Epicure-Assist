@@ -119,9 +119,11 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
         cursor: z.string().nullish().describe("Pagination cursor from a previous helper_list_tickets call."),
         view: TICKET_LIST_VIEW.optional(),
         category: z
-          .enum(["conversations", "assigned", "mine", "unassigned"])
+          .enum(["conversations", "assigned", "mine"])
           .optional()
-          .describe("Legacy dashboard category filter. Prefer view for common MCP triage use cases."),
+          .describe(
+            "Legacy dashboard category filter. Prefer view for common MCP triage use cases (e.g. unassigned_open for open unassigned tickets).",
+          ),
         search: z.string().optional().describe("Search subject, customer email, or indexed message content."),
         statuses: z.array(TICKET_STATUS).optional().describe("Ticket status filters."),
         assignee_ids: z.array(z.string().uuid()).optional().describe("Filter by team member IDs."),

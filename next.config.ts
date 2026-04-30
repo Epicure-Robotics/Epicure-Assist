@@ -9,6 +9,9 @@ if (!env.NEXT_RUNTIME) {
 }
 
 let nextConfig: NextConfig = {
+  async redirects() {
+    return [{ source: "/unassigned", destination: "/all", permanent: true }];
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

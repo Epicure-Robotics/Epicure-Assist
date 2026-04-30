@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  BarChart,
   Bell,
   BookOpen,
   ChevronDown,
@@ -15,7 +14,6 @@ import {
   MonitorSmartphone,
   PanelLeft,
   Settings as SettingsIcon,
-  Ticket,
   User,
   UserPlus,
   Users,
@@ -49,7 +47,7 @@ const settingsItems = [
   { label: "Knowledge", id: "knowledge", icon: BookOpen },
   { label: "Team", id: "team", icon: Users },
   { label: "Common Issues", id: "common-issues", icon: Layers },
-  { label: "Customers", id: "customers", icon: UserPlus },
+  { label: "Partner locations", id: "customers", icon: UserPlus },
   { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
   { label: "Integrations", id: "integrations", icon: LinkIcon },
   { label: "Mailbox", id: "mailbox", icon: Inbox },
@@ -169,17 +167,6 @@ export function AppSidebar() {
                     )}
                   </SidebarMenuItem>
                   <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === `/unassigned`} tooltip="Up for grabs">
-                      <Link href={`/unassigned`} onClick={handleItemClick}>
-                        <Ticket className="size-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">Up for grabs</span>
-                      </Link>
-                    </SidebarMenuButton>
-                    {openCounts && openCounts.unassigned > 0 && (
-                      <SidebarMenuBadge>{openCounts.unassigned}</SidebarMenuBadge>
-                    )}
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={pathname === `/all` && !currentIssueGroupId} tooltip="Open">
                       <Link href={`/all`} onClick={handleItemClick}>
                         <Inbox className="size-4" />
@@ -292,14 +279,6 @@ export function AppSidebar() {
             <div className="mt-auto">
               <SidebarGroup>
                 <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild isActive={pathname === `/stats`} tooltip="Stats">
-                      <Link href={`/stats`} onClick={handleItemClick}>
-                        <BarChart className="size-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">Stats</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       asChild

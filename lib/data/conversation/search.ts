@@ -42,9 +42,6 @@ export const searchConversations = async (
   if (filters.category === "mine" && currentUserId) {
     filters.assignee = [currentUserId];
   }
-  if (filters.category === "unassigned") {
-    filters.isAssigned = false;
-  }
   if (filters.category === "assigned") {
     filters.isAssigned = true;
   }

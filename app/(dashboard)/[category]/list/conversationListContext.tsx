@@ -142,13 +142,11 @@ export const ConversationListContextProvider = ({
       const selectedStatus = input.status?.[0] ?? "open";
       if (previousValues.status !== selectedStatus) return;
       if (input.category === "assigned" && previousValues.assignedToId === null) return;
-      if (input.category === "unassigned" && previousValues.assignedToId !== null) return;
       if (input.category === "mine" && previousValues.assignedToId !== data?.pages[0]?.assignedToIds?.[0]) return;
 
       if (
         status !== selectedStatus ||
         (input.category === "assigned" && assignedToId === null) ||
-        (input.category === "unassigned" && assignedToId !== null) ||
         (input.category === "mine" && assignedToId !== data?.pages[0]?.assignedToIds?.[0])
       )
         removeConversationFromList((c) => c.id === id);

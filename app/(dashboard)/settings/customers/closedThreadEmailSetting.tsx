@@ -43,15 +43,14 @@ export default function ClosedThreadEmailSetting({ mailbox }: { mailbox: RouterO
       </div>
       <SectionWrapper
         title="Closed Thread Notification"
-        description="Send an email notification to customers 24 hours after their ticket is closed by staff."
+        description="Send an email to the requesting contact about 24 hours after staff closes their thread."
       >
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
               <Label htmlFor="closed-thread-email-toggle">Enable closure notification</Label>
               <p className="text-sm text-muted-foreground">
-                When enabled, customers will receive an email 24 hours after their ticket is closed, letting them know
-                they can reply if they need further assistance.
+                When enabled, the contact receives a message after closure so they can reply if they need anything else.
               </p>
             </div>
             <Switch id="closed-thread-email-toggle" checked={isEnabled} onCheckedChange={setIsEnabled} />
