@@ -15,9 +15,10 @@ import { getCustomerOrdersByEmail, isShopifyConfigured, searchOrderByName } from
 import { buildAITools, callToolApi } from "@/lib/tools/apiTool";
 import { ToolRequestBody } from "@/packages/client/dist";
 
-const searchKnowledgeBase = async (query: string) => {
+/** Semantic search over past tickets (customer + staff messages). Separate from FAQ/website excerpts injected into the system prompt. */
+const searchPastSupportThreads = async (query: string) => {
   const documents = await getPastConversationsPrompt(query);
-  return documents ?? "No past conversations found";
+  return documents ?? "No similar past conversations found.";
 };
 
 const requestHumanSupport = async (conversationId: number, email: string | null, reason: string, newEmail?: string) => {
@@ -95,12 +96,15 @@ export const buildTools = async ({
 
   const tools: Record<string, Tool> = {
     knowledge_base: tool({
-      description: "search the knowledge base",
+      description:
+        "Search past support conversations similar to this query (includes both customer messages and agent replies). Use for recurring issues, phrasing, or how humans handled comparable cases. Official facts and marketing content come from the knowledge bank and crawled website excerpts already in your system instructions—call this when ticket history may help beyond those sources.",
       parameters: z.object({
-        query: z.string().describe("query to search the knowledge base"),
+        query: z.string().describe("Short search phrase describing what to match in historical conversations"),
       }),
       execute: ({ query }) =>
-        reasoningMiddleware(searchKnowledgeBase(query)).finally(() => logToolEvent("search_knowledge_base", { query })),
+        reasoningMiddleware(searchPastSupportThreads(query)).finally(() =>
+          logToolEvent("search_knowledge_base", { query }),
+        ),
     }),
     read_saved_reply: tool({
       description: "read a saved reply, to get the message content when a saved reply should be used",
