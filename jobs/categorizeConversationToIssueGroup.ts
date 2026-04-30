@@ -57,21 +57,19 @@ const categorizeWithAI = async (
       reasoning: z.string(),
       confidenceScore: z.number().min(0).max(1).optional(),
     }),
-    system: `You are an Intelligent Issue Categorization System that analyzes customer conversations and matches them to the most appropriate issue group.
+    system: `You categorize inbound email for Epicure Robotics (industrial automation / food-line equipment, B2B). Website leads often include vending or cafeteria projects, factory scale (e.g. employee count), integration questions, or procurement.
 
-Your task is to:
-1. Analyze the semantic meaning and core problem described in the conversation
-2. Match it against available issue groups based on title and description
-3. Only assign to an issue group if there's a strong, relevant match
-4. Return null if no good match exists (it's better to leave uncategorized than to miscategorize)
+Issue groups mean:
+- **Business Lead**: End customer or operator wanting to buy, evaluate, pilot, quote, or deploy Epicure solutions (factories, vending, food service at scale).
+- **Vendor / Manufacturer Pitch**: Suppliers, OEMs, or manufacturers pitching components, outsourcing, or "use our product for lower cost" — not the end buyer of Epicure equipment.
+- **Partnership / Distributor**: Distribution, reseller, territory, or strategic partnership (not a simple product quote).
+- **Hiring**: Jobs, careers, recruiting, candidates, staffing agencies.
+- **Press / Media**: Journalists, podcasts, PR, events.
+- **Other**: Anything that does not clearly fit above (internal, unclear, or mixed).
 
-Matching criteria:
-- The conversation's main problem should align with the issue group's purpose
-- Consider both direct and indirect relevance
-- Look for problem patterns, not just keyword matching
-- Prioritize accuracy over assignment rate
+Match the conversation to the **single best** issue group by title and description. Prefer **Vendor / Manufacturer Pitch** when the sender is selling *to* Epicure rather than buying *from* Epicure.
 
-If the conversation is too generic, unclear, or doesn't fit any existing categories well, return null.`,
+Return null if there is no strong fit (do not guess).`,
     messages: [
       {
         role: "user",

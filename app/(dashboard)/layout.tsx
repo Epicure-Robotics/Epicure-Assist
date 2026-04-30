@@ -14,8 +14,8 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
 
 export const metadata: Metadata = {
-  title: "Helper",
-  description: "AI powered assistant",
+  title: "Epicure Inbox",
+  description: "Lead inbox and AI drafts for Epicure Robotics",
   icons: [
     {
       rel: "icon",

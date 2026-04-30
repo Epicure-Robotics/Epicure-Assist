@@ -18,7 +18,7 @@ export const AppLayout = () => {
         return (
           <div className="p-6">
             <h2 className="mb-4 text-2xl font-bold">Dashboard</h2>
-            <p className="text-gray-600">Welcome to your Gumroad dashboard!</p>
+            <p className="text-gray-600">Welcome to your Epicure dashboard!</p>
           </div>
         );
       case "Profile":

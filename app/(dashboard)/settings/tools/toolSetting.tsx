@@ -30,7 +30,7 @@ const ToolSetting = () => {
   return (
     <SectionWrapper
       title="Tools"
-      description="Connect your API using an OpenAPI spec to let Helper take actions in your app when drafting replies."
+      description="Connect an OpenAPI spec so Epicure Inbox can call your APIs when drafting replies."
     >
       <div className="flex flex-col gap-8">
         {!showApiForm && (

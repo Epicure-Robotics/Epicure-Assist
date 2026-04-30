@@ -1,6 +1,6 @@
-# Helper - End-to-End Testing
+# Epicure Inbox — End-to-End Testing
 
-Playwright e2e tests for the Helper application.
+Playwright e2e tests for the Epicure Inbox application.
 
 ## 🚀 Quick Start
 

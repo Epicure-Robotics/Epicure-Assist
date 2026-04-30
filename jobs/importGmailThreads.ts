@@ -23,7 +23,7 @@ export const importGmailThreads = async ({
   gmailSupportEmailId: number;
   fromInclusive: string;
   toInclusive: string;
-  /** Appended to Gmail `q` (e.g. subject:"🚀 New Lead" newer_than:90d). */
+  /** Appended to Gmail `q`. Preset: `EPICURE_WEBSITE_LEADS_GMAIL_QUERY_SUFFIX` in lib/epicure/websiteLeadGmailQuery.ts */
   gmailQuerySuffix?: string;
 }) => {
   const fromInclusiveDate = new Date(fromInclusive);

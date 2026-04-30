@@ -23,7 +23,7 @@ export const Sidebar = ({ activePage, onMenuItemClick }: SidebarProps) => {
   return (
     <div className="h-full w-64 bg-gray-100 p-4 shadow-md">
       <div className="mb-6 flex items-center">
-        <span className="text-xl font-bold text-black">Gumroad</span>
+        <span className="text-xl font-bold text-black">Epicure</span>
       </div>
       <nav>
         <ul className="space-y-2">

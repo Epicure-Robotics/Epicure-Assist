@@ -58,12 +58,12 @@ export function OnboardingForm({ className, ...props }: React.ComponentPropsWith
       <div className="flex flex-col items-center gap-3">
         <Image
           src={theme === "dark" || systemTheme === "dark" ? "/logo-white.svg" : "/logo.svg"}
-          alt="Helper"
+          alt="Epicure Robotics"
           width="110"
           height="32"
           className="w-28"
         />
-        <p className="text-sm text-muted-foreground">Welcome! Let's set up your Helper account</p>
+        <p className="text-sm text-muted-foreground">Welcome! Let's set up your Epicure Inbox account</p>
       </div>
       <form onSubmit={handleFormSubmit}>
         <div className="flex flex-col gap-4">
@@ -100,7 +100,7 @@ export function OnboardingForm({ className, ...props }: React.ComponentPropsWith
             className="w-full"
             disabled={!email || !displayName.trim() || isLoading}
           >
-            {isLoading ? "Setting up your account..." : "Start using Helper"}
+            {isLoading ? "Setting up your account..." : "Open Epicure Inbox"}
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
           {formError && <p className="text-sm text-red-500">{formError}</p>}

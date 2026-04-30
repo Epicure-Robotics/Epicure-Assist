@@ -46,9 +46,9 @@ export const ChatView = ({ conversation }: { conversation: ConversationDetails }
       conversation,
       tools: {
         getProductStatus: {
-          description: "Get the status of a Gumroad product",
+          description: "Get the deployment status of an Epicure line module",
           parameters: {
-            productId: { type: "string", description: "The ID of the Gumroad product" },
+            productId: { type: "string", description: "The module or SKU id" },
           },
           execute: ({ productId }: { productId: string }) => {
             return `The status of ${productId} is ${Math.random() > 0.5 ? "active" : "inactive"}`;

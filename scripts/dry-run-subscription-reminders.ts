@@ -1,7 +1,6 @@
 #!/usr/bin/env tsx
 /**
- * Legacy dry-run for Pocket app subscription reminders.
- * Epicure Inbox does not use an external subscription DB; the job is a no-op.
+ * Dry-run script placeholder. Epicure Inbox does not use external subscription DB reminders.
  */
 async function main() {
   console.log("Subscription expiration reminders are not used for Epicure Inbox.");

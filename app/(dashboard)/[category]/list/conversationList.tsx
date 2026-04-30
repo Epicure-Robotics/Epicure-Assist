@@ -173,7 +173,7 @@ export const List = () => {
                 assignee && "displayName" in assignee
                   ? assignee.displayName
                   : assignee && "ai" in assignee
-                    ? "Helper agent"
+                    ? "AI assistant"
                     : "Unassigned";
               toast.success(`${ticketsText} assigned to ${assigneeName}`);
             } else {
@@ -197,7 +197,7 @@ export const List = () => {
       "id" in pendingBulkAssignee
         ? pendingBulkAssignee.displayName
         : "ai" in pendingBulkAssignee
-          ? "Helper agent"
+          ? "AI assistant"
           : "Unassigned";
 
     if (allConversationsSelected || selectedConversations.length > 1) {
@@ -450,9 +450,7 @@ export const List = () => {
 
 const EmailPreviewSidebar = ({ conversation, onClose }: { conversation: ListItem; onClose: () => void }) => {
   const displayEmailFrom = conversation.emailFrom ?? "Anonymous";
-  const subject = conversation.subject
-    .replace("World's First AI Thought Companion ", "")
-    .replace(" (Launch Special)", "");
+  const subject = conversation.subject;
 
   // Fetch full conversation data with all messages
   const { data: fullConversation, isLoading } = api.mailbox.conversations.get.useQuery(

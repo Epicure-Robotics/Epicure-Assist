@@ -14,19 +14,17 @@ vi.mock("@/lib/ai", async () => {
 
 describe("emailKeywordsExtractor", () => {
   it("returns email keywords", async () => {
-    vi.mocked(aiModule.runAIQuery).mockResolvedValue({ text: "global affiliate gumroad" } as any);
-
     const { mailbox } = await userFactory.createRootUser();
 
-    vi.mocked(aiModule.runAIQuery).mockResolvedValue({ text: "global affiliate gumroad" } as any);
+    vi.mocked(aiModule.runAIQuery).mockResolvedValue({ text: "dealer program epicure" } as any);
 
     const keywords = await emailKeywordsExtractor({
       mailbox,
       subject: "Recent purchase failed",
-      body: "How do I become a global affiliate on Gumroad?",
+      body: "How do I join the Epicure dealer program?",
     });
 
-    expect(keywords.toSorted()).toEqual(["global", "affiliate", "gumroad"].toSorted());
+    expect(keywords.toSorted()).toEqual(["dealer", "program", "epicure"].toSorted());
 
     expect(aiModule.runAIQuery).toHaveBeenCalledWith({
       functionId: "email-keywords-extractor",
@@ -35,7 +33,7 @@ describe("emailKeywordsExtractor", () => {
       messages: [
         {
           role: "user",
-          content: "Recent purchase failed\n\nHow do I become a global affiliate on Gumroad?",
+          content: "Recent purchase failed\n\nHow do I join the Epicure dealer program?",
         },
       ],
       system: expect.stringContaining("Generate a space-delimited list of 1-3 keywords"),

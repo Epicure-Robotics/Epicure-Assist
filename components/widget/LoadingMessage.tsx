@@ -1,7 +1,7 @@
 import cx from "classnames";
 
 type Props = {
-  color: "primary" | "gumroad-pink";
+  color: "primary" | "brand-accent";
 };
 
 export default function LoadingMessage({ color }: Props) {

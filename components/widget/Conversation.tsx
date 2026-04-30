@@ -21,7 +21,7 @@ import { GuideInstructions } from "@/types/guide";
 
 type Props = {
   token: string | null;
-  isGumroadTheme: boolean;
+  isEpicureSiteTheme: boolean;
   isNewConversation?: boolean;
   selectedConversationSlug?: string | null;
   readPageTool?: ReadPageToolConfig | null;
@@ -39,7 +39,7 @@ export type Attachment = {
 
 export default function Conversation({
   token,
-  isGumroadTheme,
+  isEpicureSiteTheme,
   isNewConversation = false,
   selectedConversationSlug,
   readPageTool,
@@ -406,7 +406,7 @@ export default function Conversation({
         messages={[...(conversationMessages ?? []), ...(messages as MessageWithReaction[])]}
         allAttachments={conversation?.allAttachments ?? []}
         conversationSlug={conversationSlug}
-        isGumroadTheme={isGumroadTheme}
+        isEpicureSiteTheme={isEpicureSiteTheme}
         token={token}
         stopChat={stop}
         addToolResult={addToolResult}
@@ -431,7 +431,7 @@ export default function Conversation({
           lastMessage={lastAIMessage}
           onTalkToTeamClick={handleTalkToTeamClick}
           onAddDetailsClick={handleAddDetailsClick}
-          isGumroadTheme={isGumroadTheme}
+          isEpicureSiteTheme={isEpicureSiteTheme}
           isEscalated={isEscalated}
         />
       </AnimatePresence>
@@ -441,7 +441,7 @@ export default function Conversation({
         handleInputChange={handleInputChange}
         handleSubmit={handleSubmit}
         isLoading={isLoading}
-        isGumroadTheme={isGumroadTheme}
+        isEpicureSiteTheme={isEpicureSiteTheme}
         placeholder={isProvidingDetails ? "Provide additional details..." : "Ask a question..."}
       />
     </>

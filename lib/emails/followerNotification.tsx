@@ -158,7 +158,7 @@ FollowerNotificationEmail.PreviewProps = {
   triggeredByName: "John Doe",
   conversationSubject: "Login issue with mobile app",
   customerEmail: "customer@example.com",
-  conversationLink: "https://helperai.dev/conversations/abc123",
+  conversationLink: "https://epicurerobotics.com/conversations/example",
   eventDetails: {
     oldStatus: "open",
     newStatus: "closed",

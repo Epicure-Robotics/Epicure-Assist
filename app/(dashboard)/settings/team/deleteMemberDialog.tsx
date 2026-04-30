@@ -82,7 +82,7 @@ export default function DeleteMemberDialog({
         await removeTeamMember({ id: member.id });
 
         toast.success("Member removed from the team", {
-          description: `Conversations will be reassigned to ${"displayName" in assignedTo ? assignedTo.displayName : "Helper agent"}`,
+          description: `Conversations will be reassigned to ${"displayName" in assignedTo ? assignedTo.displayName : "AI assistant"}`,
         });
       } else {
         await removeTeamMember({ id: member.id });

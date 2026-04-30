@@ -40,7 +40,7 @@ function App() {
   });
 
   return (
-    <HelperProvider host="https://helper.ai" {...authData}>
+    <HelperProvider host="https://epicurerobotics.com" {...authData}>
       <YourApp />
     </HelperProvider>
   );
@@ -57,7 +57,7 @@ Provides global state management for Helper functionality, supporting both widge
 
 ```tsx
 <HelperProvider
-  host="https://helper.ai"
+  host="https://epicurerobotics.com"
   email="user@example.com"
   emailHash="hmac-hash"
   timestamp={Date.now()}
@@ -155,7 +155,7 @@ export default function DashboardPage() {
 
   return (
     <HelperProvider
-      host="https://helper.ai"
+      host="https://epicurerobotics.com"
       email={authData.email}
       emailHash={authData.emailHash}
       timestamp={authData.timestamp}

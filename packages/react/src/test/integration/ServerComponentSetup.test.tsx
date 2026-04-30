@@ -30,7 +30,7 @@ describe("Server Component Integration", () => {
       customerMetadata: {},
     };
 
-    render(<HelperWidgetScript host="https://helper.ai" {...mockConfig} />);
+    render(<HelperWidgetScript host="https://epicurerobotics.com" {...mockConfig} />);
 
     const script = document.querySelector("script");
     act(() => {

@@ -26,7 +26,7 @@ const AIReplyEmail = ({ content }: Props) => (
 
 AIReplyEmail.PreviewProps = {
   content:
-    "Reasons you might want to use Gumroad are:\n\n- Gumroad makes it easy to sell digital products.\n- Gumroad makes it easy to sell physical products.\n- Gumroad makes it easy to sell services.",
+    "Reasons teams choose Epicure automation:\n\n- Consistent portioning and sanitation workflows\n- Local support and spare parts from Epicure Robotics\n- Integration with your existing production line",
 } satisfies Props;
 
 export default AIReplyEmail;

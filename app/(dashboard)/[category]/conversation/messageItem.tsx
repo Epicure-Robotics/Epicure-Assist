@@ -142,10 +142,10 @@ const MessageItem = ({
       }
 
       if (msg.role === "ai_assistant") {
-        return "Helper agent";
+        return "AI assistant";
       }
 
-      return msg.from || "Helper agent";
+      return msg.from || "AI assistant";
     }
 
     if (msg.type === "note" && msg.userId) {
@@ -156,7 +156,7 @@ const MessageItem = ({
       return "Unknown user";
     }
 
-    return "Helper agent";
+    return "AI assistant";
   };
 
   const messageLabels: JSX.Element[] = [];

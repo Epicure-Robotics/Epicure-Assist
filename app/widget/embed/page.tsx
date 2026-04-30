@@ -35,7 +35,7 @@ export default function Page() {
   const [selectedConversationSlug, setSelectedConversationSlug] = useState<string | null>(null);
   const [hasLoadedHistory, setHasLoadedHistory] = useState(false);
   const [pageHTML, setPageHTML] = useState<string | null>(null);
-  const isGumroadTheme = typeof window !== "undefined" && location.hostname.includes("gumroad.com");
+  const isEpicureSiteTheme = typeof window !== "undefined" && location.hostname.includes("epicurerobotics.com");
   const { readPageToolCall } = useReadPageTool(token, config, pageHTML, currentURL);
   const [resumeGuide, setResumeGuide] = useState<GuideInstructions | null>(null);
 
@@ -140,8 +140,8 @@ export default function Page() {
     <QueryClientProvider client={queryClient}>
       <div
         className={cx("light flex h-screen w-full flex-col responsive-chat max-w-full sm:max-w-[520px]", {
-          "bg-gumroad-bg": isGumroadTheme,
-          "bg-background": !isGumroadTheme,
+          "bg-brand-canvas": isEpicureSiteTheme,
+          "bg-background": !isEpicureSiteTheme,
         })}
       >
         <Header
@@ -183,7 +183,7 @@ export default function Page() {
                   token={token}
                   currentView={currentView}
                   readPageTool={readPageToolCall}
-                  isGumroadTheme={isGumroadTheme}
+                  isEpicureSiteTheme={isEpicureSiteTheme}
                   isNewConversation={isNewConversation}
                   selectedConversationSlug={selectedConversationSlug}
                   onLoadFailed={memoizedHandleNewConversation}

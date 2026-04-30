@@ -20,7 +20,7 @@ type Props = {
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (screenshotData?: string, attachments?: File[]) => void;
   isLoading: boolean;
-  isGumroadTheme: boolean;
+  isEpicureSiteTheme: boolean;
   placeholder?: string;
 };
 
@@ -68,7 +68,7 @@ export default function ChatInput({
   handleInputChange,
   handleSubmit,
   isLoading,
-  isGumroadTheme,
+  isEpicureSiteTheme,
   placeholder,
 }: Props) {
   const [showScreenshot, setShowScreenshot] = useState(false);
@@ -405,7 +405,7 @@ export default function ChatInput({
             )}
             <ShadowHoverButton
               isLoading={isLoading || screenshotState.state === "capturing"}
-              isGumroadTheme={isGumroadTheme}
+              isEpicureSiteTheme={isEpicureSiteTheme}
             />
           </div>
         </div>

@@ -13,7 +13,7 @@ type Props = {
   messages: MessageWithReaction[];
   allAttachments: Attachment[];
   conversationSlug: string | null;
-  isGumroadTheme: boolean;
+  isEpicureSiteTheme: boolean;
   token: string | null;
   stopChat: () => void;
   addToolResult: ({ toolCallId, result }: { toolCallId: string; result: any }) => void;
@@ -26,7 +26,7 @@ export default function MessagesList({
   messages,
   conversationSlug,
   allAttachments,
-  isGumroadTheme,
+  isEpicureSiteTheme,
   token,
   stopChat,
   addToolResult,
@@ -85,7 +85,7 @@ export default function MessagesList({
                   pendingResume={pendingResume}
                   resumeGuide={resumeGuide}
                   existingSessionId={sessionId}
-                  color={isGumroadTheme ? "gumroad-pink" : "primary"}
+                  color={isEpicureSiteTheme ? "brand-accent" : "primary"}
                 />
                 {hasResult && (
                   <Message
@@ -96,7 +96,7 @@ export default function MessagesList({
                     conversationSlug={conversationSlug}
                     token={token}
                     data={index === messages.length - 1 ? data : null}
-                    color={isGumroadTheme ? "gumroad-pink" : "primary"}
+                    color={isEpicureSiteTheme ? "brand-accent" : "primary"}
                     hideReasoning={true}
                   />
                 )}
@@ -114,14 +114,14 @@ export default function MessagesList({
               token={token}
               data={index === messages.length - 1 ? data : null}
               hideReasoning={true}
-              color={isGumroadTheme ? "gumroad-pink" : "primary"}
+              color={isEpicureSiteTheme ? "brand-accent" : "primary"}
             />
           );
         })}
 
         {status === "submitted" && (
           <div className="flex flex-col gap-3">
-            <LoadingMessage color={isGumroadTheme ? "gumroad-pink" : "primary"} />
+            <LoadingMessage color={isEpicureSiteTheme ? "brand-accent" : "primary"} />
           </div>
         )}
       </div>

@@ -84,7 +84,7 @@ export const handleKnowledgeBankSlackAction = async (
       await postSlackMessage(mailbox.slackBotToken, {
         ephemeralUserId: payload.user.id,
         channel: knowledge.slackChannel,
-        text: "_Helper user not found, please make sure your Slack email matches your Helper email._",
+        text: "_Team member not found. Use the same email in Slack as in your Epicure Inbox account._",
       });
       return;
     }

@@ -25,13 +25,13 @@ const ConnectSupportEmail = () => {
       ) : !enabled ? (
         <Alert className="text-sm">
           Create a Google OAuth app to enable linking your Gmail account.{" "}
-          <Link className="underline" href="https://helper.ai/docs/development#optional-integrations" target="_blank">
-            Learn how!
+          <Link className="underline" href="/settings/integrations">
+            See README for OAuth setup
           </Link>
         </Alert>
       ) : supportAccount ? (
         <ConfirmationDialog
-          message="Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Helper, but you will not be able to send/receive new emails until you connect a new Gmail account."
+          message="Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Epicure Inbox, but you will not be able to send/receive new emails until you connect a new Gmail account."
           onConfirm={async () => {
             await deleteSupportEmailMutation();
             router.refresh();

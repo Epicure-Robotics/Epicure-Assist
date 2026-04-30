@@ -117,7 +117,7 @@ const WebsiteCrawlSetting = () => {
         description={
           <>
             <div className="mb-2">
-              Helper will learn about your product by reading your websites to provide better responses.
+              Epicure Inbox learns about your offerings by reading your websites to improve AI drafts.
             </div>
             <div>Content is automatically updated weekly, but you can also update it manually.</div>
           </>

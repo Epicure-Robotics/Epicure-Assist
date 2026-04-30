@@ -7,7 +7,7 @@ test.describe("Image Attachments E2E", () => {
   test("should support multiple image formats", async ({ page }) => {
     await page.goto("/settings/in-app-chat");
 
-    const widgetIcon = page.getByRole("button", { name: "Helper Widget Icon" }).first();
+    const widgetIcon = page.getByRole("button", { name: "Epicure Widget Icon" }).first();
     await expect(widgetIcon).toBeVisible({ timeout: 15000 });
     await widgetIcon.click({ force: true });
 

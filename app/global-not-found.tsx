@@ -59,7 +59,7 @@ export default function NotFound() {
             <Image
               src="/logo-white.svg"
               priority
-              alt="Helper"
+              alt="Epicure Robotics"
               width={100}
               height={32}
               className="absolute top-0 left-0 transition-opacity duration-300 ease-in-out opacity-100"
@@ -71,7 +71,7 @@ export default function NotFound() {
       <main className="grow flex flex-col items-center justify-center h-screen bg-secondary-light dark:bg-secondary-dark text-center p-4">
         <div className="max-w-md">
           <div className="flex justify-center mb-8">
-            <Image src="/logo_icon.svg" alt="Helper" width={96} height={96} className="md:w-128 md:h-128" />
+            <Image src="/logo_icon.svg" alt="Epicure Robotics" width={96} height={96} className="md:w-128 md:h-128" />
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-8xl font-bold mb-6 text-secondary dark:text-foreground">Oops!</h1>
           <p className="text-lg md:text-xl mb-12 text-secondary dark:text-foreground">

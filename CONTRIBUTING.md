@@ -1,5 +1,9 @@
-# Contributing to Helper
+# Contributing
 
-Please see the main [Antiwork Contributing Guidelines](https://github.com/antiwork/.github/blob/main/CONTRIBUTING.md) for development guidelines.
+Epicure Inbox is an internal fork for Epicure Robotics. For changes:
 
-Generally: include an AI disclosure, self-review (comment) on your code, break up big 1k+ line PRs into smaller PRs (100 loc), and include video of before/after with light/dark mode and mobile/desktop experiences represented. And include e2e tests!
+1. Open a PR against the main integration branch with a clear description.
+2. Run `pnpm lint` and `pnpm tc` where practical before review.
+3. Keep commits focused; avoid unrelated refactors.
+
+For broader open-source norms, you may refer to standard community contribution guides; day-to-day process is defined by the Epicure team.

@@ -10,35 +10,35 @@ describe("Help Article Search", () => {
   const mockArticles: HelpArticle[] = [
     {
       title: "Account login security",
-      url: "https://gumroad.com/help/article/292-account-login-security",
+      url: "https://epicurerobotics.com/help/article/292-account-login-security",
     },
     {
       title: "Account settings",
-      url: "https://gumroad.com/help/article/67-the-settings-menu",
+      url: "https://epicurerobotics.com/help/article/67-the-settings-menu",
     },
     {
-      title: "Adding a product",
-      url: "https://gumroad.com/help/article/149-adding-a-product",
+      title: "Adding a device to your site",
+      url: "https://epicurerobotics.com/help/article/149-adding-a-device",
     },
     {
-      title: "Payout methods",
-      url: "https://gumroad.com/help/article/180-payout-methods",
+      title: "Invoice and payout methods",
+      url: "https://epicurerobotics.com/help/article/180-payout-methods",
     },
     {
       title: "Payment processing",
-      url: "https://gumroad.com/help/article/201-payment-processing",
+      url: "https://epicurerobotics.com/help/article/201-payment-processing",
     },
     {
       title: "Getting paid and payouts",
-      url: "https://gumroad.com/help/article/150-getting-paid",
+      url: "https://epicurerobotics.com/help/article/150-getting-paid",
     },
     {
       title: "Account suspension FAQ",
-      url: "https://gumroad.com/help/article/160-suspension",
+      url: "https://epicurerobotics.com/help/article/160-suspension",
     },
     {
-      title: "Accessibility statement for Gumroad",
-      url: "https://gumroad.com/help/article/324-accessibility-statement",
+      title: "Accessibility at Epicure Robotics",
+      url: "https://epicurerobotics.com/help/article/324-accessibility-statement",
     },
   ];
 
@@ -47,14 +47,14 @@ describe("Help Article Search", () => {
       const results = searchArticles(mockArticles, "");
       expect(results).toHaveLength(mockArticles.length);
       // Results should be sorted alphabetically by title
-      expect(results[0]?.title).toBe("Accessibility statement for Gumroad");
+      expect(results[0]?.title).toBe("Accessibility at Epicure Robotics");
     });
 
     it("returns all articles when query is only whitespace", () => {
       const results = searchArticles(mockArticles, "   ");
       expect(results).toHaveLength(mockArticles.length);
       // Results should be sorted alphabetically by title
-      expect(results[0]?.title).toBe("Accessibility statement for Gumroad");
+      expect(results[0]?.title).toBe("Accessibility at Epicure Robotics");
     });
 
     it("returns empty array when no articles match", () => {
@@ -126,7 +126,7 @@ describe("Help Article Search", () => {
     it("considers both title and URL matches", () => {
       const results = searchArticles(mockArticles, "accessibility");
       expect(results.length).toBeGreaterThan(0);
-      expect(results[0]?.title).toBe("Accessibility statement for Gumroad");
+      expect(results[0]?.title).toBe("Accessibility at Epicure Robotics");
     });
   });
 

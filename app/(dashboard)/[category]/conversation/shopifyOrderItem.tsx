@@ -240,11 +240,7 @@ export const ShopifyOrderItem = ({ order, initialExpanded = true }: ShopifyOrder
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-foreground leading-tight">
-                            {item.name
-                              .replace("World's First AI Thought Companion ", "")
-                              .replace(" (Launch Special)", "")
-                              .replace("-", "")
-                              .trim()}
+                            {item.name.replace("-", "").trim()}
                           </div>
                           {item.sku && (
                             <div className="text-muted-foreground/70 text-[10px] mt-0.5 font-mono">SKU: {item.sku}</div>

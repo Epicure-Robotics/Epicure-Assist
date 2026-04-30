@@ -106,11 +106,7 @@ export const ConversationListItemContent = ({ conversation, emailPrefix }: Conve
 
   const issueGroup = issueGroups?.find((g) => g.id === conversation.issueGroupId);
 
-  let highlightedSubject = escape(
-    conversation.subject
-      .replace("World's First AI Thought Companion ", "")
-      .replace(" (Launch Special)", ""),
-  );
+  let highlightedSubject = escape(conversation.subject);
   let bodyText = conversation.matchedMessageText ?? conversation.recentMessageText ?? "";
 
   if (searchTerms.length > 0 && conversation.matchedMessageText) {
@@ -243,7 +239,7 @@ const AssignedToLabel = ({
 
   if (assignedToAI) {
     return (
-      <div className={className} title="Assigned to Helper agent">
+      <div className={className} title="Assigned to AI assistant">
         AI
       </div>
     );

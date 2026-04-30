@@ -3,7 +3,7 @@ import { evalite } from "evalite";
 import { expect, vi } from "vitest";
 import { REQUEST_HUMAN_SUPPORT_DESCRIPTION } from "@/lib/ai/constants";
 import { knowledgeBankPrompt } from "@/lib/ai/prompts";
-import { buildMessagesWithMocks, gumroadPrompt, runAIQuery } from "@/tests/evals/support/chat";
+import { buildMessagesWithMocks, epicureInboxEvalPrompt, runAIQuery } from "@/tests/evals/support/chat";
 
 const REASONING_ENABLED = true;
 
@@ -34,7 +34,7 @@ evalite("Human request clarification", {
           },
         ],
         promptRetrievalData: {
-          knowledgeBank: knowledgeBankPrompt(gumroadPrompt.map((content) => ({ content }))),
+          knowledgeBank: knowledgeBankPrompt(epicureInboxEvalPrompt.map((content) => ({ content }))),
         },
         tools: {
           request_human_support: tool,
@@ -84,7 +84,7 @@ evalite("Request human support after clarifying", {
           },
         ],
         promptRetrievalData: {
-          knowledgeBank: knowledgeBankPrompt(gumroadPrompt.map((content) => ({ content }))),
+          knowledgeBank: knowledgeBankPrompt(epicureInboxEvalPrompt.map((content) => ({ content }))),
         },
         tools: {
           request_human_support: tool,
@@ -112,7 +112,7 @@ evalite("Request human support when the issue is already clear", {
           },
         ],
         promptRetrievalData: {
-          knowledgeBank: knowledgeBankPrompt(gumroadPrompt.map((content) => ({ content }))),
+          knowledgeBank: knowledgeBankPrompt(epicureInboxEvalPrompt.map((content) => ({ content }))),
         },
         tools: {
           request_human_support: tool,

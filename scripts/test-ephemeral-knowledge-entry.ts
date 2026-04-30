@@ -65,7 +65,7 @@ const run = async () => {
 
   // Verify via findUserViaSlack (same check used in handleSlackAgentMessage)
   const user = await findUserViaSlack(token, slackUserId);
-  console.log(`Resolved Helper user: ${user?.email ?? "(not found in Helper)"}`);
+  console.log(`Resolved team user: ${user?.email ?? "(not found)"}`);
 
   if (user?.email !== TARGET_EMAIL) {
     throw new Error(`Email mismatch: expected ${TARGET_EMAIL}, got ${user?.email}`);

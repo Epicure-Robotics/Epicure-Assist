@@ -2,6 +2,28 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { vercel } from "@t3-oss/env-nextjs/presets";
 import { z } from "zod";
 
+/** Dotenv `KEY=` is read as ""; Zod `.optional()` only treats `undefined`. */
+function emptyUnsetOptString() {
+  return z.preprocess(
+    (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().min(1).optional(),
+  );
+}
+
+function emptyUnsetOptEmail() {
+  return z.preprocess(
+    (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().email().optional(),
+  );
+}
+
+function emptyUnsetOptUrl() {
+  return z.preprocess(
+    (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().url().optional(),
+  );
+}
+
 const defaultUnlessDeployed = <V extends z.ZodString | z.ZodOptional<z.ZodString>>(value: V, testingDefault: string) =>
   ["preview", "production"].includes(process.env.VERCEL_ENV ?? "") ? value : value.default(testingDefault);
 
@@ -33,32 +55,37 @@ export const env = createEnv({
   server: {
     // Set this for both local development and when deploying
     OPENAI_API_KEY: isAIMockingEnabled ? z.string().min(1).default("mock-openai-api-key") : z.string().min(1), // API key from https://platform.openai.com for AI models
-    OPENROUTER_API_KEY: isAIMockingEnabled ? z.string().min(1).default("mock-openai-api-key") : z.string().min(1), // API key from https://platform.openai.com for AI models
+    // Optional — not wired in Epicure inbox; use when adding OpenRouter-backed models.
+    OPENROUTER_API_KEY: isAIMockingEnabled
+      ? z.string().min(1).default("mock-openrouter-api-key")
+      : emptyUnsetOptString(),
 
     // Set these before or after deploying for email sending and receiving
-    RESEND_API_KEY: z.string().min(1).optional(),
-    RESEND_FROM_ADDRESS: z.string().min(1).optional(),
-    GOOGLE_CLIENT_ID: z.string().min(1).optional(), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
-    GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
-    GOOGLE_PUBSUB_TOPIC_NAME: z.string().min(1).optional(), // Google PubSub for Gmail sync
-    GOOGLE_PUBSUB_CLAIM_EMAIL: z.string().email().min(1).optional(),
+    RESEND_API_KEY: emptyUnsetOptString(),
+    RESEND_FROM_ADDRESS: emptyUnsetOptString(),
+    GOOGLE_CLIENT_ID: emptyUnsetOptString(), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
+    GOOGLE_CLIENT_SECRET: emptyUnsetOptString(),
+    GOOGLE_PUBSUB_TOPIC_NAME: emptyUnsetOptString(), // Google PubSub for Gmail sync
+    GOOGLE_PUBSUB_CLAIM_EMAIL: emptyUnsetOptEmail(),
 
     // Web Push Notifications (generate keys with: npx web-push generate-vapid-keys)
-    VAPID_PRIVATE_KEY: z.string().min(1).optional(), // Private key for web push (server-side only)
-    VAPID_MAILTO: z.string().min(1).optional(), // Contact email for web push (can be plain email or mailto: URL)
+    VAPID_PRIVATE_KEY: emptyUnsetOptString(), // Private key for web push (server-side only)
+    VAPID_MAILTO: emptyUnsetOptString(), // Contact email for web push (can be plain email or mailto: URL)
 
     // Set these when deploying if you're not using Vercel with the Supabase integration
     AUTH_URL: z.string().url().default(defaultRootUrl), // The root URL of the app; legacy name which was required by next-auth
+    // Supabase PostgreSQL: Dashboard → Database → Connection string. Pooler URL for app/worker; non-pooling for migrations when split.
     POSTGRES_URL: defaultUnlessDeployed(
       z.string().url(),
       `postgresql://postgres:postgres@127.0.0.1:${process.env.LOCAL_SUPABASE_DB_PORT}/postgres`,
     ),
     POSTGRES_URL_NON_POOLING: defaultUnlessDeployed(
       z.string().url(),
-      // Same as POSTGRES_URL unless using Supabase with built-in pooling
+      // Direct / session URI from Supabase (or same as POSTGRES_URL for local CLI)
       `postgresql://postgres:postgres@127.0.0.1:${process.env.LOCAL_SUPABASE_DB_PORT}/postgres`,
     ),
-    DATABASE_URL: z.string().url().optional(),
+    // Optional; drizzle-kit uses DATABASE_URL if set, else POSTGRES_URL (see db/drizzle.config.ts)
+    DATABASE_URL: emptyUnsetOptUrl(),
     // Based on Supabase's default local development secret ("super-secret-jwt-token-with-at-least-32-characters-long")
     SUPABASE_SERVICE_ROLE_KEY: defaultUnlessDeployed(
       z.string().min(1),
@@ -69,33 +96,36 @@ export const env = createEnv({
     // Other optional integrations
 
     // Slack OAuth client credentials from https://api.slack.com/apps
-    SLACK_CLIENT_ID: z.string().min(1).optional(),
-    SLACK_CLIENT_SECRET: z.string().min(1).optional(),
-    SLACK_SIGNING_SECRET: z.string().min(1).optional(),
+    SLACK_CLIENT_ID: emptyUnsetOptString(),
+    SLACK_CLIENT_SECRET: emptyUnsetOptString(),
+    SLACK_SIGNING_SECRET: emptyUnsetOptString(),
     // GitHub app credentials from https://github.com/apps
-    GITHUB_APP_SLUG: z.string().min(1).optional(),
-    GITHUB_APP_ID: z.string().min(1).optional(),
-    GITHUB_CLIENT_SECRET: z.string().min(1).optional(),
-    GITHUB_PRIVATE_KEY: z.string().min(1).optional(),
+    GITHUB_APP_SLUG: emptyUnsetOptString(),
+    GITHUB_APP_ID: emptyUnsetOptString(),
+    GITHUB_CLIENT_SECRET: emptyUnsetOptString(),
+    GITHUB_PRIVATE_KEY: emptyUnsetOptString(),
     // Token from https://jina.ai for the widget to read the current page
-    JINA_API_TOKEN: z.string().min(1).optional(),
+    JINA_API_TOKEN: emptyUnsetOptString(),
     // API key from https://www.firecrawl.dev to import help docs from a website
-    FIRECRAWL_API_KEY: z.string().min(1).optional(),
+    FIRECRAWL_API_KEY: emptyUnsetOptString(),
     // Proxy assets when rendering email content
-    PROXY_URL: z.string().url().optional(),
-    PROXY_SECRET_KEY: z.string().min(1).optional(),
+    PROXY_URL: emptyUnsetOptUrl(),
+    PROXY_SECRET_KEY: emptyUnsetOptString(),
     // Sign in with Apple credentials for integration with the desktop app
-    APPLE_APP_ID: z.string().min(1).optional(),
-    APPLE_TEAM_ID: z.string().min(1).optional(),
-    APPLE_PRIVATE_KEY: z.string().min(1).optional(),
-    APPLE_PRIVATE_KEY_IDENTIFIER: z.string().min(1).optional(),
+    APPLE_APP_ID: emptyUnsetOptString(),
+    APPLE_TEAM_ID: emptyUnsetOptString(),
+    APPLE_PRIVATE_KEY: emptyUnsetOptString(),
+    APPLE_PRIVATE_KEY_IDENTIFIER: emptyUnsetOptString(),
     // Shopify integration for displaying customer orders
-    SHOPIFY_SHOP_DOMAIN: z.string().min(1).optional(), // Your Shopify store domain (e.g., yourstore.myshopify.com)
-    SHOPIFY_ADMIN_ACCESS_TOKEN: z.string().min(1).optional(), // Admin API access token from custom app
-    SHOPIFY_API_VERSION: z.string().min(1).optional().default("2025-01"), // Shopify API version
-    REVENUECAT_API_KEY: z.string().min(1).optional(), // API key from https://revenuecat.com for subscription checking
+    SHOPIFY_SHOP_DOMAIN: emptyUnsetOptString(), // Your Shopify store domain (e.g., yourstore.myshopify.com)
+    SHOPIFY_ADMIN_ACCESS_TOKEN: emptyUnsetOptString(), // Admin API access token from custom app
+    SHOPIFY_API_VERSION: z.preprocess(
+      (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.string().min(1).optional().default("2025-01"),
+    ), // Shopify API version
+    REVENUECAT_API_KEY: emptyUnsetOptString(), // API key from https://revenuecat.com for subscription checking
     // Cal.com API integration for webhook handling
-    CAL_API_KEY: z.string().min(1).optional(), // API key from https://cal.com for webhook integration
+    CAL_API_KEY: emptyUnsetOptString(), // API key from https://cal.com for webhook integration
 
     // Optional configuration
 
@@ -123,6 +153,17 @@ export const env = createEnv({
       .string()
       .default("epicure-seed@example.com")
       .transform((v) => v.split(",").map((s) => s.trim()).filter(Boolean)),
+
+    /**
+     * Epicure: which deployment tier this instance is (for logging, docs, future guards).
+     * Use a separate Supabase project per tier in production—one `POSTGRES_URL` cannot serve both dev and prod safely.
+     */
+    EPICURE_DEPLOYMENT: z.enum(["local", "preview", "production"]).default("local"),
+    /**
+     * Expected primary support Gmail for website form notifications in this environment.
+     * Should match the inbox you connect via OAuth (e.g. prod: connect@epicurerobotics.com, dev: your test Gmail).
+     */
+    EPICURE_PRIMARY_SUPPORT_EMAIL: emptyUnsetOptEmail(),
   },
 
   /**
@@ -140,10 +181,13 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: z.string().optional(), // Sentry DSN for error tracking
 
     // Helper host URL configuration - overrides automatic detection in e2e tests
-    NEXT_PUBLIC_DEV_HOST: z.string().url().optional().default("https://helperai.dev"),
+    NEXT_PUBLIC_DEV_HOST: z.preprocess(
+      (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.string().url().optional().default("https://helperai.dev"),
+    ),
 
     // Web Push Notifications - public VAPID key needs to be exposed to client for push subscriptions
-    NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().min(1).optional(),
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: emptyUnsetOptString(),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.

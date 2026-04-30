@@ -612,7 +612,7 @@ const getActiveMailbox = async () => {
   });
 
   if (!mailbox) {
-    throw new Error("No active Helper mailbox found.");
+    throw new Error("No active mailbox found.");
   }
 
   return mailbox;
@@ -656,7 +656,7 @@ export const resolveActingUserSelection = async (selectors: ActingUserSelectors 
   if (userId) {
     const user = await getFullProfileById(userId);
     if (!user) {
-      throw new Error(`No Helper user matched HELPER_MCP_USER_ID=${userId}.`);
+      throw new Error(`No user matched HELPER_MCP_USER_ID=${userId}.`);
     }
     return user;
   }
@@ -664,24 +664,24 @@ export const resolveActingUserSelection = async (selectors: ActingUserSelectors 
   if (userEmail) {
     const user = await getFullProfileByEmail(userEmail);
     if (!user) {
-      throw new Error(`No Helper user matched HELPER_MCP_USER_EMAIL=${userEmail}.`);
+      throw new Error(`No user matched HELPER_MCP_USER_EMAIL=${userEmail}.`);
     }
     return user;
   }
 
   const members = await getUsersWithMailboxAccess();
   if (members.length === 0) {
-    throw new Error("No active Helper team members were found. Create a user or set HELPER_MCP_USER_EMAIL.");
+    throw new Error("No active team members were found. Create a user or set HELPER_MCP_USER_EMAIL.");
   }
 
   if (members.length === 1) {
     const [member] = members;
     if (!member) {
-      throw new Error("The only active Helper user could not be determined.");
+      throw new Error("The only active user could not be determined.");
     }
     const user = await getFullProfileById(member.id);
     if (!user) {
-      throw new Error(`The only active Helper user (${member.id}) could not be loaded.`);
+      throw new Error(`The only active user (${member.id}) could not be loaded.`);
     }
     return user;
   }
@@ -690,17 +690,17 @@ export const resolveActingUserSelection = async (selectors: ActingUserSelectors 
   if (admins.length === 1) {
     const [admin] = admins;
     if (!admin) {
-      throw new Error("The only admin Helper user could not be determined.");
+      throw new Error("The only admin user could not be determined.");
     }
     const user = await getFullProfileById(admin.id);
     if (!user) {
-      throw new Error(`The only admin Helper user (${admin.id}) could not be loaded.`);
+      throw new Error(`The only admin user (${admin.id}) could not be loaded.`);
     }
     return user;
   }
 
   throw new Error(
-    "Helper MCP could not choose an acting user automatically. Set HELPER_MCP_USER_EMAIL or HELPER_MCP_USER_ID.",
+    "Epicure Inbox MCP could not choose an acting user automatically. Set HELPER_MCP_USER_EMAIL or HELPER_MCP_USER_ID.",
   );
 };
 
@@ -942,7 +942,7 @@ export class HelperMcpService {
           {
             set: { assignedToId: this.user.id, assignedToAI: false },
             byUserId: this.user.id,
-            message: "Auto-assigned by Helper MCP reply",
+            message: "Auto-assigned by MCP reply",
           },
           tx,
         );
@@ -954,7 +954,7 @@ export class HelperMcpService {
           {
             set: { assignedToAI: false },
             byUserId: this.user.id,
-            message: "AI response disabled after Helper MCP reply",
+            message: "AI response disabled after MCP reply",
           },
           tx,
         );
@@ -1113,7 +1113,7 @@ export class HelperMcpService {
     for (const email of assigneeEmails) {
       const match = lookup.get(email.toLowerCase());
       if (!match) {
-        throw new Error(`No Helper team member matched assignee email ${email}.`);
+        throw new Error(`No team member matched assignee email ${email}.`);
       }
       resolvedIds.push(match);
     }
@@ -1143,7 +1143,7 @@ export class HelperMcpService {
     if (input.assignedToId) {
       const exists = teamMembers.some((member) => member.id === input.assignedToId);
       if (!exists) {
-        throw new Error(`No Helper team member matched assigned_to_id ${input.assignedToId}.`);
+        throw new Error(`No team member matched assigned_to_id ${input.assignedToId}.`);
       }
       return input.assignedToId;
     }
@@ -1151,7 +1151,7 @@ export class HelperMcpService {
     if (input.assignedToEmail) {
       const match = teamMembers.find((member) => member.email?.toLowerCase() === input.assignedToEmail?.toLowerCase());
       if (!match) {
-        throw new Error(`No Helper team member matched assigned_to_email ${input.assignedToEmail}.`);
+        throw new Error(`No team member matched assigned_to_email ${input.assignedToEmail}.`);
       }
       return match.id;
     }

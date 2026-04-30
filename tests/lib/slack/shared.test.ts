@@ -94,7 +94,7 @@ describe("handleSlackAction", () => {
     expect(updatedConversation?.status).toBe("closed");
   });
 
-  it("posts an ephemeral message when the Helper user is not found", async () => {
+  it("posts an ephemeral message when the Slack user is not linked to a team member", async () => {
     await userFactory.createRootUser({
       mailboxOverrides: { slackBotToken: "xoxb-12345678901234567890" },
     });
@@ -120,7 +120,7 @@ describe("handleSlackAction", () => {
       expect.objectContaining({
         ephemeralUserId: "U12345",
         channel: "C12345",
-        text: expect.stringContaining("Helper user not found"),
+        text: expect.stringContaining("Team member not found"),
       }),
     );
   });

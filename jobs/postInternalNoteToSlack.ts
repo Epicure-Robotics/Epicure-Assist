@@ -88,7 +88,7 @@ export const postInternalNoteToSlack = async (payload: PostInternalNoteToSlackPa
     const conversationSubject = conversation.subject || "Untitled Conversation";
     const customerEmail = conversation.emailFrom || "Unknown";
 
-    // Generate public link for users without Helper access
+    // Public link for teammates without dashboard access
     const publicToken = generatePublicConversationToken(conversation.id);
     const publicLink = `${env.AUTH_URL}/api/public/conversation/${publicToken}`;
 

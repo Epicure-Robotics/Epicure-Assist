@@ -4,7 +4,7 @@ This file provides guidance to agents when working with code in this repository.
 
 ## Project Overview
 
-Helper is an in-app customer support platform with live chat powered by AI. Built with Next.js 15 (App Router), it provides a comprehensive customer support system with email integration (Gmail), Slack notifications, AI-powered responses, and a customizable chat widget.
+Epicure Inbox is an AI-assisted team inbox for Epicure Robotics: email (Gmail), Slack, and a customizable chat widget, built on Next.js 15 (App Router) with real-time updates and background jobs.
 
 ## Development Commands
 
@@ -45,7 +45,7 @@ The URL ends with `p<ts>` — insert a `.` after the 10th digit (e.g. `p17000000
 ### Tech Stack
 
 - **Framework**: Next.js 15 (App Router, React Server Components, Server Actions)
-- **Database**: PostgreSQL via Supabase with Drizzle ORM
+- **Database**: Supabase (managed PostgreSQL) with Drizzle ORM — plan on one Supabase project per environment
 - **API Layer**: tRPC for type-safe APIs + Next.js Route Handlers for webhooks
 - **Styling**: Tailwind CSS 4 with Radix UI components
 - **AI**: OpenAI & Fireworks AI (via Vercel AI SDK)
@@ -186,11 +186,12 @@ Customer-facing chat widget:
 
 ### Environment Variables
 
-Required for local development (see `.env.local.sample`):
+Required for local development (see [`.env.example`](.env.example); copy to `.env.local`). **Plan on Supabase only:** each environment is one Supabase project (PostgreSQL + Auth API).
 
 - `OPENAI_API_KEY` - OpenAI API key (required)
-- `DATABASE_URL` - PostgreSQL connection (auto-set by Supabase)
-- `NEXT_PUBLIC_SUPABASE_*` - Supabase config (auto-set)
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` - Supabase Dashboard → API
+- `POSTGRES_URL`, `POSTGRES_URL_NON_POOLING` - Supabase Dashboard → Database (pooler + direct/session strings)
+- `AUTH_URL` - Public URL of this app (matches Supabase Auth redirect configuration)
 
 Optional integrations (can use placeholders initially):
 
@@ -215,7 +216,7 @@ Use `pnpm with-dev-env <command>` to run commands with dev environment variables
 
 ### Local SSL Setup
 
-The app uses local SSL certificates for `helperai.dev`:
+The app uses local SSL certificates for `helperai.dev` by default (upstream local hostname; set `AUTH_URL` / `NEXT_PUBLIC_DEV_HOST` for your deployment).
 
 - Auto-generated on first `pnpm dev`
 - Uses mkcert (must be installed, see README)

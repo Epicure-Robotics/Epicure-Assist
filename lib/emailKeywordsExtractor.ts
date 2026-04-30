@@ -13,11 +13,11 @@ const examples: [email: string, keywords: string][] = [
   ],
   ["Email: Refund\n\nI need to get refund for this transaction, it was by mistake.", "refund transaction"],
   [
-    "Email: Services not visible on Gumroad discover\n\nHello, I have added services and they are published. I cannot see my services in the marketplace. Thank you. Kind regards, Charlie",
-    "Gumroad discover visibility",
+    "Email: Parts not showing on dealer portal\n\nHello, I published new spare parts but they do not appear for our territory. Can you check permissions? Thanks, Charlie",
+    "dealer portal parts",
   ],
   [
-    "Email: RE: O365 Ebook\nAn additional $0.50 (fifty cents) charge? That wasn't from us - it must be a charge from your credit card provider for some reason. Perhaps the Gumroad support people can throw some light onto the topic. They're copied on this note and can track transactions (we can't). Cheers, David",
+    "Email: RE: Invoice INV-2041\nAn additional $0.50 showed on the card statement—that was not on our quote. Could support confirm if that is a processor fee? Regards, David",
     "additional charge",
   ],
   [
@@ -25,8 +25,8 @@ const examples: [email: string, keywords: string][] = [
     "tender offer blank",
   ],
   [
-    "Email: Re: Regarding your Gumroad account\n\nHi I'm replying to the suspension on the account. What's the reason? Regards Nathan\n-- Original message --\nHi, We apologize for the inconvenience, but we noticed certain behaviors in your account that indicate possible violations of our Terms of Service.",
-    "Gumroad suspension",
+    "Email: Re: Regarding your Epicure account\n\nHi I'm replying to the hold on our account. What's the reason? Regards Nathan\n-- Original message --\nHi, We apologize for the inconvenience, but we noticed certain behaviors that indicate possible violations of our Terms of Service.",
+    "Epicure account hold",
   ],
 ];
 

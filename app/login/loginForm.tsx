@@ -115,7 +115,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
       <div className="flex flex-col items-center gap-3">
         <Image
           src={theme === "dark" || systemTheme === "dark" ? "/logo-white.svg" : "/logo.svg"}
-          alt="Helper"
+          alt="Epicure Robotics"
           width="110"
           height="32"
           className="w-28"

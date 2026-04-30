@@ -5,8 +5,8 @@ import Script from "next/script";
 import { ThemeProvider } from "@/components/themeProvider";
 
 export const metadata: Metadata = {
-  title: "Helper",
-  description: "AI powered assistant",
+  title: "Epicure Inbox",
+  description: "Lead inbox and AI drafts for Epicure Robotics",
   manifest: "/app.webmanifest",
   icons: [
     {

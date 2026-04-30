@@ -36,7 +36,7 @@ This Code of Conduct applies in all community spaces and when representing the c
 
 ## Enforcement
 
-Instances of unacceptable behavior should be reported to the community leaders at hi@gumroad.com. All reports will be handled promptly, fairly, and with respect to privacy.
+Instances of unacceptable behavior should be reported to the maintainers at connect@epicurerobotics.com. All reports will be handled promptly, fairly, and with respect to privacy.
 
 Community leaders will follow these Community Impact Guidelines in determining
 the consequences for any action they deem in violation of this Code of Conduct:

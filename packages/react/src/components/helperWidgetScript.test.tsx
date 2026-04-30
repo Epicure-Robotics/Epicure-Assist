@@ -15,15 +15,15 @@ describe("HelperWidgetScript", () => {
   });
 
   it("injects Helper script", () => {
-    render(<HelperWidgetScript host="https://helper.ai" {...createTestConfig()} />);
+    render(<HelperWidgetScript host="https://epicurerobotics.com" {...createTestConfig()} />);
 
-    const script = document.querySelector('script[src="https://helper.ai/widget/sdk.js"]');
+    const script = document.querySelector('script[src="https://epicurerobotics.com/widget/sdk.js"]');
     expect(script).toBeInTheDocument();
   });
 
   it("initializes Helper widget with correct config", () => {
     const config = createTestConfig();
-    render(<HelperWidgetScript host="https://helper.ai" {...config} />);
+    render(<HelperWidgetScript host="https://epicurerobotics.com" {...config} />);
 
     const script = document.querySelector("script");
     act(() => {
@@ -35,13 +35,13 @@ describe("HelperWidgetScript", () => {
   });
 
   it("cleans up script on unmount", () => {
-    const { unmount } = render(<HelperWidgetScript host="https://helper.ai" {...createTestConfig()} />);
+    const { unmount } = render(<HelperWidgetScript host="https://epicurerobotics.com" {...createTestConfig()} />);
 
-    const script = document.querySelector('script[src="https://helper.ai/widget/sdk.js"]');
+    const script = document.querySelector('script[src="https://epicurerobotics.com/widget/sdk.js"]');
     expect(script).toBeInTheDocument();
 
     unmount();
 
-    expect(document.querySelector('script[src="https://helper.ai/widget/sdk.js"]')).not.toBeInTheDocument();
+    expect(document.querySelector('script[src="https://epicurerobotics.com/widget/sdk.js"]')).not.toBeInTheDocument();
   });
 });

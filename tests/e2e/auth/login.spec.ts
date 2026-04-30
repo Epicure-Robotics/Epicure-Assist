@@ -5,7 +5,7 @@ import { takeDebugScreenshot } from "../utils/test-helpers";
 test.describe("Working Authentication", () => {
   test("should display login form", async ({ page }) => {
     await page.goto("/login");
-    await expect(page).toHaveTitle(/Helper/);
+    await expect(page).toHaveTitle(/Epicure Inbox/);
 
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -15,7 +15,7 @@ test.describe("Working Authentication", () => {
 
   test("should login successfully and redirect to dashboard", async ({ page }) => {
     await page.goto("/login");
-    await expect(page).toHaveTitle(/Helper/);
+    await expect(page).toHaveTitle(/Epicure Inbox/);
 
     await page.fill("#email", SEED_ADMIN_EMAIL);
     await page.click('button[type="submit"]');
@@ -32,7 +32,7 @@ test.describe("Working Authentication", () => {
 
   test("should handle different email addresses", async ({ page }) => {
     await page.goto("/login");
-    await expect(page).toHaveTitle(/Helper/);
+    await expect(page).toHaveTitle(/Epicure Inbox/);
 
     await page.fill("#email", "different@example.com");
     await page.click('button[type="submit"]');
@@ -45,7 +45,7 @@ test.describe("Working Authentication", () => {
 
   test("should handle empty email submission", async ({ page }) => {
     await page.goto("/login");
-    await expect(page).toHaveTitle(/Helper/);
+    await expect(page).toHaveTitle(/Epicure Inbox/);
 
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeDisabled();
@@ -55,7 +55,7 @@ test.describe("Working Authentication", () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     await page.goto("/login");
-    await expect(page).toHaveTitle(/Helper/);
+    await expect(page).toHaveTitle(/Epicure Inbox/);
 
     await expect(page.locator("#email")).toBeVisible();
     await expect(page.locator('button[type="submit"]')).toBeVisible();
@@ -79,7 +79,7 @@ test.describe("Working Authentication", () => {
 
   test("should support dark mode", async ({ page }) => {
     await page.goto("/login");
-    await expect(page).toHaveTitle(/Helper/);
+    await expect(page).toHaveTitle(/Epicure Inbox/);
 
     await page.evaluate(() => {
       document.documentElement.classList.add("dark");

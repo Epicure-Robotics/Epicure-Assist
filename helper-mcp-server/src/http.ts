@@ -254,9 +254,9 @@ export const startHelperMcpHttpServer = async () => {
     });
   });
 
-  console.error(`Helper MCP HTTP server listening on http://${DEFAULT_HOST}:${DEFAULT_PORT}${MCP_PATH}`);
+  console.error(`Epicure Inbox MCP HTTP server listening on http://${DEFAULT_HOST}:${DEFAULT_PORT}${MCP_PATH}`);
   if (helperMcpEnv.HELPER_MCP_BEARER_TOKEN) {
-    console.error("Helper MCP HTTP server requires Authorization: Bearer <HELPER_MCP_BEARER_TOKEN>");
+    console.error("Epicure Inbox MCP HTTP server requires Authorization: Bearer <HELPER_MCP_BEARER_TOKEN>");
   }
 };
 

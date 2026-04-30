@@ -18,21 +18,23 @@ if (!TEAM_ID) {
   process.exit(1);
 }
 
-async function getAllHelperProjects() {
+const GIT_ORG = process.env.VERCEL_GIT_ORG ?? "epicurerobotics";
+const GIT_REPO = process.env.VERCEL_GIT_REPO ?? "helper-epicure";
+
+async function getAllEpicureProjects() {
   try {
     console.log("Fetching all projects...");
     const response = await vercel.projects.getProjects({
       teamId: TEAM_ID,
       limit: "100",
-      search: "helper-",
+      search: "epicure-",
     });
 
-    // Only deploy projects without a Git repo linked
-    const helperInstances = response.projects.filter((project) => project.name.startsWith("helper-") && !project.link);
+    const instances = response.projects.filter((project) => project.name.startsWith("epicure-") && !project.link);
 
-    console.log(`Found ${helperInstances.length} projects with "helper-" prefix.`);
+    console.log(`Found ${instances.length} projects with "epicure-" prefix.`);
 
-    return helperInstances;
+    return instances;
   } catch (error) {
     console.error("Error fetching projects:", error instanceof Error ? error.message : String(error));
     return [];
@@ -48,9 +50,9 @@ async function deployProject(projectName: string, projectId: string) {
         target: "production",
         gitSource: {
           type: "github",
-          repo: "helper",
+          repo: GIT_REPO,
           ref: "main",
-          org: "antiwork",
+          org: GIT_ORG,
         },
       },
     });
@@ -73,19 +75,19 @@ async function deployProject(projectName: string, projectId: string) {
   }
 }
 
-async function deployAllHelperProjects() {
-  console.log("🚀 Starting deployment of Helper projects...\n");
+async function deployAllEpicureProjects() {
+  console.log("🚀 Starting deployment of Epicure Vercel projects...\n");
 
-  const helperProjects = await getAllHelperProjects();
+  const projects = await getAllEpicureProjects();
 
-  if (helperProjects.length === 0) {
-    console.log("No projects with 'helper-' prefix found. Exiting.");
+  if (projects.length === 0) {
+    console.log("No projects with 'epicure-' prefix found. Exiting.");
     return;
   }
 
   console.log("\n📦 Starting deployments...");
 
-  const results = await Promise.all(helperProjects.map((project) => deployProject(project.name, project.id)));
+  const results = await Promise.all(projects.map((project) => deployProject(project.name, project.id)));
 
   console.log("\n📊 Deployment Summary:");
   console.log("======================");
@@ -112,4 +114,4 @@ async function deployAllHelperProjects() {
   }
 }
 
-deployAllHelperProjects();
+deployAllEpicureProjects();

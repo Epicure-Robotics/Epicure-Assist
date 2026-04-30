@@ -200,7 +200,7 @@
   animation: slide-bounce-in 0.5s ease-out forwards;
 }
 
-.helper-widget-toggle-button.gumroad-theme {
+.helper-widget-toggle-button.epicure-site-widget-theme {
   background-color: #f4f4ef;
   color: #000000;
   box-shadow: 4px 2px 0 0 #000000;
@@ -217,7 +217,7 @@
   color: #ffffff;
 }
 
-.helper-widget-toggle-button.gumroad-theme:hover {
+.helper-widget-toggle-button.epicure-site-widget-theme:hover {
   background-color: #ff7ad9;
   color: #000;
   box-shadow: 3px 3px 0 0 #000000;
@@ -465,16 +465,16 @@
   color: #4b5563;
 }
 
-.notification-bubble.gumroad-theme {
+.notification-bubble.epicure-site-widget-theme {
   background-color: #f4f4ef;
   box-shadow: 4px 2px 0 0 #000000;
 }
 
-.notification-bubble.gumroad-theme .close-button {
+.notification-bubble.epicure-site-widget-theme .close-button {
   color: #000000;
 }
 
-.notification-bubble.gumroad-theme .close-button:hover {
+.notification-bubble.epicure-site-widget-theme .close-button:hover {
   color: #4b5563;
 }
 

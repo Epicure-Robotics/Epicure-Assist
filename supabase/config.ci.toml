@@ -1,9 +1,9 @@
 # Supabase config optimized for CI: disable nonessential services
-project_id = "env(SUPABASE_PROJECT_ID)"
+project_id = "helper"
 
 [api]
 enabled = true
-port = "env(LOCAL_SUPABASE_API_PORT)"
+port = 54321
 schemas = ["public"]
 extra_search_path = ["public", "extensions"]
 
@@ -11,12 +11,13 @@ extra_search_path = ["public", "extensions"]
 enabled = false
 
 [db]
-port = "env(LOCAL_SUPABASE_DB_PORT)"
-shadow_port = "env(LOCAL_SUPABASE_DB_SHADOW_PORT)"
+port = 54322
+shadow_port = 54320
 major_version = 15
 
 [db.pooler]
 enabled = false
+port = 54329
 
 [db.seed]
 enabled = false

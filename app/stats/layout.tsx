@@ -8,7 +8,7 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
 
 export const metadata: Metadata = {
-  title: "Helper Stats",
+  title: "Epicure Inbox Stats",
   description: "Ticket count dashboard",
 };
 

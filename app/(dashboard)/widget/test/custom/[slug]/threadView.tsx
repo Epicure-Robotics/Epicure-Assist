@@ -92,7 +92,7 @@ export const ThreadView = ({ conversation }: { conversation: ConversationDetails
           {conversation.messages?.map((message) => (
             <div key={message.id} className="p-4 border-b">
               <div className="text-sm text-muted-foreground">
-                {message.role === "user" ? "You" : (message.staffName ?? "Helper")}
+                {message.role === "user" ? "You" : (message.staffName ?? "Team")}
               </div>
               <MessageContent className="prose" message={message} />
               <AttachmentDisplay attachments={[...message.publicAttachments, ...message.privateAttachments]} />

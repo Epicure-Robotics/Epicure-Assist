@@ -139,7 +139,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   };
 
   const plainJSPrompt = `
-Integrate the helper.ai widget into my app.
+Integrate the Epicure Inbox chat widget into my app.
 
 First, add the following code snippet in my HTML layout before the closing </body> tag:
 
@@ -191,7 +191,7 @@ Make sure to inject the placeholder values based on what was generated on the se
   `.trim();
 
   const reactPrompt = `
-Integrate the Helper widget into my React/Next.js app.
+Integrate the Epicure Inbox widget into my React/Next.js app.
 
 First, install the React package (use yarn, pnpm, etc instead if the current project uses it):
 
@@ -333,7 +333,7 @@ ${NODE_HMAC_SAMPLE_CODE}
                     code={`
 <script>
   window.helperWidgetConfig = {
-    title: "My Helper Widget",
+    title: "My Epicure Inbox widget",
   }
 </script>
 <!-- The script you added earlier -->
@@ -411,7 +411,7 @@ ${WIDGET_SAMPLE_CODE}
                       language="html"
                     />
                     <p className="text-sm">
-                      Optionally, you can add metadata to give Helper more context about the customer:
+                      Optionally, you can add metadata to give Epicure Inbox more context about the customer:
                     </p>
                     <CodeBlock
                       code={`
@@ -422,7 +422,7 @@ ${WIDGET_SAMPLE_CODE}
       name: 'John Doe', // Optional: Customer name
       value: 1000, // Optional: Value of the customer for sorting tickets and VIP support
       links: {
-        'Profile': 'https://example.com/profile' // Optional: Links to show in Helper alongside conversations from this customer
+        'Profile': 'https://example.com/profile' // Optional: Links to show alongside conversations from this customer
       }
     }
   }
@@ -493,7 +493,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     code={`
 <HelperProvider
   host="${getBaseUrl()}"
-  title="My Helper Widget"
+  title="My Epicure Inbox widget"
   iconColor="#ff0000"
 >
   {children}
@@ -560,7 +560,7 @@ export function SupportButton() {
                 <AccordionContent>
                   <div className="space-y-4">
                     <p className="text-sm">
-                      First, add your Helper authentication credentials to your environment variables. For local
+                      First, add your widget authentication credentials to your environment variables. For local
                       development, add these to your environment file, and for production add them to your deployment
                       environment:
                     </p>

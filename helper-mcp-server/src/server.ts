@@ -22,7 +22,7 @@ const RESPONSE_FORMAT = z
   .default("markdown")
   .describe("Use markdown for human-readable text or json for machine-readable output.");
 
-const TICKET_STATUS = z.enum(HELPER_TICKET_STATUSES).describe("Helper ticket status.");
+const TICKET_STATUS = z.enum(HELPER_TICKET_STATUSES).describe("Conversation status.");
 const TICKET_LIST_VIEW = z
   .enum(HELPER_TICKET_LIST_VIEWS)
   .describe(
@@ -73,9 +73,9 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
   server.registerTool(
     "helper_get_current_user",
     {
-      title: "Get Current Helper User",
+      title: "Get Current User",
       description:
-        "Show which Helper team member this MCP server is acting as, along with the active mailbox. Use this first if a client needs to confirm permissions or the selected identity.",
+        "Show which team member this MCP server is acting as, along with the active mailbox. Use this first to confirm permissions or identity.",
       inputSchema: {
         response_format: RESPONSE_FORMAT,
       },
@@ -92,9 +92,9 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
   server.registerTool(
     "helper_list_team_members",
     {
-      title: "List Helper Team Members",
+      title: "List Team Members",
       description:
-        "List Helper team members who can be assigned to tickets. Returns IDs, emails, roles, permissions, and each member's open ticket count.",
+        "List team members who can be assigned. Returns IDs, emails, roles, permissions, and each member's open conversation count.",
       inputSchema: {
         response_format: RESPONSE_FORMAT,
       },
@@ -111,9 +111,9 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
   server.registerTool(
     "helper_list_tickets",
     {
-      title: "List Helper Tickets",
+      title: "List Conversations",
       description:
-        "List Helper tickets with pagination and common filters such as status, assignee, inbox category, customer email, unread state, and search text. By default this returns active tickets sorted newest-first. Use view for first-class triage filters before opening a ticket thread.",
+        "List conversations with pagination and filters (status, assignee, category, customer email, unread, search). By default returns active items, newest first.",
       inputSchema: {
         limit: z.number().int().min(1).max(100).default(25).describe("Maximum number of tickets to return."),
         cursor: z.string().nullish().describe("Pagination cursor from a previous helper_list_tickets call."),
@@ -124,8 +124,8 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
           .describe("Legacy dashboard category filter. Prefer view for common MCP triage use cases."),
         search: z.string().optional().describe("Search subject, customer email, or indexed message content."),
         statuses: z.array(TICKET_STATUS).optional().describe("Ticket status filters."),
-        assignee_ids: z.array(z.string().uuid()).optional().describe("Filter by Helper team member IDs."),
-        assignee_emails: z.array(z.string().email()).optional().describe("Filter by Helper team member emails."),
+        assignee_ids: z.array(z.string().uuid()).optional().describe("Filter by team member IDs."),
+        assignee_emails: z.array(z.string().email()).optional().describe("Filter by team member emails."),
         is_assigned: z.boolean().optional().describe("Filter assigned or unassigned tickets."),
         customer_emails: z.array(z.string().email()).optional().describe("Filter by customer email."),
         has_unread_messages: z.boolean().optional().describe("Only return tickets with unread customer replies."),
@@ -192,11 +192,11 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
   server.registerTool(
     "helper_get_ticket",
     {
-      title: "Get Helper Ticket",
+      title: "Get Conversation",
       description:
-        "Fetch a single Helper ticket by slug, including message/note/event history. Use this before replying or changing status so the agent sees the full context.",
+        "Fetch a single conversation by slug, including message/note/event history. Use before replying or changing status.",
       inputSchema: {
-        ticket_slug: z.string().min(1).describe("Helper ticket slug."),
+        ticket_slug: z.string().min(1).describe("Conversation slug."),
         include_timeline: z
           .boolean()
           .default(true)
@@ -233,11 +233,11 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
   server.registerTool(
     "helper_reply_to_ticket",
     {
-      title: "Reply To Helper Ticket",
+      title: "Reply To Conversation",
       description:
-        "Queue a staff reply on an existing Helper ticket. By default this keeps the ticket open; set should_close=true if the reply should also close the ticket.",
+        "Queue a staff reply on an existing conversation. By default keeps it open; set should_close=true to close after send.",
       inputSchema: {
-        ticket_slug: z.string().min(1).describe("Helper ticket slug."),
+        ticket_slug: z.string().min(1).describe("Conversation slug."),
         message: z.string().min(1).describe("Reply body."),
         to: z.array(z.string().email()).optional().describe("Optional explicit To recipients."),
         cc: z.array(z.string().email()).default([]).describe("Optional CC recipients."),
@@ -294,11 +294,11 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
   server.registerTool(
     "helper_set_ticket_status",
     {
-      title: "Set Helper Ticket Status",
+      title: "Set Conversation Status",
       description:
-        "Update a Helper ticket status. Use this for explicit state changes such as open, waiting_on_customer, closed, spam, check_back_later, or ignored.",
+        "Update conversation status: open, waiting_on_customer, closed, spam, check_back_later, or ignored.",
       inputSchema: {
-        ticket_slug: z.string().min(1).describe("Helper ticket slug."),
+        ticket_slug: z.string().min(1).describe("Conversation slug."),
         status: TICKET_STATUS,
         reason: z.string().optional().describe("Optional audit reason recorded on the ticket event."),
         response_format: RESPONSE_FORMAT,
@@ -326,13 +326,13 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
   server.registerTool(
     "helper_assign_ticket",
     {
-      title: "Assign Helper Ticket",
+      title: "Assign Conversation",
       description:
-        "Assign or unassign a Helper ticket, or toggle AI auto-response. Provide either assigned_to_id, assigned_to_email, or unassign=true. You can also set assigned_to_ai independently.",
+        "Assign or unassign a conversation, or toggle AI auto-response. Use assigned_to_id, assigned_to_email, or unassign=true.",
       inputSchema: {
-        ticket_slug: z.string().min(1).describe("Helper ticket slug."),
-        assigned_to_id: z.string().uuid().optional().describe("Helper team member ID to assign."),
-        assigned_to_email: z.string().email().optional().describe("Helper team member email to assign."),
+        ticket_slug: z.string().min(1).describe("Conversation slug."),
+        assigned_to_id: z.string().uuid().optional().describe("Team member ID to assign."),
+        assigned_to_email: z.string().email().optional().describe("Team member email to assign."),
         unassign: z.boolean().default(false).describe("Set true to clear the human assignee."),
         assigned_to_ai: z.boolean().optional().describe("Enable or disable AI auto-response for this ticket."),
         reason: z.string().optional().describe("Optional audit reason recorded on the ticket event."),
@@ -364,11 +364,11 @@ const registerTools = (server: McpServer, service: HelperMcpService) => {
   server.registerTool(
     "helper_add_internal_note",
     {
-      title: "Add Helper Internal Note",
+      title: "Add Internal Note",
       description:
-        "Add an internal note to a Helper ticket. Notes stay internal to the support team and can optionally be posted to a Slack channel if Helper is configured to do that.",
+        "Add an internal note to a conversation. Notes are team-only; Slack cross-post is used when configured.",
       inputSchema: {
-        ticket_slug: z.string().min(1).describe("Helper ticket slug."),
+        ticket_slug: z.string().min(1).describe("Conversation slug."),
         note: z.string().min(1).describe("Internal note body."),
         slack_channel_id: z.string().optional().describe("Optional Slack channel ID for note posting."),
         response_format: RESPONSE_FORMAT,

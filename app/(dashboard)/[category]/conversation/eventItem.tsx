@@ -67,8 +67,8 @@ export const EventItem = ({ event, initialExpanded = false }: { event: Conversat
     eventDescriptions[event.eventType],
     event.changes.status ? statusVerbs[event.changes.status] : null,
     getAssignmentDescription(),
-    event.changes.assignedToAI ? "assigned to Helper agent" : null,
-    event.changes.assignedToAI === false ? "unassigned Helper agent" : null,
+    event.changes.assignedToAI ? "assigned to AI assistant" : null,
+    event.changes.assignedToAI === false ? "AI assistant unassigned" : null,
   ]
     .filter(Boolean)
     .join(" and ");

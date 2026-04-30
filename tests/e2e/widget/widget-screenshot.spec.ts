@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 import { loadWidget } from "../utils/test-helpers";
 import { widgetConfigs } from "./fixtures/widget-config";
 
-test.describe("Helper Chat Widget - Screenshot Functionality", () => {
+test.describe("Epicure chat widget - screenshot functionality", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/widget/test/vanilla");
   });

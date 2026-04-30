@@ -279,9 +279,7 @@ const ConversationHeader = ({
           className="truncate text-base font-semibold text-foreground text-center max-w-full"
           data-testid="conversation-subject"
         >
-          {subject
-            ?.replace("World's First AI Thought Companion ", "")
-            .replace(" (Launch Special)", "") ?? "(no subject)"}
+          {subject ?? "(no subject)"}
         </div>
       </div>
       <div className="flex items-center gap-2 min-w-0 flex-shrink-0 z-10 lg:w-44 justify-end">

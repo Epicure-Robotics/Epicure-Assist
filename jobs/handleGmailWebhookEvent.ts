@@ -29,6 +29,7 @@ import { getBasicProfileByEmail } from "@/lib/data/user";
 import { upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { extractAddresses, parseEmailAddress } from "@/lib/emails";
 import { env } from "@/lib/env";
+import { isFormLeadMessage } from "@/lib/leads/formLeadDetection";
 import { parseFormLeadHtml } from "@/lib/leads/parseFormBody";
 import { getPrimaryMailboxFromRelation } from "@/lib/tenant";
 import { getGmailService, getMessageById, getMessagesFromHistoryId } from "@/lib/gmail/client";
@@ -233,9 +234,11 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       );
       const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
 
-      const isFormLead =
-        Boolean(parsedEmail.subject?.includes("New Lead")) &&
-        parsedEmailFrom.address.toLowerCase() === gmailSupportEmail.email.toLowerCase();
+      const isFormLead = isFormLeadMessage({
+        subject: parsedEmail.subject,
+        fromAddress: parsedEmailFrom.address,
+        mailboxAddress: gmailSupportEmail.email,
+      });
 
       const emailSentFromMailbox =
         parsedEmailFrom.address.toLowerCase() === gmailSupportEmail.email.toLowerCase();

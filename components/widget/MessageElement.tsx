@@ -25,8 +25,8 @@ export default function MessageElement({
   hideReasoning: boolean;
   token: string | null;
   conversationSlug: string | null;
-  // bg-primary or bg-gumroad-pink - Keep this for Tailwind to identify the color
-  color: "primary" | "gumroad-pink";
+  // bg-primary or bg-brand-accent — full class required for Tailwind
+  color: "primary" | "brand-accent";
 }) {
   const [showReasoning, setShowReasoning] = useState(false);
   const [reasoningTimeCounter, setReasoningTimeCounter] = useState(0);

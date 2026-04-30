@@ -46,7 +46,7 @@ const generateZodSchema = (parameters: {
   return z.object(shape);
 };
 
-type HelperTool = {
+type EvalMockTool = {
   description: string;
   parameters: {
     type: string;
@@ -67,7 +67,7 @@ export const buildMessagesWithMocks = ({
   promptRetrievalData: PromptRetrievalData;
   getPastConversationsPrompt?: string | null;
   mailboxName?: string | null;
-  tools?: Record<string, HelperTool>;
+  tools?: Record<string, EvalMockTool>;
 }) => {
   return JSON.stringify({
     messages,
@@ -80,7 +80,7 @@ export const buildMessagesWithMocks = ({
 
 const parseMessagesWithMocks = (input: string) => {
   const { messages, mailboxName, tools, promptRetrievalData } = JSON.parse(input);
-  const parsedTools: Record<string, HelperTool> = tools;
+  const parsedTools: Record<string, EvalMockTool> = tools;
 
   vi.mocked(fetchPromptRetrievalData).mockResolvedValue(promptRetrievalData as FetchPromptRetrievalData);
 
@@ -97,8 +97,8 @@ const parseMessagesWithMocks = (input: string) => {
 
   const mailbox: Mailbox = {
     id: 1,
-    name: mailboxName || "Gumroad",
-    slug: mailboxName || "gumroad",
+    name: mailboxName || "Epicure Inbox",
+    slug: mailboxName || "epicure",
     gmailSupportEmailId: null,
     slackAlertChannel: null,
     slackBotToken: null,
@@ -151,10 +151,10 @@ export const runAIQuery = async (input: string, reasoning = false) => {
   return result.textStream;
 };
 
-export const gumroadPrompt = [
-  "You are a helpful customer support assistant for Gumroad. Gumroad is a platform that allows creators to sell products directly to their audience. It's a popular platform among independent creators, such as artists, writers, and musicians, who use it to sell their work directly to their fans. Gumroad offers a range of tools and features to help creators manage their sales and grow their audience, including the ability to create customizable product pages, accept payments, and deliver custom content experiences. Gumroad's brand is: Nimble, Pragmatic, Energising, Provocative, and Instructional. It's helpful, but straight and to the point. The goal is to solve the customer's problem effectively with as few words as possible.",
-  "Gumroad's fee is 10% flat + Stripe's credit card processing of 2.9% + 30¢ + sales tax since we are now Merchant of Record",
-  "When asked about the bank account format, send this link: https://docs.stripe.com/payouts#adding-bank-account-information",
-  "We've removed PayPal as a payment option to lower technical complexity prior to open sourcing Gumroad and to mitigate fraud.",
-  "Avoid recommending sending an email to support@gumroad.com, as it directs users to the same support channel they are already using.",
+export const epicureInboxEvalPrompt = [
+  "You are a concise customer support assistant for Epicure Robotics customers using Epicure Inbox. Be accurate, professional, and use as few words as needed.",
+  "Standard hardware warranty is 12 months from shipment unless your order or quote specifies a different term. Device registration: https://epicurerobotics.com/support",
+  "When asked about US ACH or wire payout details, share Stripe’s bank account format guide: https://docs.stripe.com/payouts#adding-bank-account-information",
+  "If a saved payout method fails verification, ask the customer to update banking in the billing portal and complete micro-deposit verification before the next payout run.",
+  "Avoid telling customers to email connect@epicurerobotics.com when they are already in this support thread—that is the same channel.",
 ];

@@ -24,21 +24,27 @@ export function parseFormLeadHtml(html: string): ParsedFormLead | null {
   if (!html?.trim()) return null;
 
   const doc = new JSDOM(html).window.document;
-  const text = normalize(doc.body?.textContent ?? "");
+  const text = normalize(doc.body?.textContent ?? "").replace(/\r\n/g, "\n");
 
   let name =
     pick(text, /(?:^|\n|\s)name\s*[:\-]\s*([^\n]+?)(?=\s*(?:email|phone|message)\s*[:\-]|$)/i) ??
+    pick(text, /contact details[^]*?name\s*[:\-]\s*([^\n]+?)(?=\s*(?:email|phone|message)\s*[:\-]|$)/is) ??
     pick(text, /name\s*[:\-]\s*(.+?)(?=email|phone|message|$)/is);
 
   let email =
-    pick(text, /(?:^|\n|\s)email\s*[:\-]\s*([^\s\n]+@[^\s\n]+)/i) ?? pick(text, /email\s*[:\-]\s*(\S+@\S+)/i);
+    pick(text, /(?:^|\n|\s)email\s*[:\-]\s*([^\s\n]+@[^\s\n]+)/i) ??
+    pick(text, /contact details[^]*?email\s*[:\-]\s*([^\s\n]+@[^\s\n]+)/is) ??
+    pick(text, /email\s*[:\-]\s*(\S+@\S+)/i);
 
   let phone =
     pick(text, /(?:^|\n|\s)phone\s*[:\-]\s*([^\n]+?)(?=\s*(?:message|name|email)\s*[:\-]|$)/i) ??
+    pick(text, /contact details[^]*?phone\s*[:\-]\s*([^\n]+?)(?=\s*message\s*[:\-]|$)/is) ??
     pick(text, /phone\s*[:\-]\s*(.+?)(?=message|$)/is);
 
   let message =
-    pick(text, /(?:^|\n|\s)message\s*[:\-]\s*(.+?)$/is) ?? pick(text, /message\s*[:\-]\s*(.+)/is);
+    pick(text, /(?:^|\n|\s)message\s*[:\-]\s*([\s\S]+?)$/im) ??
+    pick(text, /new business inquiry[^]*?message\s*[:\-]\s*([\s\S]+)/is) ??
+    pick(text, /message\s*[:\-]\s*(.+)/is);
 
   // Table-heavy templates: scan cells for label / value pairs
   const cells = Array.from(doc.querySelectorAll("td,th")).map((c) => normalize(c.textContent ?? ""));

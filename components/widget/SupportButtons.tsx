@@ -12,7 +12,7 @@ type Props = {
   lastMessage: UIMessage | undefined;
   onTalkToTeamClick: () => void;
   onAddDetailsClick: () => void;
-  isGumroadTheme: boolean;
+  isEpicureSiteTheme: boolean;
   isEscalated?: boolean;
 };
 
@@ -23,7 +23,7 @@ export default function SupportButtons({
   lastMessage,
   onTalkToTeamClick,
   onAddDetailsClick,
-  isGumroadTheme,
+  isEpicureSiteTheme,
   isEscalated = false,
 }: Props) {
   const [isHelpfulAnimating, setIsHelpfulAnimating] = useState(false);
@@ -105,7 +105,7 @@ export default function SupportButtons({
       "absolute -bottom-2 left-6 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px]";
     return (
       <motion.div
-        className={cn("-mb-px relative text-sm h-10", isGumroadTheme ? "bg-gumroad-bg" : "bg-background")}
+        className={cn("-mb-px relative text-sm h-10", isEpicureSiteTheme ? "bg-brand-canvas" : "bg-background")}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
@@ -119,7 +119,7 @@ export default function SupportButtons({
             <X className="h-4 w-4" />
           </button>
         </div>
-        <div className={cn(arrowBase, isGumroadTheme ? "border-t-gumroad-bg" : "border-t-background")} />
+        <div className={cn(arrowBase, isEpicureSiteTheme ? "border-t-brand-canvas" : "border-t-background")} />
         <div className={cn(arrowBase, "border-t-black/5")} />
       </motion.div>
     );

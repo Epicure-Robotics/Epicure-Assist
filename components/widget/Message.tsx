@@ -22,7 +22,7 @@ type Props = {
   token: string | null;
   data: JSONValue[] | null;
   attachments: Attachment[];
-  color: "primary" | "gumroad-pink";
+  color: "primary" | "brand-accent";
   hideReasoning?: boolean;
 };
 

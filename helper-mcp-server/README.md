@@ -1,8 +1,8 @@
-# Epicure / Helper MCP Server
+# Epicure Inbox MCP server
 
-Local stdio MCP server for the Epicure Inbox app (forked from Helper).
+Local stdio MCP server for [Epicure Inbox](https://epicurerobotics.com). It uses the app’s data and mutation layer so conversation reads and writes behave like the dashboard, including side effects such as event logs, notifications, notes, and reply queueing.
 
-It uses the app's data and mutation layer so ticket reads and writes behave like the dashboard, including side effects such as event logs, notifications, notes, and reply queueing.
+Tool names keep the `helper_*` prefix for compatibility with existing MCP client configs.
 
 ## Included tools
 
@@ -26,13 +26,13 @@ The Shopify lookup tools are read-only:
 
 ## Acting user
 
-The server always acts as a real Helper team member.
+The server always acts as a real team member in your Epicure Inbox workspace.
 
 Selection order:
 
 1. `HELPER_MCP_USER_ID`
 2. `HELPER_MCP_USER_EMAIL`
-3. The only active Helper user, if there is exactly one
+3. The only active user account, if there is exactly one
 4. The only active admin user, if there is exactly one
 
 If none of those resolve cleanly, startup fails with an actionable error.
@@ -47,7 +47,7 @@ From the repo root:
 pnpm mcp:helper
 ```
 
-That command already loads the local Helper env files and runs with `react-server` conditions.
+This loads local env files and runs with `react-server` conditions.
 
 ## Run as Streamable HTTP
 
@@ -77,7 +77,7 @@ Optional env vars:
 ### URL mode for Codex
 
 ```bash
-codex mcp add helper \
+codex mcp add epicure-inbox \
   --url http://127.0.0.1:3334/mcp \
   --bearer-token-env-var HELPER_MCP_BEARER_TOKEN
 ```
@@ -89,10 +89,10 @@ Start the HTTP server first with `pnpm mcp:helper:http`.
 ```json
 {
   "mcpServers": {
-    "helper": {
+    "epicure-inbox": {
       "command": "pnpm",
       "args": ["mcp:helper"],
-      "cwd": "/Users/bharatsoni/helper",
+      "cwd": "/path/to/helper-epicure",
       "env": {
         "HELPER_MCP_USER_EMAIL": "support@example.com"
       }
@@ -103,8 +103,8 @@ Start the HTTP server first with `pnpm mcp:helper:http`.
 
 ## Notes
 
-- This server uses stdio transport, so it redirects `console.log`/`console.info`/`console.debug` to stderr before loading Helper app modules.
-- The HTTP server uses session-based Streamable HTTP, which is a better fit for Codex URL-based MCP registration.
+- This server uses stdio transport, so it redirects `console.log`/`console.info`/`console.debug` to stderr before loading app modules.
+- The HTTP server uses session-based Streamable HTTP, which works well with URL-based MCP registration.
 - When `HELPER_MCP_BEARER_TOKEN` is set, HTTP requests must include `Authorization: Bearer <token>`.
 - Ticket timelines expose both `html_body` and normalized `body_text` for message reading and draft generation.
 - Shopify lookup tools return structured `configured`, `found`, and `error` fields so agents can branch cleanly on missing integrations versus no-match lookups.

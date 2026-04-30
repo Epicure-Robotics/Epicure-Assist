@@ -250,7 +250,7 @@ class HelperWidget {
 
     this.helperIcon = document.createElement("button");
     this.helperIcon.className = "helper-widget-icon";
-    this.helperIcon.setAttribute("aria-label", "Helper Widget Icon");
+    this.helperIcon.setAttribute("aria-label", "Epicure Widget Icon");
     this.helperIcon.setAttribute("title", `Get help for ${window.location.hostname}`);
 
     const { backgroundColor, foregroundColor } = this.getIconColors();

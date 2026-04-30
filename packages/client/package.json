@@ -1,19 +1,20 @@
 {
   "name": "@helperai/client",
   "version": "0.4.5",
-  "description": "Helper API client for integrating customer support features",
+  "description": "API client for Epicure Inbox widget and REST APIs (upstream-compatible package name)",
   "keywords": [
-    "helper",
+    "epicure",
+    "inbox",
     "api",
     "client",
     "sdk"
   ],
-  "author": "Helper (https://helper.ai)",
+  "author": "Epicure Robotics (https://epicurerobotics.com)",
   "license": "MIT",
-  "homepage": "https://helper.ai",
+  "homepage": "https://epicurerobotics.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/antiwork/helper.git"
+    "url": "https://github.com/epicurerobotics/helper-epicure.git"
   },
   "publishConfig": {
     "access": "public"

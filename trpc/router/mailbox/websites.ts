@@ -12,7 +12,7 @@ import { mailboxProcedure } from "./procedure";
 const fetchPageTitle = async (url: string): Promise<string> => {
   try {
     const response = await fetch(url, {
-      headers: { "User-Agent": "Helper Website Crawler" },
+      headers: { "User-Agent": "EpicureInbox-WebsiteCrawler/1.0" },
     });
     const html = await response.text();
 

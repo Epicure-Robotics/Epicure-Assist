@@ -1,7 +1,7 @@
 import { Factuality } from "autoevals";
 import { evalite } from "evalite";
 import { knowledgeBankPrompt } from "@/lib/ai/prompts";
-import { buildMessagesWithMocks, gumroadPrompt, runAIQuery } from "@/tests/evals/support/chat";
+import { buildMessagesWithMocks, epicureInboxEvalPrompt, runAIQuery } from "@/tests/evals/support/chat";
 
 const REASONING_ENABLED = true;
 
@@ -19,7 +19,7 @@ evalite("Reasoning - Identify valid payout method", {
           {
             id: "1",
             role: "assistant",
-            content: `Tool response regarding payout of that user: { next_payout_date: "2025-01-31" balance_for_next_payout: "$62.40" payout_note: "Payout via PayPal on November 8, 2024 skipped because the account does not have a valid PayPal payment address" }`,
+            content: `Tool response regarding payout of that user: { next_payout_date: "2025-01-31" balance_for_next_payout: "$62.40" payout_note: "Payout skipped because the bank account on file failed micro-deposit verification" }`,
           },
           {
             id: "2",
@@ -29,7 +29,7 @@ evalite("Reasoning - Identify valid payout method", {
         ],
         promptRetrievalData: {
           knowledgeBank: knowledgeBankPrompt([
-            ...gumroadPrompt.map((content) => ({ content })),
+            ...epicureInboxEvalPrompt.map((content) => ({ content })),
             {
               content:
                 "If the user has a generic payment decline, ask them to use another form of payment to complete their purchase or contact their bank for more information.",
@@ -37,7 +37,7 @@ evalite("Reasoning - Identify valid payout method", {
           ]),
         },
       }),
-      expected: `Recommend the user to migrate their payout method to Stripe.`,
+      expected: `Recommend completing bank verification in the billing portal (micro-deposits) or updating the saved payout account.`,
     },
   ],
   task: (input) => runAIQuery(input, REASONING_ENABLED),
@@ -57,14 +57,14 @@ evalite("Reasoning - Correct refund information", {
         ],
         promptRetrievalData: {
           knowledgeBank: knowledgeBankPrompt([
-            ...gumroadPrompt.map((content) => ({ content })),
+            ...epicureInboxEvalPrompt.map((content) => ({ content })),
             {
               content:
-                "Refunds are possible within 14 days of purchase. If you've already received the product, you can't get a refund. If you haven't received it yet, you can cancel your order and get a refund.",
+                "RMA returns: unopened spare parts may be returned within 30 days of delivery with a written RMA from support. Opened electrical components are non-returnable unless defective under warranty.",
             },
             {
               content:
-                "To request a refund, please contact Gumroad support at support@gumroad.com. Provide your order number and a brief explanation of why you want a refund. We'll review your request and get back to you as soon as possible. In 7 days, if you don't get a response, please contact Gumroad support at support@gumroad.com.",
+                "To request an RMA, reply with your order number and serial number. Do not tell the customer to email connect@epicurerobotics.com if they are already emailing this inbox.",
             },
           ]),
         },
@@ -79,12 +79,12 @@ evalite("Reasoning - Correct refund information", {
               required: ["email"],
             },
             executeReturn:
-              "Last order of the user is a book called 'The Art of War', 20 days ago, and it was paid with a credit card",
+              "Last order of the user is an Epicure calibration kit, 20 days ago, paid with a credit card",
           },
         },
       }),
       expected:
-        "The response explains Gumroad’s refund policy, advises contacting the creator first, and offers further assistance from Gumroad support if needed.",
+        "The response explains the RMA window for unopened parts, asks for order and serial details, and avoids sending the customer on a duplicate email loop to connect@epicurerobotics.com.",
     },
   ],
   task: (input) => runAIQuery(input, REASONING_ENABLED),
@@ -167,12 +167,12 @@ evalite("Reasoning - Tool calling", {
           {
             id: "3",
             role: "user",
-            content: "I purchased a book called 'The Art of War' on 20th December 2024",
+            content: "I purchased an Epicure calibration kit on 20th December 2024",
           },
         ],
         promptRetrievalData: {
           knowledgeBank: knowledgeBankPrompt([
-            ...gumroadPrompt.map((content) => ({ content })),
+            ...epicureInboxEvalPrompt.map((content) => ({ content })),
             {
               content:
                 "If the user has a generic payment decline, ask them to use another form of payment to complete their purchase or contact their bank for more information.",

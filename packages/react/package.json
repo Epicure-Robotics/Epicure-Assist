@@ -1,9 +1,10 @@
 {
   "name": "@helperai/react",
   "version": "0.9.5",
-  "description": "React/Next.js integration for Helper chat widget",
+  "description": "React/Next.js integration for Epicure Inbox chat widget (upstream-compatible package name)",
   "keywords": [
-    "helper",
+    "epicure",
+    "inbox",
     "chat",
     "ai",
     "widget",
@@ -12,12 +13,12 @@
     "nextjs",
     "customer-service"
   ],
-  "author": "Helper (https://helper.ai)",
+  "author": "Epicure Robotics (https://epicurerobotics.com)",
   "license": "MIT",
-  "homepage": "https://helper.ai",
+  "homepage": "https://epicurerobotics.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/antiwork/helper.git"
+    "url": "https://github.com/epicurerobotics/helper-epicure.git"
   },
   "publishConfig": {
     "access": "public"

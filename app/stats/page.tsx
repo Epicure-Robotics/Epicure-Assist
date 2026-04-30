@@ -35,10 +35,10 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-[hsl(0_58%_10%)] text-white -m-8 p-8 relative">
-      {/* Helper Logo in top left corner */}
+      {/* Logo in top left corner */}
       <div className="absolute top-8 left-8 z-10">
         <Link href="/mine">
-          <Image src="/logo-white.svg" alt="Helper" width={120} height={32} className="cursor-pointer" />
+          <Image src="/logo-white.svg" alt="Epicure Robotics" width={120} height={32} className="cursor-pointer" />
         </Link>
       </div>
 

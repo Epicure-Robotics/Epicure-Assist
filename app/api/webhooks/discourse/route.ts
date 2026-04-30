@@ -6,6 +6,9 @@ import { db } from "@/db/client";
 import openai from "@/lib/ai/openai";
 import { listSlackChannels, postSlackMessage } from "@/lib/slack/client";
 
+/** Slack channel name (without #) for Discourse → Slack community alerts. Override via env for your workspace. */
+const SLACK_COMMUNITY_ALERTS_CHANNEL = process.env.SLACK_COMMUNITY_ALERTS_CHANNEL ?? "community-reddit-alerts";
+
 // Schema for sentiment analysis result
 const HelpSeekingAnalysisSchema = z.object({
   isSeekingHelp: z.boolean().describe("Whether the user is seeking help or support"),
@@ -223,7 +226,7 @@ Do NOT classify as seeking help if:
 }
 
 /**
- * Send Slack alert to #community-reddit-alerts channel
+ * Send Slack alert to the configured community alerts channel
  */
 async function sendSlackAlert(post: DiscoursePost, analysis: HelpSeekingAnalysis) {
   try {
@@ -239,12 +242,11 @@ async function sendSlackAlert(post: DiscoursePost, analysis: HelpSeekingAnalysis
       return;
     }
 
-    // Find the #community-reddit-alerts channel
     const channels = await listSlackChannels(mailbox.slackBotToken);
-    const targetChannel = channels.find((ch) => ch.name === "community-reddit-alerts");
+    const targetChannel = channels.find((ch) => ch.name === SLACK_COMMUNITY_ALERTS_CHANNEL);
 
     if (!targetChannel?.id) {
-      console.error("Could not find #community-reddit-alerts channel");
+      console.error(`Could not find #${SLACK_COMMUNITY_ALERTS_CHANNEL} channel`);
       return;
     }
 
@@ -299,7 +301,7 @@ async function sendSlackAlert(post: DiscoursePost, analysis: HelpSeekingAnalysis
       ],
     });
 
-    console.log(`✅ Slack alert sent to #community-reddit-alerts for post ${post.id}`);
+    console.log(`✅ Slack alert sent to #${SLACK_COMMUNITY_ALERTS_CHANNEL} for post ${post.id}`);
   } catch (error) {
     console.error("Error sending Slack alert:", error);
   }

@@ -515,7 +515,7 @@ describe("handleGmailWebhookEvent", () => {
       const conversation = await db.query.conversations.findFirst();
       expect(conversation).toMatchObject({
         emailFrom: "helperai123@gmail.com",
-        emailFromName: "Helper Support",
+        emailFromName: "Epicure Support",
         subject: "Re: An email sent directly to helperai123@gmail.com",
         status: "open",
         conversationProvider: "gmail",
@@ -573,7 +573,7 @@ describe("handleGmailWebhookEvent", () => {
       });
       expect(message).toMatchObject({
         emailFrom: "s.rauf124@gmail.com",
-        emailTo: 'shan124.development@gmail.com, "Helper Support" <helperai123@gmail.com>',
+        emailTo: 'shan124.development@gmail.com, "Epicure Support" <helperai123@gmail.com>',
         emailCc: null,
         body: '<div dir="ltr">Email message content,<br><br>Best,<br>Shan</div>\n',
         cleanedUpText: "Email message content,\n\nBest,\nShan",
