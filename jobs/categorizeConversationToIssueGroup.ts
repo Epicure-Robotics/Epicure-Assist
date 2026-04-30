@@ -5,7 +5,7 @@ import { conversationMessages } from "@/db/schema/conversationMessages";
 import { conversations } from "@/db/schema/conversations";
 import { issueGroups } from "@/db/schema/issueGroups";
 import { runAIObjectQuery } from "@/lib/ai";
-import { MINI_MODEL } from "@/lib/ai/core";
+import { DRAFT_MODEL } from "@/lib/ai/core";
 import { getMailbox, Mailbox } from "@/lib/data/mailbox";
 import { triggerEvent } from "./trigger";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
@@ -50,7 +50,8 @@ const categorizeWithAI = async (
 
   const result = await runAIObjectQuery({
     mailbox,
-    model: MINI_MODEL,
+    model: DRAFT_MODEL,
+    functionId: "categorize-conversation-issue-group",
     queryType: "auto_assign_conversation",
     schema: z.object({
       matchedGroupId: z.number().nullable(),

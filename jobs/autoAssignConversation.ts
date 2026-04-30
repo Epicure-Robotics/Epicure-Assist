@@ -4,6 +4,7 @@ import { db } from "@/db/client";
 import { conversations } from "@/db/schema/conversations";
 import { issueGroups } from "@/db/schema/issueGroups";
 import { runAIObjectQuery } from "@/lib/ai";
+import { DRAFT_MODEL } from "@/lib/ai/core";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateConversation } from "@/lib/data/conversation";
 import { getMailbox, Mailbox } from "@/lib/data/mailbox";
@@ -37,6 +38,7 @@ const getNonCoreTeamMembersWithMatchingKeywords = async (
 
   const result = await runAIObjectQuery({
     mailbox,
+    model: DRAFT_MODEL,
     queryType: "auto_assign_conversation",
     schema: z.object({
       matches: z.record(z.string(), z.boolean()),

@@ -128,16 +128,20 @@ export const processGmailThreadWithClient = async (
     // Process messages serially since we rely on the database ID for message ordering
     const staffUser = await getBasicProfileByEmail(parsedEmailFrom.address);
 
+    const gmailMsgId = assertDefinedOrRaiseNonRetriableError(message.data.id);
+    const isFirstInThread = isNewThread(gmailMsgId, gmailThreadId);
+
     await createMessageAndProcessAttachments(
       parsedEmail,
       parsedEmailFrom,
       processedHtml,
       cleanedUpText,
       fileSlugs,
-      assertDefinedOrRaiseNonRetriableError(message.data.id),
+      gmailMsgId,
       gmailThreadId,
       conversation,
       staffUser,
+      isFirstInThread,
     );
     const isUserEmail = parsedEmailFrom.address.toLowerCase() !== gmailSupportEmail.email.toLowerCase();
     if (isUserEmail && parsedEmail.date && (!lastUserEmailCreatedAt || lastUserEmailCreatedAt < parsedEmail.date)) {

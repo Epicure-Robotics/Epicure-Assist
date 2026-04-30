@@ -89,6 +89,8 @@ export const createMessageAndProcessAttachments = async (
   gmailThreadId: string,
   conversation: { id: number; slug: string },
   staffUser?: BasicUserProfile | null,
+  /** First message in the Gmail thread: treat as customer-facing inbound even if From matches a team profile (fixes drafts/RAG). */
+  isFirstMessageInThread?: boolean,
   tx: Transaction | typeof db = db,
 ) => {
   const references = parsedEmail.references
@@ -100,11 +102,14 @@ export const createMessageAndProcessAttachments = async (
   const emailCc = parsedEmail.cc ? addressesToString(parsedEmail.cc) : null;
   const emailBcc = parsedEmail.bcc ? addressesToString(parsedEmail.bcc) : null;
 
+  const treatAsFirstInboundMessage = isFirstMessageInThread ?? true;
+  const fromTeamMemberOnContinuation = Boolean(staffUser && !treatAsFirstInboundMessage);
+
   const newEmail = await createConversationMessage(
     {
-      role: staffUser ? "staff" : "user",
-      status: staffUser ? "sent" : null,
-      userId: staffUser?.id,
+      role: fromTeamMemberOnContinuation ? "staff" : "user",
+      status: fromTeamMemberOnContinuation ? "sent" : null,
+      userId: fromTeamMemberOnContinuation ? staffUser?.id : undefined,
       gmailMessageId,
       gmailThreadId,
       messageId: parsedEmail.messageId?.length ? parsedEmail.messageId : null,
@@ -344,6 +349,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
           gmailThreadId,
           conversation,
           staffUser,
+          isFirstMessage,
           tx,
         );
 
