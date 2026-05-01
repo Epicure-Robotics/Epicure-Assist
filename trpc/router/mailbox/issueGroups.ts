@@ -192,7 +192,7 @@ export const issueGroupsRouter = {
     });
 
     if (!group) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Issue group not found" });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
     }
 
     return group;
@@ -248,7 +248,7 @@ export const issueGroupsRouter = {
       });
 
       if (!existingGroup) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Issue group not found" });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
       }
 
       const updatedGroup = await db
@@ -284,7 +284,7 @@ export const issueGroupsRouter = {
       });
 
       if (!existingGroup) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Issue group not found" });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
       }
 
       const updatedGroup = await db
@@ -311,7 +311,7 @@ export const issueGroupsRouter = {
     });
 
     if (!group) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Issue group not found" });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
     }
 
     await db.transaction(async (tx) => {
@@ -347,7 +347,7 @@ export const issueGroupsRouter = {
         });
 
         if (!issueGroup) {
-          throw new TRPCError({ code: "NOT_FOUND", message: "Issue group not found" });
+          throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
         }
       }
 
@@ -405,7 +405,7 @@ export const issueGroupsRouter = {
     });
 
     if (!group) {
-      throw new TRPCError({ code: "NOT_FOUND", message: "Issue group not found" });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
     }
 
     const userProfile = await db.query.userProfiles.findFirst({
@@ -453,7 +453,7 @@ export const issueGroupsRouter = {
     if (result.issues.length === 0) {
       throw new TRPCError({
         code: "BAD_REQUEST",
-        message: "No common issues could be generated from existing conversations",
+        message: "No categories could be generated from existing conversations",
       });
     }
 
@@ -602,7 +602,7 @@ export const issueGroupsRouter = {
         where: eq(issueGroups.id, input.issueGroupId),
       });
       if (!issueGroup) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Issue group not found" });
+        throw new TRPCError({ code: "NOT_FOUND", message: "Category not found" });
       }
 
       // Verify saved reply exists

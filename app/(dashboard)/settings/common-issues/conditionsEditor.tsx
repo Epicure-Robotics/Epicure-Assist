@@ -30,7 +30,7 @@ export const ConditionsEditor = ({ issueGroupId }: ConditionsEditorProps) => {
 
   const utils = api.useUtils();
 
-  // Fetch conditions for this issue group
+  // Fetch conditions for this category (issue group)
   const { data: conditionsData, isLoading: conditionsLoading } = api.mailbox.issueGroups.listConditions.useQuery({
     issueGroupId,
   });

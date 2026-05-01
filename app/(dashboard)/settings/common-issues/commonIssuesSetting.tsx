@@ -79,7 +79,7 @@ const CommonIssueEditForm = ({
         <Input
           value={title}
           onChange={(e) => onTitleChange?.(e.target.value)}
-          placeholder="e.g., Login Issues"
+          placeholder="e.g., Login"
           className="mt-2"
         />
       </div>
@@ -88,7 +88,7 @@ const CommonIssueEditForm = ({
         <Textarea
           value={description}
           onChange={(e) => onDescriptionChange?.(e.target.value)}
-          placeholder="Brief description of this issue group..."
+          placeholder="Brief description of this category..."
           className="mt-2"
           rows={3}
         />
@@ -105,7 +105,7 @@ const CommonIssueEditForm = ({
             Enable AI Auto-Response
           </Label>
           <p className="text-xs text-muted-foreground">
-            Automatically reply to conversations categorized into this issue group using AI.
+            Automatically reply to conversations categorized into this category using AI.
           </p>
         </div>
       </div>
@@ -123,7 +123,7 @@ const CommonIssueEditForm = ({
             rows={4}
           />
           <p className="text-xs text-muted-foreground">
-            Provide specific instructions for how the AI should handle this recurring issue.
+            Provide specific instructions for how the AI should handle conversations in this category.
           </p>
 
           <Label className="mt-4">Default Template (Optional)</Label>
@@ -219,7 +219,7 @@ const CommonIssueEditForm = ({
             </div>
           )}
           <p className="text-xs text-muted-foreground">
-            Conversations assigned to this issue group will be automatically assigned to these team members in rotation.
+            Conversations assigned to this category will be automatically assigned to these team members in rotation.
           </p>
         </div>
       </div>
@@ -253,7 +253,7 @@ const SubcategoryStatsPanel = ({ issueGroupId }: { issueGroupId: number }) => {
     <div className="rounded-lg border p-3 space-y-2">
       <div>
         <div className="text-sm font-medium">Subcategory stats (last 30 days)</div>
-        <div className="text-xs text-muted-foreground">Auto-generated internal breakdown for this common issue</div>
+        <div className="text-xs text-muted-foreground">Auto-generated internal breakdown for this category</div>
       </div>
       {isLoading ? (
         <div className="text-xs text-muted-foreground">Loading subcategory stats...</div>
@@ -319,10 +319,10 @@ const CommonIssuesSetting = () => {
       setNewIssueCustomPrompt(null);
       setNewIssueAutoResponseEnabled(false);
       setNewIssueDefaultSavedReplyId(null);
-      toast.success("Common issue created");
+      toast.success("Category created");
     },
     onError: (error) => {
-      toast.error("Error creating common issue", { description: error.message });
+      toast.error("Error creating category", { description: error.message });
     },
   });
 
@@ -339,12 +339,12 @@ const CommonIssuesSetting = () => {
   const deleteMutation = api.mailbox.issueGroups.delete.useMutation({
     onSuccess: (data) => {
       toast.success(
-        `Common issue deleted${data.unassignedConversations ? ` (${data.unassignedConversations} conversations unassigned)` : ""}`,
+        `Category deleted${data.unassignedConversations ? ` (${data.unassignedConversations} conversations unassigned)` : ""}`,
       );
       utils.mailbox.issueGroups.listAll.invalidate();
     },
     onError: (error) => {
-      toast.error("Error deleting common issue", { description: error.message });
+      toast.error("Error deleting category", { description: error.message });
     },
   });
 
@@ -352,10 +352,10 @@ const CommonIssuesSetting = () => {
     onSuccess: () => {
       utils.mailbox.issueGroups.listAll.invalidate();
       setEditingIssue(null);
-      toast.success("Common issue updated");
+      toast.success("Category updated");
     },
     onError: (error) => {
-      toast.error("Error updating common issue", { description: error.message });
+      toast.error("Error updating category", { description: error.message });
     },
   });
 
@@ -364,11 +364,11 @@ const CommonIssuesSetting = () => {
   const bulkCreateMutation = api.mailbox.issueGroups.bulkCreate.useMutation({
     onSuccess: (data) => {
       utils.mailbox.issueGroups.listAll.invalidate();
-      toast.success(`Created ${data.createdIssues} common issues from your conversations`);
+      toast.success(`Created ${data.createdIssues} categories from your conversations`);
       setShowGenerateDialog(false);
     },
     onError: (error) => {
-      toast.error("Error creating common issues", { description: error.message });
+      toast.error("Error creating categories", { description: error.message });
     },
   });
 
@@ -422,12 +422,12 @@ const CommonIssuesSetting = () => {
 
   return (
     <SectionWrapper
-      title="Common Issues"
-      description="Create issue groups to organize and track recurring customer problems. These will help you quickly categorize and resolve similar conversations."
+      title="Categories"
+      description="Create categories to organize and track recurring customer problems. These will help you quickly categorize and resolve similar conversations."
     >
       <Input
         type="text"
-        placeholder="Search common issues..."
+        placeholder="Search categories..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="mb-4"
@@ -448,11 +448,11 @@ const CommonIssuesSetting = () => {
           </>
         ) : filteredIssueGroups.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground space-y-4">
-            <div>{searchQuery ? "No common issues found matching your search." : "No common issues created yet."}</div>
+            <div>{searchQuery ? "No categories found matching your search." : "No categories created yet."}</div>
             {!searchQuery && (
               <Button variant="outlined" onClick={handleGenerateIssues} className="mx-auto">
                 <Sparkles className="mr-2 h-4 w-4" />
-                Generate common issues
+                Generate categories
               </Button>
             )}
           </div>
@@ -524,7 +524,7 @@ const CommonIssuesSetting = () => {
                         <span className="sr-only">Edit</span>
                       </Button>
                       <ConfirmationDialog
-                        message="Are you sure you want to delete this common issue? All conversations will be unassigned from this group."
+                        message="Are you sure you want to delete this category? All conversations will be unassigned from this category."
                         onConfirm={() => handleDeleteIssue(group.id)}
                         confirmLabel="Yes, delete"
                       >
@@ -589,7 +589,7 @@ const CommonIssuesSetting = () => {
           }}
         >
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Common Issue
+          Add Category
         </Button>
       )}
 

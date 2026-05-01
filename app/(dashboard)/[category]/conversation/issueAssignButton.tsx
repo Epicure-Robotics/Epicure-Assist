@@ -38,7 +38,7 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
       // Update the selected issue ID only after successful mutation
       const newIssueId = variables.issueGroupId;
       setSelectedIssueId(newIssueId === null ? "none" : newIssueId.toString());
-      toast.success("Issue assignment updated successfully");
+      toast.success("Category assignment updated successfully");
       utils.mailbox.conversations.get.invalidate({ conversationSlug });
     },
     onError: (error) => {
@@ -51,13 +51,13 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
 
   const createMutation = api.mailbox.issueGroups.create.useMutation({
     onSuccess: async (newGroup) => {
-      toast.success("Issue group created successfully");
+      toast.success("Category created successfully");
       await utils.mailbox.issueGroups.listAll.invalidate();
       setCreateDialogOpen(false);
       setNewIssueTitle("");
       setNewIssueDescription("");
 
-      // Assign the conversation to the newly created issue group
+      // Assign the conversation to the newly created category
       if (conversationInfo?.id) {
         assignMutation.mutate({
           conversationId: conversationInfo.id,
@@ -82,7 +82,7 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
     if (issueGroupId !== "none") {
       const parsed = parseInt(issueGroupId, 10);
       if (isNaN(parsed)) {
-        toast.error("Invalid issue group ID");
+        toast.error("Invalid category ID");
         return;
       }
       issueId = parsed;
@@ -100,7 +100,7 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
   if (isLoading) return null;
 
   if (!issueGroups?.groups.length) {
-    return <span className="text-muted-foreground text-sm">No issues available</span>;
+    return <span className="text-muted-foreground text-sm">No categories available</span>;
   }
 
   return (
@@ -109,12 +109,12 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
         <SelectTrigger variant="bare" className="w-full min-w-0 hover:underline" hideArrow>
           <div className="flex items-center gap-1 min-w-0 overflow-hidden">
             {!selectedGroup && <Layers className="h-4 w-4 flex-shrink-0" />}
-            <SelectValue placeholder="Assign to issue..." className="truncate min-w-0" />
+            <SelectValue placeholder="Assign to category..." className="truncate min-w-0" />
           </div>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="none">None</SelectItem>
-          <SelectItem value="create-new">Create new issue</SelectItem>
+          <SelectItem value="create-new">Create new category</SelectItem>
           <SelectSeparator />
           {issueGroups.groups.map((group) => (
             <SelectItem key={group.id} value={group.id.toString()}>
@@ -135,8 +135,8 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Issue Group</DialogTitle>
-            <DialogDescription>Create a new issue group to categorize similar conversations.</DialogDescription>
+            <DialogTitle>Create new category</DialogTitle>
+            <DialogDescription>Create a category to organize similar conversations.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -155,7 +155,7 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
                 id="description"
                 value={newIssueDescription}
                 onChange={(e) => setNewIssueDescription(e.target.value)}
-                placeholder="Describe the type of issues in this group..."
+                placeholder="Describe conversations that belong in this category..."
                 maxLength={1000}
                 rows={3}
               />
@@ -183,7 +183,7 @@ export const IssueAssignButton = ({ initialIssueGroupId }: { initialIssueGroupId
               }}
               disabled={!newIssueTitle.trim() || createMutation.isPending}
             >
-              {createMutation.isPending ? "Creating..." : "Create Issue Group"}
+              {createMutation.isPending ? "Creating..." : "Create category"}
             </Button>
           </DialogFooter>
         </DialogContent>

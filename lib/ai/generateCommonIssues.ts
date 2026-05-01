@@ -63,11 +63,11 @@ export const generateCommonIssuesSuggestions = async (
   }
 
   const systemPrompt = `
-You are analyzing customer support conversations to identify common issue patterns that should be grouped together.
+You are analyzing customer support conversations to identify recurring category patterns that belong together.
 
-Based on the conversation data provided, identify 3-7 common issue categories that would help organize and track recurring customer problems.
+Based on the conversation data provided, identify 3-7 categories that would help organize and track recurring customer problems.
 
-For each common issue category you identify:
+For each category you identify:
 1. Create a clear, concise title (2-5 words)
 2. Provide a brief description explaining what types of conversations belong in this category
 3. Explain your reasoning for why this is a common pattern
@@ -84,12 +84,12 @@ Avoid:
 - Categories that are too broad to be useful
 - Duplicate or overlapping categories
 
-Return only the most valuable and distinct common issue categories.
+Return only the most valuable and distinct categories.
 Do not use em dashes (—) in your response.
 `;
 
   const userPrompt = `
-Analyze these recent customer support conversations to identify common issue patterns:
+Analyze these recent customer support conversations to identify recurring category patterns:
 
 ${conversationSummaries
   .map(
@@ -103,7 +103,7 @@ Status: ${conv.status}
   )
   .join("\n")}
 
-Based on these conversations, what are the most common issue categories that would help organize similar future conversations?
+Based on these conversations, what are the strongest categories that would help organize similar future conversations?
 `;
 
   const result = await runAIObjectQuery({

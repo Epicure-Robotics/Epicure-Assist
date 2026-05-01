@@ -290,7 +290,7 @@ test.describe("Conversation Actions", () => {
   });
 
   test.describe("Assignment", () => {
-    test("should assign conversation to common issue", async ({ page }) => {
+    test("should assign conversation to category", async ({ page }) => {
       await openCommandBar(page);
 
       try {

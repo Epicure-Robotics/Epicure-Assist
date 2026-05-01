@@ -31,7 +31,7 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
       setEditableSuggestions(data.issues);
     },
     onError: (error) => {
-      toast.error("Error generating common issues", { description: error.message });
+      toast.error("Error generating categories", { description: error.message });
       onClose();
     },
   });
@@ -74,10 +74,10 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="text-left">
-          <DialogTitle>Review generated common issues</DialogTitle>
+          <DialogTitle>Review generated categories</DialogTitle>
           <DialogDescription>
-            Review and edit the AI-generated common issues before creating them. You can modify titles, descriptions, or
-            remove issues you don't want.
+            Review and edit the AI-generated categories before creating them. You can modify titles, descriptions, or remove
+            categories you don't want.
           </DialogDescription>
         </DialogHeader>
 
@@ -85,7 +85,7 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
           {generateSuggestionsMutation.isPending && editableSuggestions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground space-y-4">
               <div className="animate-spin mx-auto h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
-              <div>Analyzing conversations to generate common issues...</div>
+              <div>Analyzing conversations to generate categories...</div>
             </div>
           ) : (
             <>
@@ -109,7 +109,7 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
 
               {editableSuggestions.length === 0 && !generateSuggestionsMutation.isPending && (
                 <div className="text-center py-8 text-muted-foreground">
-                  No issues to create. All suggestions have been removed.
+                  No categories to create. All suggestions have been removed.
                 </div>
               )}
             </>
@@ -128,7 +128,7 @@ export function GenerateIssuesDialog({ isOpen, onClose, onApprove, isCreating }:
               ? "Creating..."
               : generateSuggestionsMutation.isPending
                 ? "Generating..."
-                : `Create ${editableSuggestions.length} issue${editableSuggestions.length !== 1 ? "s" : ""}`}
+                : `Create ${editableSuggestions.length} categor${editableSuggestions.length !== 1 ? "ies" : "y"}`}
           </Button>
         </div>
       </DialogContent>
@@ -156,14 +156,14 @@ function EditIssueForm({ suggestion, onSave, onCancel }: EditIssueFormProps) {
     <div className="space-y-3">
       <div>
         <label className="text-sm font-medium">Title</label>
-        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Issue title" />
+        <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Category title" />
       </div>
       <div>
         <label className="text-sm font-medium">Description</label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Issue description (optional)"
+          placeholder="Category description (optional)"
           rows={3}
         />
       </div>

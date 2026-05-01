@@ -20,7 +20,7 @@ const MOCKED_COMMON_ISSUES_SUGGESTIONS = [
 
 test.use({ storageState: "tests/e2e/.auth/user.json" });
 
-test.describe("Settings - Common Issues", () => {
+test.describe("Settings - Categories", () => {
   test.beforeEach(async ({ page }) => {
     await db.delete(issueGroups);
 
@@ -46,39 +46,39 @@ test.describe("Settings - Common Issues", () => {
     await db.delete(issueGroups);
   });
 
-  test("generate issues dialog actions and submit", async ({ page }) => {
+  test("generate categories dialog actions and submit", async ({ page }) => {
     await page.goto("/settings/common-issues");
-    await expect(page.getByText("No common issues created yet.")).toBeVisible();
-    const generateButton = page.getByRole("button", { name: "Generate common issues" });
+    await expect(page.getByText("No categories created yet.")).toBeVisible();
+    const generateButton = page.getByRole("button", { name: "Generate categories" });
     await generateButton.click();
 
     // 1. Check UI visibility
-    await expect(page.getByText("No common issues created yet.")).toBeVisible();
+    await expect(page.getByText("No categories created yet.")).toBeVisible();
 
-    await expect(page.getByText("Review generated common issues")).toBeVisible();
+    await expect(page.getByText("Review generated categories")).toBeVisible();
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();
     await expect(page.getByText("AI reasoning:").first()).toBeVisible();
     await expect(page.getByText("Suggestion quality directly impacts trust")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Create 2 issues" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Create 2 categories" })).toBeVisible();
 
     // 2. Remove generated item from the dialog
     await page.getByRole("button", { name: "Delete" }).first().click();
-    await expect(page.getByRole("button", { name: "Create 1 issue" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Create 1 category" })).toBeVisible();
 
     await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByText("Review generated common issues")).not.toBeVisible();
+    await expect(page.getByText("Review generated categories")).not.toBeVisible();
 
     await generateButton.click();
 
     // 3.  Edit item from the dialog
     await page.getByLabel("Edit").first().click();
-    await page.getByPlaceholder("Issue title").fill("Custom Issue Title");
-    await page.getByPlaceholder("Issue description (optional)").fill("Custom description for this issue");
+    await page.getByPlaceholder("Category title").fill("Custom Issue Title");
+    await page.getByPlaceholder("Category description (optional)").fill("Custom description for this issue");
     await page.getByRole("button", { name: "Save" }).click();
 
-    await page.getByRole("button", { name: "Create 2 issues" }).click();
+    await page.getByRole("button", { name: "Create 2 categories" }).click();
 
-    await expect(page.getByText("Created 2 common issues from your conversations")).toBeVisible();
+    await expect(page.getByText("Created 2 categories from your conversations")).toBeVisible();
     await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(page.getByText("Custom description for this issue")).toBeVisible();
   });

@@ -46,7 +46,7 @@ export default function TabsPage() {
       content: <TeamSetting />,
     },
     {
-      label: "Common Issues",
+      label: "Categories",
       id: "common-issues",
       content: <CommonIssuesSetting />,
     },

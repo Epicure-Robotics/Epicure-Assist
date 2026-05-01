@@ -47,7 +47,7 @@ declare global {
 const settingsItems = [
   { label: "Knowledge", id: "knowledge", icon: BookOpen },
   { label: "Team", id: "team", icon: Users },
-  { label: "Common Issues", id: "common-issues", icon: Layers },
+  { label: "Categories", id: "common-issues", icon: Layers },
   { label: "Partner locations", id: "customers", icon: UserPlus },
   { label: "In-App Chat", id: "in-app-chat", icon: MonitorSmartphone },
   { label: "Integrations", id: "integrations", icon: LinkIcon },
@@ -206,10 +206,10 @@ export function AppSidebar() {
                 <SidebarMenu>
                   {!issueGroupsError && (
                     <SidebarMenuItem>
-                      <SidebarMenuButton asChild isActive={pathname === `/common-issues`} tooltip="Common issues">
+                      <SidebarMenuButton asChild isActive={pathname === `/common-issues`} tooltip="Categories">
                         <Link href={`/common-issues`} onClick={handleItemClick}>
                           <Layers className="size-4" />
-                          <span className="group-data-[collapsible=icon]:hidden">Common issues</span>
+                          <span className="group-data-[collapsible=icon]:hidden">Categories</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -230,7 +230,7 @@ export function AppSidebar() {
                   <SidebarMenu>
                     <SidebarMenuItem>
                       <SidebarMenuButton className="text-xs font-medium text-sidebar-foreground/50 pointer-events-none">
-                        Pinned issues
+                        Pinned categories
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                     {pinnedIssues.groups.slice(0, 5).map((group) => (

@@ -38,7 +38,7 @@ export default function CommonIssuesPage() {
 
   const pinMutation = api.mailbox.issueGroups.pin.useMutation({
     onSuccess: () => {
-      toast.success("Issue group bookmarked");
+      toast.success("Category bookmarked");
       refetchPinned();
     },
     onError: (error) => {
@@ -48,7 +48,7 @@ export default function CommonIssuesPage() {
 
   const unpinMutation = api.mailbox.issueGroups.unpin.useMutation({
     onSuccess: () => {
-      toast.success("Issue group unbookmarked");
+      toast.success("Category unbookmarked");
       refetchPinned();
     },
     onError: (error) => {
@@ -89,10 +89,10 @@ export default function CommonIssuesPage() {
   if (error) {
     return (
       <div className="flex flex-col h-full">
-        <PageHeader title="Common Issues" />
+        <PageHeader title="Categories" />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h3 className="text-lg font-medium">Error loading issue groups</h3>
+            <h3 className="text-lg font-medium">Error loading categories</h3>
             <p className="text-muted-foreground mt-2">{error.message}</p>
           </div>
         </div>
@@ -102,9 +102,9 @@ export default function CommonIssuesPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <PageHeader title="Common Issues">
+      <PageHeader title="Categories">
         <Input
-          placeholder="Search common issues..."
+          placeholder="Search categories..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full h-10 rounded-full text-sm"
@@ -125,7 +125,7 @@ export default function CommonIssuesPage() {
         <Button variant="ghost" className="gap-2" asChild>
           <Link href="/settings/common-issues">
             <Settings className="h-4 w-4" />
-            Manage issues
+            Manage categories
           </Link>
         </Button>
       </PageHeader>
@@ -152,7 +152,7 @@ export default function CommonIssuesPage() {
           ) : filteredAndSortedGroups.length === 0 ? (
             <div className="text-center py-12">
               <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-medium">{searchQuery ? "No issues found" : "No issue groups yet"}</h3>
+              <h3 className="mt-4 text-lg font-medium">{searchQuery ? "No categories found" : "No categories yet"}</h3>
               <p className="mt-2 text-muted-foreground">
                 {searchQuery ? (
                   "Try adjusting your search terms"

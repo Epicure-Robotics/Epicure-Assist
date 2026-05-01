@@ -223,7 +223,7 @@ export const handleAutoResponse = async ({
   });
 
   if (!issueGroup) {
-    await updateConversation(conversation.id, { set: { status: "open" }, message: "Issue group not found" });
+    await updateConversation(conversation.id, { set: { status: "open" }, message: "Category not found" });
     return { message: "Skipped - issue group not found" };
   }
 

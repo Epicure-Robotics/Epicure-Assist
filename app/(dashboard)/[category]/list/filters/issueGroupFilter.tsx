@@ -37,7 +37,7 @@ export const IssueGroupFilter = memo(function IssueGroupFilter({
                 ? "Classified"
                 : isClassified === false
                   ? "Unclassified"
-                  : "Common issue"
+                  : "Category"
           }
           count={
             selectedGroup
@@ -81,11 +81,11 @@ export const IssueGroupFilter = memo(function IssueGroupFilter({
             </DropdownMenuRadioItem>
           ) : isError ? (
             <DropdownMenuRadioItem value="error" disabled>
-              <span className="text-red-500">Failed to load issue groups</span>
+              <span className="text-red-500">Failed to load categories</span>
             </DropdownMenuRadioItem>
           ) : issueGroups?.groups.length === 0 ? (
             <DropdownMenuRadioItem value="empty" disabled>
-              No issue groups found
+              No categories found
             </DropdownMenuRadioItem>
           ) : (
             issueGroups?.groups.map((group) => (
