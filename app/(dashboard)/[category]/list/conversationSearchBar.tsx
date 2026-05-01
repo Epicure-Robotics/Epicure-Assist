@@ -1,8 +1,7 @@
 import { capitalize } from "lodash-es";
-import { ArrowDownUp, Filter, Search } from "lucide-react";
+import { ArrowDownUp, Filter } from "lucide-react";
 import { useQueryState } from "nuqs";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useHotkeys } from "react-hotkeys-hook";
+import { useCallback, useMemo } from "react";
 import { useAlternateHotkeyInEditor } from "@/app/(dashboard)/[category]/conversation/messageActions";
 import {
   DropdownMenu,
@@ -12,8 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { FilterButton } from "@/components/ui/filter-button";
-import { Input } from "@/components/ui/input";
-import { useDebouncedCallback } from "@/components/useDebouncedCallback";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import { useConversationsListInput } from "../shared/queries";
@@ -44,8 +41,6 @@ export const ConversationSearchBar = ({
 }: ConversationSearchBarProps) => {
   const { input, searchParams, setSearchParams } = useConversationsListInput();
   const [, setId] = useQueryState("id");
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const [search, setSearch] = useState(searchParams.search || "");
 
   const { data: openCount } = api.mailbox.openCount.useQuery();
 
@@ -70,20 +65,6 @@ export const ConversationSearchBar = ({
         { status: "ignored" as const, count: openCount.ignored[input.category] },
       ]
     : [];
-
-  const debouncedSetSearch = useDebouncedCallback((val: string) => {
-    setSearchParams({ search: val || null });
-    searchInputRef.current?.focus();
-  }, 300);
-
-  useEffect(() => {
-    debouncedSetSearch(search);
-  }, [search]);
-
-  useHotkeys("mod+k", (e) => {
-    e.preventDefault();
-    searchInputRef.current?.focus();
-  });
 
   useAlternateHotkeyInEditor("f", "mod+shift+f", () => {
     setShowFilters(!showFilters);
@@ -167,7 +148,7 @@ export const ConversationSearchBar = ({
   }, [effectiveDefaultSort, searchParams.sort, supportsHighestValueSort]);
 
   return (
-    <div className="flex items-center justify-between gap-2 md:gap-6 py-0.5">
+    <div className="flex items-center justify-between gap-2 md:gap-4 py-0.5">
       <div className="flex items-center gap-2">
         {statusOptions.length > 1 ? (
           <DropdownMenu>
@@ -229,16 +210,7 @@ export const ConversationSearchBar = ({
           />
         )}
       </div>
-      <div className="flex-1 max-w-[400px] flex items-center gap-2">
-        <Input
-          ref={searchInputRef}
-          placeholder="Search conversations"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 h-8 rounded-full text-sm"
-          iconsPrefix={<Search className="ml-1 h-4 w-4 text-foreground" />}
-          autoFocus
-        />
+      <div className="flex items-center gap-2">
         <FilterButton
           isActive={showFilters}
           onClick={() => setShowFilters(!showFilters)}
@@ -246,28 +218,28 @@ export const ConversationSearchBar = ({
           label="Filters"
           count={activeFilterCount > 0 ? activeFilterCount : undefined}
         />
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <FilterButton
+              isActive={(sortOptions.find(({ selected }) => selected)?.value || "oldest") !== "oldest"}
+              icon={ArrowDownUp}
+              label={sortOptions.find(({ selected }) => selected)?.label}
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuRadioGroup
+              value={sortOptions.find(({ selected }) => selected)?.value || ""}
+              onValueChange={(val) => handleSortChange(val as SortOption)}
+            >
+              {sortOptions.map((option) => (
+                <DropdownMenuRadioItem key={option.value} value={option.value}>
+                  {option.label}
+                </DropdownMenuRadioItem>
+              ))}
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <FilterButton
-            isActive={(sortOptions.find(({ selected }) => selected)?.value || "oldest") !== "oldest"}
-            icon={ArrowDownUp}
-            label={sortOptions.find(({ selected }) => selected)?.label}
-          />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuRadioGroup
-            value={sortOptions.find(({ selected }) => selected)?.value || ""}
-            onValueChange={(val) => handleSortChange(val as SortOption)}
-          >
-            {sortOptions.map((option) => (
-              <DropdownMenuRadioItem key={option.value} value={option.value}>
-                {option.label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   );
 };

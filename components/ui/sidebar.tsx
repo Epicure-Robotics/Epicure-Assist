@@ -39,9 +39,10 @@ const SidebarProvider = ({ className, style, children, ref, ...props }: React.Co
     // Initialize from localStorage on client-side
     if (typeof window !== "undefined") {
       const stored = localStorage.getItem("sidebar-open");
-      return stored !== null ? stored === "true" : true;
+      // Default to collapsed (icon rail) for a distinct layout.
+      return stored !== null ? stored === "true" : false;
     }
-    return true;
+    return false;
   });
 
   // Persist to localStorage when state changes

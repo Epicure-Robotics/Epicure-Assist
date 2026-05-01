@@ -243,6 +243,8 @@ export const List = () => {
     if (newConversation.status !== (searchParams.status ?? "open")) return;
 
     switch (input.category) {
+      case "all":
+        break;
       case "assigned":
         if (!newConversation.assignedToId) return;
         break;
@@ -267,7 +269,7 @@ export const List = () => {
     <div className="flex w-full h-full">
       {/* Main conversation list */}
       <div className="flex flex-col flex-1 min-w-0 h-full">
-        <div className="px-3 md:px-6 py-2 shrink-0 border-b border-border">
+        <div className="px-3 md:px-6 py-2.5 shrink-0 border-b border-border/70">
           <div className="flex flex-col gap-2">
             <ConversationSearchBar
               toggleAllConversations={toggleAllConversations}
@@ -393,16 +395,35 @@ export const List = () => {
         <NewConversationModal />
       </div>
 
-      {/* Preview Sidebar - fixed position like left sidebar */}
+      {/* Bottom preview dock (distinct from right-sidebar previews) */}
       {hoveredConversation && (
-        <>
-          {/* Spacer to prevent layout shift */}
-          <div className="w-96 shrink-0" />
-          {/* Fixed sidebar */}
-          <div className="fixed right-0 inset-y-0 w-96 border-l border-border bg-background z-40 overflow-y-auto">
-            <EmailPreviewSidebar conversation={hoveredConversation} onClose={() => setHoveredConversation(null)} />
+        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
+          <div className="pointer-events-auto mx-auto max-w-[1100px] px-3 md:px-6 pb-4">
+            <div className="rounded-2xl border border-border/70 bg-background/80 backdrop-blur shadow-lg overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-foreground">
+                    {hoveredConversation.subject || "(no subject)"}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {hoveredConversation.emailFrom ?? "Anonymous"}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setHoveredConversation(null)}
+                  className="text-muted-foreground hover:text-foreground transition-colors text-lg"
+                  aria-label="Close preview"
+                  type="button"
+                >
+                  ×
+                </button>
+              </div>
+              <div className="max-h-[320px] overflow-y-auto">
+                <EmailPreviewSidebar conversation={hoveredConversation} onClose={() => setHoveredConversation(null)} />
+              </div>
+            </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

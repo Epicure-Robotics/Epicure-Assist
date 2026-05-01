@@ -225,65 +225,66 @@
 
 .helper-widget-icon {
   border: none;
-  border-radius: 50%;
+  border-radius: 14px;
   position: fixed;
   bottom: 20px;
   right: 20px;
-  background-color: #222;
+  background-color: #0f172a;
   color: white;
   display: flex;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
   cursor: pointer;
   transition:
-    filter 0.3s,
-    transform 0.3s ease;
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease;
   align-items: center;
   justify-content: center;
   z-index: 2147482998;
   pointer-events: auto;
+  box-shadow:
+    0 10px 26px rgba(2, 6, 23, 0.28),
+    0 0 0 1px rgba(15, 23, 42, 0.65);
 }
 
 .helper-widget-icon:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
-.helper-widget-icon .hand-icon {
-  width: 26px;
-  height: 29px;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  transform-origin: bottom center;
+.helper-widget-icon .er-icon {
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  user-select: none;
 }
 
-.helper-widget-icon:hover .hand-icon {
-  animation: subtleWave 1s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+.helper-widget-icon.has-notification {
+  animation: erPulse 1.2s ease-in-out 2;
 }
 
-.helper-widget-icon.has-notification .hand-icon {
-  animation: subtleWave 1s cubic-bezier(0.25, 0.1, 0.25, 1) 2;
-}
-
-@keyframes subtleWave {
-  0% {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-  20% {
-    transform: translate(-50%, -50%) rotate(-10deg);
-  }
-  40% {
-    transform: translate(-50%, -50%) rotate(8deg);
-  }
-  60% {
-    transform: translate(-50%, -50%) rotate(-4deg);
-  }
-  80% {
-    transform: translate(-50%, -50%) rotate(2deg);
-  }
+@keyframes erPulse {
+  0%,
   100% {
-    transform: translate(-50%, -50%) rotate(0deg);
+    box-shadow:
+      0 10px 26px rgba(2, 6, 23, 0.28),
+      0 0 0 1px rgba(15, 23, 42, 0.65);
+  }
+  50% {
+    box-shadow:
+      0 12px 34px rgba(2, 6, 23, 0.34),
+      0 0 0 1px rgba(45, 212, 191, 0.55),
+      0 0 0 6px rgba(45, 212, 191, 0.14);
   }
 }
 
@@ -516,18 +517,29 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 36px;
-  height: 39px;
+  width: 40px;
+  height: 40px;
   filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.5));
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;
-  background-color: #feb61c;
-  border-radius: 50%;
+  background-color: #0f172a;
+  color: #ffffff;
+  border-radius: 12px;
   padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.04em;
 }
 
 .helper-guide-hand.visible {
@@ -543,6 +555,12 @@
 .helper-guide-hand.clicking {
   transform: translate(-50%, -50%) scale(0.8);
   transition: transform 0.2s ease;
+}
+
+.helper-guide-hand::before {
+  content: "ER";
+  font-size: 14px;
+  line-height: 1;
 }
 
 /* Contact Form Styles */

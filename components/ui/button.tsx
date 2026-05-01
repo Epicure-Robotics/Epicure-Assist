@@ -4,22 +4,21 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 export const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-lg text-sm font-medium ring-offset-background transition-[color,box-shadow,transform] duration-150 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-[.60] active:scale-[0.98]",
+  "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-[color,box-shadow,transform] duration-150 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-[.60] active:scale-[0.985]",
   {
     variants: {
       variant: {
-        default:
-          "text-primary-foreground bg-primary shadow-sm hover:bg-primary/90 hover:shadow dark:bg-bright dark:text-bright-foreground dark:hover:bg-bright/90",
+        default: "text-primary-foreground bg-primary hover:bg-primary/90 shadow-sm",
         destructive: "bg-destructive text-destructive-foreground hover:bg-primary hover:text-primary-foreground",
         destructive_outlined:
           "border border-destructive text-destructive hover:bg-primary hover:text-primary-foreground",
-        outlined: "border border-primary text-foreground hover:bg-secondary",
-        outlined_subtle: "border border-border text-foreground hover:bg-secondary",
-        subtle: "bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground",
-        ghost: "text-primary hover:bg-secondary",
+        outlined: "border border-primary/60 text-foreground hover:bg-secondary",
+        outlined_subtle: "border border-border/80 text-foreground hover:bg-secondary",
+        subtle: "bg-secondary text-secondary-foreground hover:bg-secondary/70",
+        ghost: "text-foreground hover:bg-secondary",
         bare: "text-primary hover:bg-secondary p-0 h-auto",
         link: "text-primary underline-offset-4 hover:underline",
-        bright: "bg-bright text-bright-foreground hover:bg-primary hover:text-primary-foreground",
+        bright: "bg-accent text-accent-foreground hover:bg-accent/90",
         sidebar:
           "hover:bg-sidebar-accent hover:text-sidebar-foreground data-[desktop=false]:hover:bg-accent data-[desktop=false]:hover:text-foreground",
         "sidebar-subtle":

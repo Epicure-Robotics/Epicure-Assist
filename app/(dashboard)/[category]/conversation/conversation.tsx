@@ -1,15 +1,5 @@
 import FileSaver from "file-saver";
-import {
-  ArrowUp,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Info,
-  Link as LinkIcon,
-  PanelRightClose,
-  PanelRightOpen,
-  X,
-} from "lucide-react";
+import { ArrowUp, ChevronLeft, ChevronRight, Download, Info, Link as LinkIcon, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useState } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useStickToBottom } from "use-stick-to-bottom";
@@ -35,8 +25,7 @@ import LoadingSpinner from "@/components/loadingSpinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
 import { useSession } from "@/components/useSession";
@@ -290,18 +279,10 @@ const ConversationHeader = ({
           size="sm"
           iconOnly
           onClick={() => setSidebarVisible(!sidebarVisible)}
-          aria-label="Toggle sidebar"
+          aria-label="Toggle details"
         >
-          {isAboveSm ? (
-            sidebarVisible ? (
-              <PanelRightClose className="h-4 w-4" />
-            ) : (
-              <PanelRightOpen className="h-4 w-4" />
-            )
-          ) : (
-            <Info className="h-4 w-4" />
-          )}
-          <span className="sr-only">{sidebarVisible ? "Hide sidebar" : "Show sidebar"}</span>
+          <Info className="h-4 w-4" />
+          <span className="sr-only">{sidebarVisible ? "Hide details" : "Show details"}</span>
         </Button>
       </div>
     </div>
@@ -456,58 +437,49 @@ const ConversationContent = () => {
   const [sidebarVisible, setSidebarVisible] = useState(isAboveSm);
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="relative flex w-full">
-      <ResizablePanel defaultSize={75} minSize={50} maxSize={85}>
-        <div className="flex flex-col h-full w-full bg-background">
-          <div className="flex flex-col h-full relative">
-            <CarouselPreviewContent
-              previewFileIndex={previewFileIndex}
+    <div className="relative flex w-full h-full">
+      <div className="flex flex-col h-full w-full bg-background">
+        <div className="flex flex-col h-full relative">
+          <CarouselPreviewContent
+            previewFileIndex={previewFileIndex}
+            setPreviewFileIndex={setPreviewFileIndex}
+            previewFiles={previewFiles}
+            setPreviewFiles={setPreviewFiles}
+          />
+          <ConversationHeader
+            subject={(conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)")}
+            isAboveSm={isAboveSm}
+            sidebarVisible={sidebarVisible}
+            setSidebarVisible={setSidebarVisible}
+          />
+          <ErrorContent />
+          <LoadingContent />
+          {!error && !isPending && (
+            <MessageThreadPanel
+              scrollRef={scrollRef}
+              contentRef={contentRef}
               setPreviewFileIndex={setPreviewFileIndex}
-              previewFiles={previewFiles}
               setPreviewFiles={setPreviewFiles}
             />
-            <ConversationHeader
-              subject={
-                (conversationListInfo?.subject || conversationInfo?.subject) ?? (isPending ? "" : "(no subject)")
-              }
-              isAboveSm={isAboveSm}
-              sidebarVisible={sidebarVisible}
-              setSidebarVisible={setSidebarVisible}
-            />
-            <ErrorContent />
-            <LoadingContent />
-            {!error && !isPending && (
-              <MessageThreadPanel
-                scrollRef={scrollRef}
-                contentRef={contentRef}
-                setPreviewFileIndex={setPreviewFileIndex}
-                setPreviewFiles={setPreviewFiles}
-              />
-            )}
-          </div>
+          )}
         </div>
-      </ResizablePanel>
+      </div>
 
-      <ResizableHandle className={cn(!sidebarVisible && "hidden")} />
-
-      <ResizablePanel
-        defaultSize={25}
-        minSize={15}
-        maxSize={50}
-        className={cn("hidden lg:block", !sidebarVisible && "hidden!")}
-      >
-        {conversationInfo && sidebarVisible ? <ConversationSidebar conversation={conversationInfo} /> : null}
-      </ResizablePanel>
-    </ResizablePanelGroup>
+      {conversationInfo ? (
+        <Sheet open={sidebarVisible} onOpenChange={setSidebarVisible}>
+          <SheetContent side="right" className="w-[380px] max-w-[90vw] p-0 border-l border-border/70 bg-background">
+            <ConversationSidebar conversation={conversationInfo} />
+          </SheetContent>
+        </Sheet>
+      ) : null}
+    </div>
   );
 };
 
 const Conversation = () => (
-  <SidebarProvider>
-    <ConversationContextProvider>
-      <ConversationContent />
-    </ConversationContextProvider>
-  </SidebarProvider>
+  <ConversationContextProvider>
+    <ConversationContent />
+  </ConversationContextProvider>
 );
 
 export default Conversation;

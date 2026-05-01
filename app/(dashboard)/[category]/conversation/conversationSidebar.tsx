@@ -1,11 +1,4 @@
-import {
-  ChevronDown,
-  ChevronRight,
-  CornerUpLeft,
-  ExternalLink,
-  Mail,
-  UserPlus,
-} from "lucide-react";
+import { ChevronDown, ChevronRight, CornerUpLeft, ExternalLink, Mail, UserPlus } from "lucide-react";
 import { useState } from "react";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { toast } from "sonner";
@@ -150,8 +143,8 @@ const ConversationSidebar = ({ conversation }: ConversationSidebarProps) => {
   const previousConversations = customerConversations?.conversations.filter(({ slug }) => slug !== conversation.slug);
 
   return (
-    <div className="flex flex-col h-dvh bg-background">
-      <div className="flex flex-col gap-3 text-sm p-4 border-b border-border">
+    <div className="flex flex-col h-full bg-background">
+      <div className="flex flex-col gap-3 text-sm p-4 border-b border-border/70">
         <h3>Conversation</h3>
         <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2">
           <span className="text-muted-foreground">Status</span>
