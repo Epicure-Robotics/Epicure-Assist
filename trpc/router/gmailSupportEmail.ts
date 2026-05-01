@@ -130,13 +130,6 @@ export const gmailSupportEmailRouter = {
 
         const result = await processGmailThread(gmailSupportEmail.id, input.threadId, { status: "open" });
 
-        if (result.error) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: `Failed to import thread: ${result.error}`,
-          });
-        }
-
         return {
           success: true,
           conversationId: result.conversationId,

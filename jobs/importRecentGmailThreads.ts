@@ -10,14 +10,12 @@ import { getBasicProfileByEmail } from "@/lib/data/user";
 import { getPrimaryMailboxFromRelation } from "@/lib/tenant";
 import { parseEmailAddress } from "@/lib/emails";
 import { getGmailService, getLast10GmailThreads, getMessageById, getThread, GmailClient } from "@/lib/gmail/client";
-import { captureExceptionAndThrowIfDevelopment } from "@/lib/shared/sentry";
 import {
   assertSuccessResponseOrThrow,
   createMessageAndProcessAttachments,
   extractAndUploadInlineImages,
   extractQuotations,
   getParsedEmailInfo,
-  isNewThread,
 } from "./handleGmailWebhookEvent";
 import { assertDefinedOrRaiseNonRetriableError } from "./utils";
 
@@ -80,13 +78,8 @@ export const processGmailThreadWithClient = async (
   const response = await getThread(client, gmailThreadId);
   assertSuccessResponseOrThrow(response);
   const messages = response.data.messages ?? [];
-  // This happened at least once in local development; this will use Sentry to track how common this case is.
-  if (messages[0]?.id !== gmailThreadId) {
-    const errorMessage = `Thread ID ${gmailThreadId} doesn't match the first message ID ${messages[0]?.id}`;
-    captureExceptionAndThrowIfDevelopment(new Error(errorMessage));
-    return { gmailThreadId, error: errorMessage };
-  }
-  const firstMessageHeaders = messages[0].payload?.headers;
+  const threadRoot = assertDefinedOrRaiseNonRetriableError(messages[0]);
+  const firstMessageHeaders = threadRoot.payload?.headers;
   const parsedEmailFrom = assertDefinedOrRaiseNonRetriableError(
     parseEmailAddress(firstMessageHeaders?.find((h) => h.name?.toLowerCase() === "from")?.value ?? ""),
   );
@@ -114,22 +107,22 @@ export const processGmailThreadWithClient = async (
       );
     }),
   );
-  for (const message of messageInfos) {
+  for (let i = 0; i < messageInfos.length; i++) {
+    const message = assertDefinedOrRaiseNonRetriableError(messageInfos[i]);
     const parsedEmail = await simpleParser(
       Buffer.from(assertDefinedOrRaiseNonRetriableError(message.data.raw), "base64url").toString("utf-8"),
     );
     const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
     const { processedHtml, fileSlugs } = await extractAndUploadInlineImages(parsedEmailBody);
+    const isFirstMessageInImportedThread = i === 0;
     const cleanedUpText = htmlToText(
-      isNewThread(assertDefinedOrRaiseNonRetriableError(message.data.id), gmailThreadId)
-        ? processedHtml
-        : extractQuotations(processedHtml),
+      isFirstMessageInImportedThread ? processedHtml : extractQuotations(processedHtml),
     );
     // Process messages serially since we rely on the database ID for message ordering
     const staffUser = await getBasicProfileByEmail(parsedEmailFrom.address);
 
     const gmailMsgId = assertDefinedOrRaiseNonRetriableError(message.data.id);
-    const isFirstInThread = isNewThread(gmailMsgId, gmailThreadId);
+    const isFirstInThread = isFirstMessageInImportedThread;
 
     await createMessageAndProcessAttachments(
       parsedEmail,

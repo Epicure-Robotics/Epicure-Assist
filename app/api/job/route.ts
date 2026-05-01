@@ -55,6 +55,14 @@ const handleJob = async (jobRun: typeof jobRuns.$inferSelect, handler: Promise<a
 
 export const maxDuration = 60;
 
+/** Browser navigation sends GET; workers use POST + HMAC. Explain so `/api/job` visits are not mistaken for outages. */
+export const GET = () =>
+  Response.json({
+    ok: true,
+    message:
+      "Job endpoint is reachable. Actual work runs via POST from the database worker (pgmq → call_job_endpoint) with Authorization Bearer HMAC and X-Timestamp—not via the browser.",
+  });
+
 export const POST = async (request: NextRequest) => {
   try {
     const authHeader = request.headers.get("authorization");

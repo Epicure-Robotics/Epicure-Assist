@@ -42,8 +42,6 @@ import { assertDefinedOrRaiseNonRetriableError, NonRetriableError } from "./util
 
 const IGNORED_GMAIL_CATEGORIES = ["CATEGORY_PROMOTIONS", "CATEGORY_UPDATES", "CATEGORY_FORUMS", "CATEGORY_SOCIAL"];
 
-export const isNewThread = (gmailMessageId: string, gmailThreadId: string) => gmailMessageId === gmailThreadId;
-
 const isUniqueViolation = (error: unknown) => {
   return typeof error === "object" && error !== null && (error as any).code === "23505";
 };
@@ -239,6 +237,13 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
       );
       const { parsedEmailFrom, parsedEmailBody } = getParsedEmailInfo(parsedEmail);
 
+      const existingMessageInThread = await db.query.conversationMessages.findFirst({
+        columns: { id: true },
+        where: eq(conversationMessages.gmailThreadId, gmailThreadId),
+      });
+      /** Gmail message-id and thread-id are different strings; derive "first seen" from our DB instead. */
+      const isFirstMessageInThread = !existingMessageInThread;
+
       const isFormLead = isFormLeadMessage({
         subject: parsedEmail.subject,
         fromAddress: parsedEmailFrom.address,
@@ -258,19 +263,16 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
 
       const { processedHtml, fileSlugs } = await extractAndUploadInlineImages(parsedEmailBody);
       const cleanedUpText = htmlToText(
-        isNewThread(gmailMessageId, gmailThreadId) ? processedHtml : extractQuotations(processedHtml),
+        isFirstMessageInThread ? processedHtml : extractQuotations(processedHtml),
       );
 
       const staffUser = await getBasicProfileByEmail(parsedEmailFrom.address);
-      const isFirstMessage = isNewThread(gmailMessageId, gmailThreadId);
 
       const formParsed = isFormLead ? parseFormLeadHtml(processedHtml) : null;
 
       let ignoreReason: string | undefined;
-      if (!!staffUser && !isFirstMessage) {
+      if (!!staffUser && !isFirstMessageInThread) {
         ignoreReason = "Message is from staff";
-      } else if (!isFormLead && !staffUser) {
-        ignoreReason ??= "Not a website form lead";
       } else if (isFormLead && !formParsed) {
         ignoreReason ??= "Could not parse website form lead body";
       } else if (labelIds.some((id) => IGNORED_GMAIL_CATEGORIES.includes(id))) {
@@ -317,7 +319,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
         }
 
         let conversation;
-        if (isNewThread(gmailMessageId, gmailThreadId)) {
+        if (isFirstMessageInThread) {
           conversation = await createNewConversation(tx);
         } else {
           const previousEmail = await tx.query.conversationMessages.findFirst({
@@ -349,7 +351,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
           gmailThreadId,
           conversation,
           staffUser,
-          isFirstMessage,
+          isFirstMessageInThread,
           tx,
         );
 
@@ -377,7 +379,7 @@ export const handleGmailWebhookEvent = async ({ body, headers }: any) => {
           conversationSlug: conversation.slug,
           conversationId: conversation.id,
           newEmailId: newEmail.id,
-          isFirstMessage: isNewThread(gmailMessageId, gmailThreadId),
+          isFirstMessage: isFirstMessageInThread,
         };
       });
 
