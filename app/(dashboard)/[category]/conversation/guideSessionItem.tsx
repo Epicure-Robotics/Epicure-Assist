@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, ChevronRight, Hand } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 import type { GuideSession as GuideSessionType } from "@/app/types/global";
 import HumanizedTime from "@/components/humanizedTime";
@@ -20,8 +21,8 @@ export const GuideSessionItem = ({ guideSession }: { guideSession: GuideSessionT
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              <Hand className="h-3 w-3" />
-              Helping hand
+              <Image src="/logo.svg" alt="ER" width={12} height={12} className="opacity-90" />
+              ER guide
             </span>
           </div>
           <div className="flex items-start gap-2">
