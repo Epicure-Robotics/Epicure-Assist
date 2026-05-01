@@ -1,4 +1,5 @@
 import { Archive, Ban, Forward, Mail, RotateCcw, Send, UserPlus } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
@@ -529,16 +530,40 @@ const EmailPreviewSidebar = ({ conversation, onClose }: { conversation: ListItem
 };
 
 const NewConversationModal = () => {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [newConversationModalOpen, setNewConversationModalOpen] = useState(false);
   const [newConversationSlug, setNewConversationSlug] = useState(generateSlug());
   useEffect(() => {
     if (newConversationModalOpen) setNewConversationSlug(generateSlug());
   }, [newConversationModalOpen]);
 
-  const closeModal = () => setNewConversationModalOpen(false);
+  useEffect(() => {
+    if (searchParams.get("new") === "1") {
+      setNewConversationModalOpen(true);
+    }
+  }, [searchParams]);
+
+  const closeModal = () => {
+    setNewConversationModalOpen(false);
+
+    const next = new URLSearchParams(searchParams.toString());
+    if (next.get("new") === "1") {
+      next.delete("new");
+      const query = next.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname);
+    }
+  };
 
   return (
-    <Dialog open={newConversationModalOpen} onOpenChange={setNewConversationModalOpen}>
+    <Dialog
+      open={newConversationModalOpen}
+      onOpenChange={(open) => {
+        if (!open) closeModal();
+        else setNewConversationModalOpen(true);
+      }}
+    >
       <DialogTrigger asChild>
         <Button
           variant="default"
