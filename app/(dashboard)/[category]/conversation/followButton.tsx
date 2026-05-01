@@ -78,11 +78,7 @@ export const FollowButton = ({ conversationSlug, className, size = "sm" }: Follo
             disabled={isLoading || isPending}
             aria-pressed={isFollowing}
             aria-label={isFollowing ? "Unfollow conversation" : "Follow conversation"}
-            className={cn(
-              "transition-all duration-200",
-              isFollowing && "bg-blue-600 hover:bg-blue-700 text-white",
-              className,
-            )}
+            className={cn("transition-all duration-200", className)}
           >
             <Icon className="h-4 w-4 mr-2" />
             {buttonText}

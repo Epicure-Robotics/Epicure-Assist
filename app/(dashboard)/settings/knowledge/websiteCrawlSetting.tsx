@@ -93,7 +93,7 @@ const WebsiteCrawlSetting = () => {
         label: "Failed",
       },
       loading: {
-        classes: `${baseClasses} bg-blue-100 text-blue-800`,
+        classes: `${baseClasses} bg-primary/12 text-primary`,
         label: "Updating",
       },
       pending: {
@@ -104,7 +104,7 @@ const WebsiteCrawlSetting = () => {
 
     return (
       statusMap[status as keyof typeof statusMap] ?? {
-        classes: `${baseClasses} bg-gray-100 text-gray-800`,
+        classes: `${baseClasses} bg-muted text-muted-foreground`,
         label: status,
       }
     );

@@ -212,13 +212,13 @@ const NotificationsSetting = () => {
           <Card
             className={cn(
               "relative flex flex-col justify-between overflow-hidden p-6 transition-all border-l-4",
-              inAppToastEnabled ? "border-l-blue-500 shadow-md" : "border-l-transparent bg-muted/40",
+              inAppToastEnabled ? "border-l-primary shadow-md" : "border-l-transparent bg-muted/40",
             )}
           >
             <div className="space-y-4">
               <div className="flex items-start justify-between">
-                <div className="rounded-full bg-blue-500/10 p-2.5">
-                  <Bell className="h-5 w-5 text-blue-600" />
+                <div className="rounded-full bg-primary/12 p-2.5">
+                  <Bell className="h-5 w-5 text-primary" />
                 </div>
                 <Switch
                   checked={inAppToastEnabled}
@@ -295,7 +295,7 @@ const NotificationsSetting = () => {
           {/* Message */}
           <div className="flex items-center justify-between p-4 sm:p-6 hover:bg-muted/50 transition-colors">
             <div className="flex items-start gap-4">
-              <div className="mt-1 rounded-full bg-blue-100 p-2 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400">
+              <div className="mt-1 rounded-full bg-primary/12 p-2 text-primary">
                 <MessageSquare className="h-5 w-5" />
               </div>
               <div>

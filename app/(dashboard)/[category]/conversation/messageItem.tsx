@@ -312,7 +312,7 @@ const MessageItem = ({
                 <span className="text-xs text-muted-foreground">{message.files.length}</span>
               </div>
             )}
-            {message.isNew && <div className="h-2 w-2 rounded-full bg-blue-500" />}
+            {message.isNew && <div className="h-2 w-2 rounded-full bg-primary shadow-sm shadow-primary/35" />}
             <HumanizedTime time={message.createdAt} className="text-xs text-muted-foreground whitespace-nowrap" />
           </div>
         </div>
@@ -373,7 +373,7 @@ const MessageItem = ({
           )}
         </div>
         <div className="flex w-full items-center gap-3 text-sm text-muted-foreground">
-          {message.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-blue-500" />}
+          {message.isNew && <div className="h-[0.5rem] w-[0.5rem] rounded-full bg-primary shadow-sm shadow-primary/35" />}
           {hasReasoning && !userMessage && (
             <Popover>
               <PopoverTrigger asChild>

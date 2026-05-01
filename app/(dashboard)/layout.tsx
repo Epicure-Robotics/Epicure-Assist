@@ -46,15 +46,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <SentryContext />
             <SidebarProvider>
               <InboxClientLayout>
-                <div className="flex h-svh w-full">
+                <div className="flex h-svh w-full bg-sidebar">
                   <Suspense>
                     <AppSidebar />
                   </Suspense>
-                  <div className="flex-1 min-w-0 flex flex-col">
+                  <div className="flex-1 min-w-0 flex flex-col bg-sidebar">
                     <Suspense>
                       <AutoReplyBanner />
                     </Suspense>
-                    <main className="flex-1 min-w-0">{children}</main>
+                    <main className="flex-1 min-h-0 min-w-0 border-border/60 bg-background md:rounded-tl-2xl md:border-l md:border-t md:shadow-[inset_1px_1px_0_0_rgba(255,255,255,0.55)]">
+                      {children}
+                    </main>
                   </div>
                 </div>
               </InboxClientLayout>

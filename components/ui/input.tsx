@@ -18,9 +18,7 @@ const Input = ({ className, type, onModEnter, iconsSuffix, iconsPrefix, hint, re
         <input
           type={type}
           className={cn(
-            "w-full rounded-lg bg-background border border-border text-sm focus:border-transparent focus:outline-hidden focus:ring-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-            "placeholder:text-muted-foreground",
-            "text-base",
+            "h-10 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm transition-shadow placeholder:text-muted-foreground focus:border-transparent focus:outline-hidden focus:ring-2 focus:ring-ring/35 disabled:cursor-not-allowed disabled:opacity-50",
             iconsPrefix && "pl-10",
             className,
           )}

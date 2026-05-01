@@ -47,15 +47,13 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-brand-accent: #ff90e8;
-  --color-brand-canvas: #f4f4f0;
+  --color-brand-accent: #c45c4a;
+  --color-brand-canvas: #f6f2eb;
 
   --text-xxs: 0.625rem;
   --text-xxs--line-height: 0.75rem;
 
-  --font-system-ui:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
-    "Helvetica Neue", sans-serif;
+  --font-sans: var(--font-app), ui-sans-serif, system-ui, sans-serif;
 
   @keyframes default-pulse {
     0%,
@@ -117,106 +115,106 @@
 @layer base {
   :root,
   .light {
-    --sidebar-width: 12rem;
-    --sidebar-width-icon: 3rem;
-    --sidebar-width-mobile: 60%; /* Mobile sidebar width */
-    --sidebar-background: hsl(0 0% 100%); /* White sidebar */
-    --sidebar-foreground: hsl(210 11% 15%); /* Near black text */
-    --sidebar-primary: rgb(10 87 208); /* Material Blue */
-    --sidebar-primary-foreground: hsl(0 0% 100%); /* White text on primary */
-    --sidebar-accent: hsl(217 91% 95%); /* Light blue accent */
-    --sidebar-accent-foreground: hsl(210 11% 15%); /* Near black text */
-    --sidebar-border: hsl(210 20% 85%); /* Darker, clearly visible border */
-    --sidebar-ring: rgb(10 87 208); /* Material Blue focus ring */
-    --background: hsl(210 20% 98%); /* Light gray background */
-    --foreground: hsl(210 11% 15%); /* Near black for text */
-    --card: hsl(0 0% 100%); /* Background color for <Card> */
-    --card-foreground: hsl(210 11% 15%); /* Near black text */
-    --popover: hsl(0 0% 100%); /* Background color for popovers */
-    --popover-foreground: hsl(210 11% 15%); /* Near black text */
-    --primary: rgb(10 87 208); /* Material Blue: Primary for <Button> */
-    --primary-foreground: hsl(0 0% 100%); /* White text on primary */
-    --secondary: hsl(217 91% 95%); /* Light blue: Secondary */
-    --secondary-foreground: hsl(217 91% 40%); /* Darker blue text */
-    --muted: hsl(210 20% 96%); /* Light gray muted */
-    --muted-foreground: hsl(215 16% 47%); /* Muted text color */
-    --accent: hsl(210 20% 96%); /* Light accent */
-    --accent-foreground: hsl(210 11% 15%); /* Dark text */
-    --destructive: hsl(17 88% 40%); /* Used for destructive actions */
-    --destructive-foreground: hsl(0 0% 100%); /* Text color for destructive elements */
-    --success: hsl(142 72% 29%); /* Used for success states */
-    --success-foreground: hsl(0 0% 100%); /* Text color for success elements */
-    --border: hsl(214 32% 91%); /* Light border */
-    --input: hsl(214 32% 91%); /* Border color for inputs */
-    --ring: rgb(10 87 208); /* Material Blue: focus ring */
-    --chart-1: hsl(12 76% 61%); /* Chart color 1 */
-    --chart-2: hsl(173 58% 39%); /* Chart color 2 */
-    --chart-3: hsl(197 37% 24%); /* Chart color 3 */
-    --chart-4: hsl(43 74% 66%); /* Chart color 4 */
-    --chart-5: hsl(27 87% 67%); /* Chart color 5 */
-    --radius: 0.5rem; /* Border radius */
-    --bright: hsl(41 99% 55%); /* Pop of bright color */
-    --bright-foreground: hsl(210 11% 15%); /* Dark text on bright */
+    --sidebar-width: 14rem;
+    --sidebar-width-icon: 3.25rem;
+    --sidebar-width-mobile: 85%;
+    --sidebar-background: hsl(42 26% 95%);
+    --sidebar-foreground: hsl(222 24% 14%);
+    --sidebar-primary: hsl(168 45% 30%);
+    --sidebar-primary-foreground: hsl(42 42% 98%);
+    --sidebar-accent: hsl(152 28% 90%);
+    --sidebar-accent-foreground: hsl(168 42% 22%);
+    --sidebar-border: hsl(38 16% 86%);
+    --sidebar-ring: hsl(168 50% 34%);
+    --background: hsl(40 32% 97%);
+    --foreground: hsl(222 24% 12%);
+    --card: hsl(42 35% 99%);
+    --card-foreground: hsl(222 24% 12%);
+    --popover: hsl(42 35% 99%);
+    --popover-foreground: hsl(222 24% 12%);
+    --primary: hsl(168 45% 30%);
+    --primary-foreground: hsl(42 42% 98%);
+    --secondary: hsl(152 28% 91%);
+    --secondary-foreground: hsl(168 40% 24%);
+    --muted: hsl(40 18% 93%);
+    --muted-foreground: hsl(220 10% 40%);
+    --accent: hsl(152 24% 92%);
+    --accent-foreground: hsl(222 24% 14%);
+    --destructive: hsl(8 58% 42%);
+    --destructive-foreground: hsl(42 42% 98%);
+    --success: hsl(152 55% 28%);
+    --success-foreground: hsl(42 42% 98%);
+    --border: hsl(38 14% 86%);
+    --input: hsl(38 14% 86%);
+    --ring: hsl(168 50% 34%);
+    --chart-1: hsl(168 45% 38%);
+    --chart-2: hsl(25 72% 48%);
+    --chart-3: hsl(220 18% 36%);
+    --chart-4: hsl(45 80% 48%);
+    --chart-5: hsl(340 48% 48%);
+    --radius: 0.75rem;
+    --bright: hsl(36 90% 52%);
+    --bright-foreground: hsl(222 28% 12%);
     --syntax-plain: #24292e;
     --syntax-comment: #6a737d;
-    --syntax-keyword: #d73a49;
-    --syntax-function: #6f42c1;
-    --syntax-string: #032f62;
-    --syntax-number: #005cc5;
-    --chart-open: rgb(10 87 208); /* Material Blue */
-    --chart-closed-manual: hsl(45 99% 55%);
-    --chart-closed-ai: hsl(73 58% 56%);
-    --chart-negative: hsl(17 88% 40%); /* Same as light mode destructive */
+    --syntax-keyword: #b8324a;
+    --syntax-function: #2563a8;
+    --syntax-string: #1d6b55;
+    --syntax-number: #995c1e;
+    --chart-open: hsl(168 45% 30%);
+    --chart-closed-manual: hsl(36 88% 48%);
+    --chart-closed-ai: hsl(152 48% 42%);
+    --chart-negative: hsl(8 58% 42%);
   }
 
   .dark {
-    --sidebar-width: 12rem;
-    --sidebar-width-icon: 3rem;
-    --sidebar-width-mobile: 60%; /* Mobile sidebar width */
-    --sidebar-background: hsl(226 57% 12%); /* Darker blue: Sidebar background */
-    --sidebar-foreground: hsl(0 0% 100%);
-    --sidebar-primary: hsl(226 57% 12%);
-    --sidebar-primary-foreground: hsl(0 0% 100%);
-    --sidebar-accent: hsl(0 0% 100% / 10%);
-    --sidebar-accent-foreground: hsl(0 0% 100%);
-    --sidebar-border: hsl(0 0% 100% / 20%);
-    --sidebar-ring: hsl(0 0% 100%);
-    --background: hsl(226 57% 12%); /* Darker blue: Default background color */
-    --foreground: hsl(0 0% 100%); /* Default text color */
-    --card: hsl(226 57% 12%); /* Darker blue: Background for <Card> */
-    --card-foreground: hsl(0 0% 100%); /* Text color for <Card> */
-    --popover: hsl(226 57% 12%); /* Darker blue: Background for popovers */
-    --popover-foreground: hsl(0 0% 100%); /* Text color for popovers */
-    --primary: hsl(0 0% 100%); /* Primary colors for <Button> */
-    --primary-foreground: hsl(226 57% 21%); /* Blue-950: Primary text color */
-    --secondary: hsl(226 45% 20%); /* Blue secondary */
-    --secondary-foreground: hsl(0 0% 100%); /* Secondary text color */
-    --muted: hsl(226 45% 20%); /* Blue muted backgrounds */
-    --muted-foreground: hsl(0 0% 100% / 70%); /* Muted text color */
-    --accent: hsl(226 45% 20%); /* Blue accent */
-    --accent-foreground: hsl(0 0% 100%); /* Text color for accent elements */
-    --destructive: hsl(0 84% 65%); /* Used for destructive actions */
-    --destructive-foreground: hsl(0 0% 100%); /* Text color for destructive elements */
-    --success: hsl(142 72% 29%); /* Used for success states */
-    --success-foreground: hsl(0 0% 100%); /* Text color for success elements */
-    --border: hsl(0 0% 100% / 20%); /* Default border color */
-    --input: hsl(0 0% 100% / 20%); /* Border color for inputs */
-    --ring: hsl(0 0% 100% / 20%); /* Used for focus ring */
-    --chart-1: hsl(12 76% 41%); /* Chart color 1 */
-    --chart-2: hsl(173 58% 29%); /* Chart color 2 */
-    --chart-3: hsl(197 37% 14%); /* Chart color 3 */
-    --chart-4: hsl(43 74% 46%); /* Chart color 4 */
-    --chart-5: hsl(27 87% 47%); /* Chart color 5 */
-    --radius: 0.5rem; /* Border radius */
-    --bright: hsl(41 99% 55%); /* Pop of bright color */
-    --bright-foreground: hsl(226 57% 12%); /* Text on top of pop of bright color */
+    --sidebar-width: 14rem;
+    --sidebar-width-icon: 3.25rem;
+    --sidebar-width-mobile: 85%;
+    --sidebar-background: hsl(222 24% 9%);
+    --sidebar-foreground: hsl(42 20% 96%);
+    --sidebar-primary: hsl(160 42% 45%);
+    --sidebar-primary-foreground: hsl(222 28% 8%);
+    --sidebar-accent: hsl(220 16% 16%);
+    --sidebar-accent-foreground: hsl(42 20% 96%);
+    --sidebar-border: hsl(220 14% 18%);
+    --sidebar-ring: hsl(160 45% 50%);
+    --background: hsl(222 26% 8%);
+    --foreground: hsl(42 18% 96%);
+    --card: hsl(222 24% 11%);
+    --card-foreground: hsl(42 18% 96%);
+    --popover: hsl(222 24% 11%);
+    --popover-foreground: hsl(42 18% 96%);
+    --primary: hsl(160 42% 45%);
+    --primary-foreground: hsl(222 28% 8%);
+    --secondary: hsl(220 16% 18%);
+    --secondary-foreground: hsl(42 18% 94%);
+    --muted: hsl(220 14% 16%);
+    --muted-foreground: hsl(40 10% 68%);
+    --accent: hsl(220 14% 18%);
+    --accent-foreground: hsl(42 18% 96%);
+    --destructive: hsl(8 65% 52%);
+    --destructive-foreground: hsl(42 18% 98%);
+    --success: hsl(152 50% 40%);
+    --success-foreground: hsl(222 28% 8%);
+    --border: hsl(220 14% 20%);
+    --input: hsl(220 14% 20%);
+    --ring: hsl(160 45% 50%);
+    --chart-1: hsl(160 45% 50%);
+    --chart-2: hsl(25 70% 55%);
+    --chart-3: hsl(220 16% 65%);
+    --chart-4: hsl(45 75% 55%);
+    --chart-5: hsl(340 45% 58%);
+    --radius: 0.75rem;
+    --bright: hsl(38 88% 54%);
+    --bright-foreground: hsl(222 28% 10%);
     --syntax-plain: #d4d4d4;
-    --syntax-comment: #6a9955;
-    --syntax-keyword: #569cd6;
-    --syntax-function: #dcdcaa;
-    --syntax-string: #ce9178;
-    --syntax-number: #9cdcfe;
-    --chart-open: hsl(214 80% 60%); /* Blue in dark mode for better visibility */
+    --syntax-comment: #8b9a7a;
+    --syntax-keyword: #e8909a;
+    --syntax-function: #7ec9d8;
+    --syntax-string: #c4e3a8;
+    --syntax-number: #e6c08b;
+    --chart-open: hsl(160 45% 52%);
   }
 }
 
@@ -269,6 +267,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 22%, transparent);
+  }
   [role="button"],
   button {
     @apply cursor-pointer;
@@ -318,8 +319,8 @@
 }
 
 :root {
-  --sidebar-width: 12rem;
-  --sidebar-width-icon: 3rem;
+  --sidebar-width: 14rem;
+  --sidebar-width-icon: 3.25rem;
 }
 
 @media (max-width: 768px) {

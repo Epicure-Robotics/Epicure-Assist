@@ -26,18 +26,20 @@ export default function AutoReplyBanner() {
 
   return (
     <div
-      className={`flex items-center justify-center gap-2 px-4 py-2 text-sm ${
+      className={
         isHoliday
-          ? "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200"
-          : "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200"
-      }`}
+          ? "flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-b border-amber-200/70 bg-amber-50 px-4 py-2.5 text-center text-sm text-amber-950"
+          : "flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-b border-primary/12 bg-primary/[0.07] px-4 py-2.5 text-center text-sm text-foreground"
+      }
     >
-      <span>{isHoliday ? "🏖️" : "📅"}</span>
       <span>
         <strong>{isHoliday ? "Holiday" : "Weekend"} auto-reply is active.</strong> Incoming emails will receive an
         automatic response.
       </span>
-      <Link href="/settings/customers" className="underline hover:no-underline font-medium">
+      <Link
+        href="/settings/customers"
+        className="font-semibold underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+      >
         {isHoliday ? "Disable" : "Settings"}
       </Link>
     </div>

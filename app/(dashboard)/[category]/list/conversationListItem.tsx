@@ -65,7 +65,7 @@ export const ConversationListItem = ({
     <div className="px-1 md:px-2 relative">
       {/* Highlight bar on left when being previewed */}
       {isHighlighted && <div className="absolute left-0 top-2 bottom-2 w-1 bg-primary rounded-r" />}
-      <div className="flex w-full cursor-pointer items-center transition-colors border-b border-border py-1.5 hover:bg-gray-50 dark:hover:bg-white/[0.02]">
+      <div className="flex w-full cursor-pointer items-center border-b border-border py-1.5 transition-colors hover:bg-muted/65 dark:hover:bg-white/[0.02]">
         <div className="flex items-center gap-3 md:gap-4 px-2 md:px-4 flex-1 min-w-0">
           <div className="w-5 flex items-center shrink-0">
             <Checkbox
@@ -220,7 +220,7 @@ export const ConversationListItemContent = ({ conversation, emailPrefix }: Conve
             <HumanizedTime time={conversation.lastMessageAt ?? conversation.updatedAt} titlePrefix="Last message on" />
           )}
         </div>
-        {conversation.isNew && <div className="h-2 w-2 rounded-full bg-blue-500" />}
+        {conversation.isNew && <div className="h-2 w-2 shrink-0 rounded-full bg-primary shadow-sm shadow-primary/40" />}
       </div>
     </div>
   );

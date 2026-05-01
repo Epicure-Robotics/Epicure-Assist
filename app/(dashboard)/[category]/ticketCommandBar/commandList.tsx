@@ -30,7 +30,7 @@ export const CommandList = ({ isLoading, page, groups, selectedItemId, onSelect,
   if (isLoading && page === "previous-replies") {
     return (
       <div className="flex flex-col items-center justify-center py-6 gap-2 pointer-events-none">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-6 w-6 border-2 border-muted border-t-primary" />
         <p className="text-sm text-muted-foreground">Finding similar replies...</p>
       </div>
     );

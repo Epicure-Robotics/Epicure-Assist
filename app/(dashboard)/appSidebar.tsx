@@ -101,21 +101,25 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         ) : (
-          <div className="flex items-center justify-between gap-2 w-full h-10 px-2 rounded-lg">
-            <span className="truncate text-base font-bold group-data-[collapsible=icon]:hidden">{mailbox?.name}</span>
+          <div className="flex items-center justify-between gap-2 w-full h-10 px-2 rounded-xl">
+            <span className="truncate text-base font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+              {mailbox?.name}
+            </span>
             {/* Collapse button - visible when expanded */}
             <button
               onClick={toggleSidebar}
-              className="p-1 px-1.5 hover:bg-slate-100 rounded-md text-slate-500 group-data-[collapsible=icon]:hidden transition-colors"
+              className="p-1 px-1.5 rounded-lg text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground group-data-[collapsible=icon]:hidden"
               title="Collapse sidebar"
+              type="button"
             >
               <PanelLeft className="size-5" />
             </button>
             {/* Expand button - visible when collapsed */}
             <button
               onClick={toggleSidebar}
-              className="hidden group-data-[collapsible=icon]:flex p-1.5 hover:bg-slate-100 rounded-md text-slate-500 transition-colors mx-auto"
+              className="hidden group-data-[collapsible=icon]:flex p-1.5 rounded-lg text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground mx-auto"
               title="Expand sidebar"
+              type="button"
             >
               <PanelLeft className="size-5" />
             </button>

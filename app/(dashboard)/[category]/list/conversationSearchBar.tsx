@@ -193,9 +193,9 @@ export const ConversationSearchBar = ({
                                 : statusOptions.find(({ selected }) => selected)?.value === "spam"
                                   ? "bg-destructive"
                                   : statusOptions.find(({ selected }) => selected)?.value === "check_back_later"
-                                    ? "bg-blue-500"
+                                    ? "bg-violet-500"
                                     : statusOptions.find(({ selected }) => selected)?.value === "ignored"
-                                      ? "bg-slate-400"
+                                      ? "bg-muted-foreground"
                                       : "bg-muted",
                       )}
                     />
