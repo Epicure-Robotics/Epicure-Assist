@@ -1,7 +1,7 @@
 {
-  "short_name": "Helper",
-  "name": "Helper for Customer Support",
-  "description": "AI-powered customer support assistant",
+  "short_name": "Epicure Assist",
+  "name": "Epicure Assist",
+  "description": "Team inbox and AI assistant for Epicure Robotics",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#280B0B",

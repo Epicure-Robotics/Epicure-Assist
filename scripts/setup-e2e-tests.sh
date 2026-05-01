@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Helper - E2E Testing Environment Setup Script
+# Epicure Assist — E2E testing setup
 # This script sets up everything needed for E2E testing including Supabase, database migrations, and Playwright
 
 set -e
 
-echo "🎭 Setting up E2E Testing Environment for Helper"
+echo "🎭 Setting up E2E Testing Environment for Epicure Assist"
 echo "================================================"
 
 if [ ! -f "package.json" ]; then
-    echo "❌ Error: Please run this script from the root of the Helper project"
+    echo "❌ Error: Please run this script from the root of the Epicure Assist project"
     exit 1
 fi
 

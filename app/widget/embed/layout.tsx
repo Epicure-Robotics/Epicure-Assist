@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Epicure Inbox Widget",
+  title: "Epicure Assist Widget",
   description: "Customer Support Widget",
 };
 

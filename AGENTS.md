@@ -4,7 +4,7 @@ This file provides guidance to agents when working with code in this repository.
 
 ## Project Overview
 
-Epicure Inbox is an AI-assisted team inbox for Epicure Robotics: email (Gmail), Slack, and a customizable chat widget, built on Next.js 15 (App Router) with real-time updates and background jobs.
+Epicure Assist is an AI-assisted team inbox for Epicure Robotics: email (Gmail), Slack, and a customizable chat widget, built on Next.js 15 (App Router) with real-time updates and background jobs.
 
 ## Development Commands
 

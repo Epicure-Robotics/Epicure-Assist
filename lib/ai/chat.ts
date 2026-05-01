@@ -28,7 +28,12 @@ import { CHAT_MODEL, DRAFT_MODEL, isWithinTokenLimit, MINI_MODEL } from "@/lib/a
 import { customerInfoPrompt } from "@/lib/ai/customerInfoPrompt";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
-import { CHAT_SYSTEM_PROMPT, DRAFT_SYSTEM_PROMPT, getDraftPromptForCategory, GUIDE_INSTRUCTIONS } from "@/lib/ai/prompts";
+import {
+  CHAT_SYSTEM_PROMPT,
+  DRAFT_SYSTEM_PROMPT,
+  getDraftPromptForCategory,
+  GUIDE_INSTRUCTIONS,
+} from "@/lib/ai/prompts";
 import { buildTools, callServerSideTool } from "@/lib/ai/tools";
 import { cacheFor } from "@/lib/cache";
 import { Conversation, updateOriginalConversation } from "@/lib/data/conversation";
@@ -160,7 +165,7 @@ export const buildPromptMessages = async (
   customerInfo: CustomerInfo | null;
 }> => {
   const [{ knowledgeBank, knowledgeBankEntryIds, websitePagesPrompt, websitePages }, customerInfo] = await Promise.all([
-    fetchPromptRetrievalData(query, null),
+    fetchPromptRetrievalData(query, null, mailbox.id),
     email && customerInfoUrl ? fetchCustomerInfo(email, customerInfoUrl, mailbox) : null,
   ]);
 
@@ -687,7 +692,7 @@ export const respondWithAI = async ({
     return assistantMessage;
   };
 
-  if (!conversation.assignedToAI && (!isPromptConversation || !isFirstMessage)) {
+  if (!isHelperUser && !conversation.assignedToAI && (!isPromptConversation || !isFirstMessage)) {
     await updateOriginalConversation(conversation.id, {
       set: { status: "open" },
       message: "Escalated to human support",
@@ -895,8 +900,7 @@ export const generateDraftResponse = async (
 
   const categoryPrompt = getDraftPromptForCategory(categoryTitle);
   const staleLead =
-    conversation?.createdAt &&
-    Date.now() - new Date(conversation.createdAt).getTime() > 7 * 24 * 60 * 60 * 1000;
+    conversation?.createdAt && Date.now() - new Date(conversation.createdAt).getTime() > 7 * 24 * 60 * 60 * 1000;
   const staleNote = staleLead
     ? "\n\nNote: This thread is more than a week old. Open with a brief, warm acknowledgement of the delay before addressing their request."
     : "";

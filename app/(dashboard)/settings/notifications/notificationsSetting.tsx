@@ -8,7 +8,6 @@ import {
   Laptop,
   MessageSquare,
   Settings2,
-  Slack as SlackIcon,
   Smartphone,
   UserPlus,
 } from "lucide-react";
@@ -32,16 +31,11 @@ const NotificationsSetting = () => {
 
   const [webPushEnabled, setWebPushEnabled] = useState(notificationPrefs.webPushEnabled ?? false);
   const [inAppToastEnabled, setInAppToastEnabled] = useState(notificationPrefs.inAppToastEnabled ?? false);
-  const [slackDMEnabled, setSlackDMEnabled] = useState(notificationPrefs.slackDMEnabled ?? false);
   const [notifyOnNewMessage, setNotifyOnNewMessage] = useState(notificationPrefs.notifyOnNewMessage ?? false);
   const [notifyOnAssignment, setNotifyOnAssignment] = useState(notificationPrefs.notifyOnAssignment ?? false);
   const [notifyOnNote, setNotifyOnNote] = useState(notificationPrefs.notifyOnNote ?? false);
 
   const [permissionStatus, setPermissionStatus] = useState<NotificationPermission | null>(null);
-
-  // Check if Slack is connected to the mailbox
-  const { data: mailbox } = api.mailbox.get.useQuery();
-  const isSlackConnected = mailbox?.slackConnected ?? false;
 
   const savingIndicator = useSavingIndicator();
   const utils = api.useUtils();
@@ -121,8 +115,8 @@ const NotificationsSetting = () => {
   const handleTestNotification = () => {
     if (Notification.permission === "granted") {
       new Notification("Test Notification", {
-        body: "This is a test notification from Helper",
-        icon: "/icon_192.png",
+        body: "This is a test notification from Epicure Assist",
+        icon: "/logo_icon.png",
       });
       toast.success("Test notification sent");
     } else {
@@ -172,7 +166,7 @@ const NotificationsSetting = () => {
           <h2 className="text-xl font-semibold tracking-tight">Delivery Channels</h2>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2">
           {/* Web Push Card */}
           <Card
             className={cn(
@@ -236,49 +230,6 @@ const NotificationsSetting = () => {
               </div>
             </div>
           </Card>
-
-          {/* Slack Card */}
-          {isSlackConnected ? (
-            <Card
-              className={cn(
-                "relative flex flex-col justify-between overflow-hidden p-6 transition-all border-l-4",
-                slackDMEnabled ? "border-l-[#4A154B] shadow-md" : "border-l-transparent bg-muted/40",
-              )}
-            >
-              <div className="space-y-4">
-                <div className="flex items-start justify-between">
-                  <div className="rounded-full bg-[#4A154B]/10 p-2.5">
-                    <SlackIcon className="h-5 w-5 text-[#4A154B]" />
-                  </div>
-                  <Switch
-                    checked={slackDMEnabled}
-                    onCheckedChange={(checked) => {
-                      setSlackDMEnabled(checked);
-                      handlePreferenceChange("slackDMEnabled", checked);
-                    }}
-                  />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-lg">Slack DM</h3>
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                    Receive critical updates as direct messages in your connected Slack workspace.
-                  </p>
-                </div>
-              </div>
-            </Card>
-          ) : (
-            <Card className="flex flex-col justify-center items-center p-6 border-dashed bg-muted/30">
-              <SlackIcon className="h-8 w-8 text-muted-foreground/50 mb-3" />
-              <p className="text-sm text-muted-foreground text-center">Slack not connected</p>
-              <Button
-                variant="link"
-                className="h-auto p-0 text-xs mt-1"
-                onClick={() => toast.info("Connect Slack in Integration Settings")}
-              >
-                Connect Workspace
-              </Button>
-            </Card>
-          )}
         </div>
       </section>
 

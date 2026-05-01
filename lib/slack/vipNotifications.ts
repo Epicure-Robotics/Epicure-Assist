@@ -82,7 +82,7 @@ const createMessageBlocks = ({
       type: "section",
       text: {
         type: "mrkdwn",
-        text: [`<${getBaseUrl()}/conversations?id=${conversation.slug}|View in Epicure Inbox>`, ...customerLinks].join(" · "),
+        text: [`<${getBaseUrl()}/conversations?id=${conversation.slug}|View in Epicure Assist>`, ...customerLinks].join(" · "),
       },
     },
     getActionButtons(),

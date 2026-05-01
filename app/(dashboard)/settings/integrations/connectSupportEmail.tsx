@@ -74,7 +74,7 @@ const ConnectSupportEmail = () => {
         </Alert>
       ) : supportAccount ? (
         <ConfirmationDialog
-          message="Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Epicure Inbox, but you will not be able to send/receive new emails until you connect a new Gmail account."
+          message="Are you sure you want to disconnect Gmail? You will still have access to all of your emails in Epicure Assist, but you will not be able to send/receive new emails until you connect a new Gmail account."
           onConfirm={async () => {
             await deleteSupportEmailMutation();
             router.refresh();

@@ -1,4 +1,5 @@
 import { History, Maximize2, Minimize2, X } from "lucide-react";
+import Image from "next/image";
 import React from "react";
 import { HelperWidgetConfig } from "@helperai/sdk";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -41,9 +42,10 @@ const Header = React.memo(function Header({ config, onShowPreviousConversations,
 
   return (
     <div className="flex items-start justify-between border-b border-black p-1.5">
-      <div className="flex items-center h-full">
-        <div className="ml-2 flex flex-col gap-0.5">
-          <h2 className="text-base leading-5 text-foreground">{title}</h2>
+      <div className="ml-2 flex min-w-0 items-center gap-2">
+        <Image src="/logo.svg" alt="" width={28} height={28} className="size-7 shrink-0 rounded-md" unoptimized />
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <h2 className="truncate text-base leading-5 text-foreground">{title}</h2>
         </div>
       </div>
       <div className="flex items-center gap-2">

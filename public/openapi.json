@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Epicure Inbox API",
-    "description": "API for Epicure Inbox: embedded chat, sessions, and integrations. Replace server URLs with your deployment.",
+    "title": "Epicure Assist API",
+    "description": "API for Epicure Assist: embedded chat, sessions, and integrations. Replace server URLs with your deployment.",
     "version": "1.0.0",
     "contact": {
       "name": "Epicure Robotics",
@@ -23,7 +23,7 @@
     "/api/widget/session": {
       "post": {
         "summary": "Create Session",
-        "description": "Creates a new authentication session for Epicure Inbox",
+        "description": "Creates a new authentication session for Epicure Assist",
         "operationId": "createSession",
         "tags": ["Session"],
         "requestBody": {
@@ -140,7 +140,7 @@
     "/api/chat/conversation": {
       "post": {
         "summary": "Create Conversation",
-        "description": "Creates a new conversation in Epicure Inbox",
+        "description": "Creates a new conversation in Epicure Assist",
         "operationId": "createConversation",
         "tags": ["Conversation"],
         "security": [
@@ -207,7 +207,7 @@
     "/api/chat": {
       "post": {
         "summary": "Send Message",
-        "description": "Sends a message to Epicure Inbox and receives a streaming response",
+        "description": "Sends a message to Epicure Assist and receives a streaming response",
         "operationId": "sendMessage",
         "tags": ["Chat"],
         "security": [
@@ -447,7 +447,7 @@
         "properties": {
           "message": {
             "$ref": "#/components/schemas/Message",
-            "description": "The message to send to Epicure Inbox"
+            "description": "The message to send to Epicure Assist"
           },
           "conversationSlug": {
             "type": "string",

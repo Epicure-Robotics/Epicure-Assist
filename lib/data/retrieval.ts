@@ -1,15 +1,17 @@
-import { and, cosineDistance, desc, eq, gt, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, cosineDistance, desc, eq, gt, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { conversationMessages, faqs } from "@/db/schema";
 import { conversations } from "@/db/schema/conversations";
 import { websitePages, websites } from "@/db/schema/websites";
+import { triggerEvent } from "@/jobs/trigger";
 import { generateEmbedding } from "@/lib/ai";
 import { knowledgeBankPrompt, PAST_CONVERSATIONS_PROMPT, websitePagesPrompt } from "@/lib/ai/prompts";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { cleanUpTextForAI } from "../ai/core";
-import { triggerEvent } from "@/jobs/trigger";
 
 const SIMILARITY_THRESHOLD = 0.4;
+/** Slightly lower threshold for chat/widget retrieval so short queries still match crawled pages. */
+const CHAT_WEBSITE_SIMILARITY_THRESHOLD = 0.33;
 const MAX_SIMILAR_CONVERSATIONS = 3;
 const MAX_SIMILAR_WEBSITE_PAGES = 5;
 
@@ -69,9 +71,9 @@ export const getPastConversationsPrompt = async (query: string) => {
   return conversationPrompt;
 };
 
-export const findEnabledKnowledgeBankEntries = async () =>
+export const findEnabledKnowledgeBankEntries = async (mailboxId: number) =>
   await db.query.faqs.findMany({
-    where: eq(faqs.enabled, true),
+    where: and(eq(faqs.enabled, true), or(eq(faqs.unused_mailboxId, mailboxId), eq(faqs.unused_mailboxId, 0))),
     columns: {
       id: true,
       content: true,
@@ -81,24 +83,30 @@ export const findEnabledKnowledgeBankEntries = async () =>
 
 export const findSimilarFaqEntries = async (
   queryEmbedding: number[],
+  mailboxId: number,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
 ) => {
   const similarity = sql<number>`1 - (${cosineDistance(faqs.embedding, queryEmbedding)})`;
   return await db
     .select({ id: faqs.id })
     .from(faqs)
-    .where(and(gt(similarity, similarityThreshold), eq(faqs.enabled, true)))
+    .where(
+      and(
+        gt(similarity, similarityThreshold),
+        eq(faqs.enabled, true),
+        or(eq(faqs.unused_mailboxId, mailboxId), eq(faqs.unused_mailboxId, 0)),
+      ),
+    )
     .limit(1);
 };
 
 export const findSimilarWebsitePages = async (
   query: string | number[],
+  mailboxId: number,
   limit: number = MAX_SIMILAR_WEBSITE_PAGES,
   similarityThreshold: number = SIMILARITY_THRESHOLD,
 ) => {
-  const queryEmbedding = Array.isArray(query)
-    ? query
-    : await generateEmbedding(query, "embedding-query-similar-pages");
+  const queryEmbedding = Array.isArray(query) ? query : await generateEmbedding(query, "embedding-query-similar-pages");
   const similarity = sql<number>`1 - (${cosineDistance(websitePages.embedding, queryEmbedding)})`;
 
   const similarPages = await db
@@ -109,7 +117,14 @@ export const findSimilarWebsitePages = async (
       similarity: similarity.as("similarity"),
     })
     .from(websitePages)
-    .innerJoin(websites, and(eq(websites.id, websitePages.websiteId), isNull(websites.deletedAt)))
+    .innerJoin(
+      websites,
+      and(
+        eq(websites.id, websitePages.websiteId),
+        isNull(websites.deletedAt),
+        or(eq(websites.unused_mailboxId, mailboxId), eq(websites.unused_mailboxId, 0)),
+      ),
+    )
     .where(and(gt(similarity, similarityThreshold), isNull(websitePages.deletedAt)))
     .orderBy(desc(similarity))
     .limit(limit);
@@ -140,9 +155,9 @@ export type PromptRetrievalData = {
 export const fetchPromptRetrievalData = async (
   query: string,
   metadata: object | null,
+  mailboxId: number,
 ): Promise<PromptRetrievalData> => {
   const metadataText = metadata ? `User metadata:\n${JSON.stringify(metadata, null, 2)}` : null;
-  const knowledgeBank = await findEnabledKnowledgeBankEntries();
 
   let queryEmbedding: number[];
   try {
@@ -150,18 +165,20 @@ export const fetchPromptRetrievalData = async (
     queryEmbedding = await generateEmbedding(query, "embedding-query-similar-pages");
   } catch (error) {
     captureExceptionAndLog(error);
+    const knowledgeBankFallback = await findEnabledKnowledgeBankEntries(mailboxId);
     return {
-      knowledgeBank: knowledgeBankPrompt(knowledgeBank),
-      knowledgeBankEntryIds: knowledgeBank.map((e) => e.id),
+      knowledgeBank: knowledgeBankPrompt(knowledgeBankFallback),
+      knowledgeBankEntryIds: knowledgeBankFallback.map((e) => e.id),
       metadata: metadataText,
       websitePagesPrompt: null,
       websitePages: [],
     };
   }
 
-  const [websitePages, similarFaqs] = await Promise.all([
-    findSimilarWebsitePages(queryEmbedding),
-    findSimilarFaqEntries(queryEmbedding),
+  const [knowledgeBank, websitePages, similarFaqs] = await Promise.all([
+    findEnabledKnowledgeBankEntries(mailboxId),
+    findSimilarWebsitePages(queryEmbedding, mailboxId, MAX_SIMILAR_WEBSITE_PAGES, CHAT_WEBSITE_SIMILARITY_THRESHOLD),
+    findSimilarFaqEntries(queryEmbedding, mailboxId),
   ]);
 
   // A gap is a query where neither website pages nor any FAQ entry was semantically

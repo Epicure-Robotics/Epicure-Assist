@@ -2,7 +2,7 @@
 
 Copyright (c) 2024 Gumroad, Inc.
 
-Copyright (c) 2026 Epicure Robotics (Epicure Inbox derivative work)
+Copyright (c) 2026 Epicure Robotics (Epicure Assist derivative work)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

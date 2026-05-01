@@ -1,6 +1,6 @@
 # Contributing
 
-Epicure Inbox is an internal fork for Epicure Robotics. For changes:
+Epicure Assist is an internal fork for Epicure Robotics. For changes:
 
 1. Open a PR against the main integration branch with a clear description.
 2. Run `pnpm lint` and `pnpm tc` where practical before review.

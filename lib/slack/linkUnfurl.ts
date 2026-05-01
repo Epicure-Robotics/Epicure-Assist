@@ -117,7 +117,7 @@ export async function handleSlackUnfurl(event: LinkSharedEvent) {
           title: `Conversation not found`,
           title_link: link.url,
           text: "This conversation link could not be resolved in the database.",
-          footer: "Helper AI • Missing",
+          footer: "Epicure Assist • Missing",
         };
       }
     } catch (unfurlBuildError) {

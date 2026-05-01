@@ -4,7 +4,7 @@ export default function WidgetTestPage() {
   return (
     <div style={{ fontFamily: "Arial, sans-serif", padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
       <div style={{ background: "#f5f5f5", padding: "20px", borderRadius: "8px", marginBottom: "20px" }}>
-        <h1 style={{ color: "#333" }}>Epicure Inbox widget test</h1>
+        <h1 style={{ color: "#333" }}>Epicure Assist widget test</h1>
         <p style={{ lineHeight: 1.6 }}>This is a test page for the Helper chat widget end-to-end tests.</p>
 
         <div

@@ -10,7 +10,7 @@ setup("authenticate", async ({ page }) => {
   await page.goto("/login");
 
   // Verify we're on the login page
-  await expect(page).toHaveTitle(/Epicure Inbox/);
+  await expect(page).toHaveTitle(/Epicure Assist/);
 
   await page.fill("#email", SEED_ADMIN_EMAIL);
 

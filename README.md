@@ -1,4 +1,4 @@
-# Epicure Inbox
+# Epicure Assist
 
 Internal **draft-first** inbox for **Epicure Robotics**: website contact-form leads arrive in Gmail (`connect@epicurerobotics.com`), are categorized, and get AI **drafts** for human review before send.
 

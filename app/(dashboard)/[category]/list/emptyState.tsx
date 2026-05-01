@@ -58,7 +58,7 @@ export const NoConversations = ({ filtered, onClearFilters }: { filtered?: boole
             <div className="flex items-center gap-2">
               {onboardingState?.hasResend ? <Check className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
               <p className={cn(onboardingState?.hasResend && "line-through")}>
-                Set up Resend to send emails from Epicure Inbox
+                Set up Resend to send emails from Epicure Assist
               </p>
             </div>
             {!onboardingState?.hasResend && (

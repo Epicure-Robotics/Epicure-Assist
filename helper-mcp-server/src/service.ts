@@ -700,7 +700,7 @@ export const resolveActingUserSelection = async (selectors: ActingUserSelectors 
   }
 
   throw new Error(
-    "Epicure Inbox MCP could not choose an acting user automatically. Set HELPER_MCP_USER_EMAIL or HELPER_MCP_USER_ID.",
+    "Epicure Assist MCP could not choose an acting user automatically. Set HELPER_MCP_USER_EMAIL or HELPER_MCP_USER_ID.",
   );
 };
 

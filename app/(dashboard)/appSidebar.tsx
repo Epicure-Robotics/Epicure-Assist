@@ -18,6 +18,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useRef, useState } from "react";
@@ -94,6 +95,14 @@ export function AppSidebar() {
                 tooltip="Back to app"
               >
                 <div className="flex items-center gap-2 h-10">
+                  <Image
+                    src="/logo.svg"
+                    alt=""
+                    width={24}
+                    height={24}
+                    className="size-6 shrink-0 rounded-md"
+                    unoptimized
+                  />
                   <ChevronLeft className="size-4" />
                   <span className="font-medium group-data-[collapsible=icon]:hidden">Back to app</span>
                 </div>
@@ -101,10 +110,21 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         ) : (
-          <div className="flex items-center justify-between gap-2 w-full h-10 px-2 rounded-xl">
-            <span className="truncate text-base font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-              {mailbox?.name}
-            </span>
+          <div className="flex items-center justify-between gap-2 w-full min-h-10 px-2 rounded-xl">
+            <div className="flex min-w-0 flex-1 items-center gap-2 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:justify-center">
+              <Image
+                src="/logo.svg"
+                alt=""
+                width={28}
+                height={28}
+                className="size-7 shrink-0 rounded-md"
+                priority
+                unoptimized
+              />
+              <span className="truncate text-base font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+                {mailbox?.name}
+              </span>
+            </div>
             {/* Collapse button - visible when expanded */}
             <button
               onClick={toggleSidebar}

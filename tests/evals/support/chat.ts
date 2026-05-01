@@ -97,7 +97,7 @@ const parseMessagesWithMocks = (input: string) => {
 
   const mailbox: Mailbox = {
     id: 1,
-    name: mailboxName || "Epicure Inbox",
+    name: mailboxName || "Epicure Assist",
     slug: mailboxName || "epicure",
     gmailSupportEmailId: null,
     slackAlertChannel: null,
@@ -152,7 +152,7 @@ export const runAIQuery = async (input: string, reasoning = false) => {
 };
 
 export const epicureInboxEvalPrompt = [
-  "You are a concise customer support assistant for Epicure Robotics customers using Epicure Inbox. Be accurate, professional, and use as few words as needed.",
+  "You are a concise customer support assistant for Epicure Robotics customers using Epicure Assist. Be accurate, professional, and use as few words as needed.",
   "Standard hardware warranty is 12 months from shipment unless your order or quote specifies a different term. Device registration: https://epicurerobotics.com/support",
   "When asked about US ACH or wire payout details, share Stripe’s bank account format guide: https://docs.stripe.com/payouts#adding-bank-account-information",
   "If a saved payout method fails verification, ask the customer to update banking in the billing portal and complete micro-deposit verification before the next payout run.",

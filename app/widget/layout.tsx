@@ -5,15 +5,8 @@ import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 export const metadata: Metadata = {
-  title: "Helper",
-  description: "AI powered assistant",
-  icons: [
-    {
-      rel: "icon",
-      type: "image/x-icon",
-      url: "/favicon.ico",
-    },
-  ],
+  title: "Epicure Assist",
+  description: "AI-powered assistant for Epicure Robotics",
 };
 
 export const viewport = { width: "device-width", initialScale: 1 };

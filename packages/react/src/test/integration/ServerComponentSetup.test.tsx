@@ -26,7 +26,7 @@ describe("Server Component Integration", () => {
   it("initializes Helper with correct HMAC configuration", () => {
     const mockConfig = {
       ...generateHelperAuth({ email: mockEmail }),
-      title: "Test Helper",
+      title: "Test Epicure Assist",
       customerMetadata: {},
     };
 

@@ -65,7 +65,7 @@ export async function handleAssistantThreadMessage(event: AssistantThreadStarted
   await client.chat.postMessage({
     channel: channel_id,
     thread_ts,
-    text: "Hello, I'm an AI assistant to help you work with Epicure Robotics leads and tickets in this inbox!",
+    text: "Hello, I'm Epicure Assist — I help your team work with Epicure Robotics leads and tickets in this inbox.",
   });
 
   await client.assistant.threads.setSuggestedPrompts({

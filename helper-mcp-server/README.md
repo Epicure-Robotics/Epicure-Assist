@@ -1,6 +1,6 @@
-# Epicure Inbox MCP server
+# Epicure Assist MCP server
 
-Local stdio MCP server for [Epicure Inbox](https://epicurerobotics.com). It uses the app’s data and mutation layer so conversation reads and writes behave like the dashboard, including side effects such as event logs, notifications, notes, and reply queueing.
+Local stdio MCP server for [Epicure Assist](https://epicurerobotics.com). It uses the app’s data and mutation layer so conversation reads and writes behave like the dashboard, including side effects such as event logs, notifications, notes, and reply queueing.
 
 Tool names keep the `helper_*` prefix for compatibility with existing MCP client configs.
 
@@ -26,7 +26,7 @@ The Shopify lookup tools are read-only:
 
 ## Acting user
 
-The server always acts as a real team member in your Epicure Inbox workspace.
+The server always acts as a real team member in your Epicure Assist workspace.
 
 Selection order:
 
@@ -77,7 +77,7 @@ Optional env vars:
 ### URL mode for Codex
 
 ```bash
-codex mcp add epicure-inbox \
+codex mcp add epicure-assist \
   --url http://127.0.0.1:3334/mcp \
   --bearer-token-env-var HELPER_MCP_BEARER_TOKEN
 ```
@@ -89,10 +89,10 @@ Start the HTTP server first with `pnpm mcp:helper:http`.
 ```json
 {
   "mcpServers": {
-    "epicure-inbox": {
+    "epicure-assist": {
       "command": "pnpm",
       "args": ["mcp:helper"],
-      "cwd": "/path/to/helper-epicure",
+      "cwd": "/path/to/epicure-assist",
       "env": {
         "HELPER_MCP_USER_EMAIL": "support@example.com"
       }

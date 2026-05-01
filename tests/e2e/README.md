@@ -1,6 +1,6 @@
-# Epicure Inbox — End-to-End Testing
+# Epicure Assist — End-to-End Testing
 
-Playwright e2e tests for the Epicure Inbox application.
+Playwright e2e tests for the Epicure Assist application.
 
 ## 🚀 Quick Start
 

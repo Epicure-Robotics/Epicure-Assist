@@ -1,5 +1,5 @@
 import { TRPCRouterRecord } from "@trpc/server";
-import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
@@ -25,9 +25,12 @@ const fetchPageTitle = async (url: string): Promise<string> => {
 };
 
 export const websitesRouter = {
-  list: mailboxProcedure.query(async () => {
+  list: mailboxProcedure.query(async ({ ctx }) => {
     const websitesList = await db.query.websites.findMany({
-      where: isNull(websites.deletedAt),
+      where: and(
+        isNull(websites.deletedAt),
+        or(eq(websites.unused_mailboxId, ctx.mailbox.id), eq(websites.unused_mailboxId, 0)),
+      ),
       orderBy: [asc(websites.createdAt)],
       with: {
         crawls: {
@@ -65,7 +68,7 @@ export const websitesRouter = {
         name: z.string().optional(),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const urlWithProtocol = /^https?:\/\//i.test(input.url) ? input.url : `https://${input.url}`;
 
       const name = input.name || (await fetchPageTitle(urlWithProtocol));
@@ -75,6 +78,7 @@ export const websitesRouter = {
         .values({
           name,
           url: urlWithProtocol,
+          unused_mailboxId: ctx.mailbox.id,
           createdAt: new Date(),
           updatedAt: new Date(),
         })

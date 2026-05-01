@@ -8,7 +8,7 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Epicure Inbox (fork) theme tokens */
+/* Epicure Assist (fork) theme tokens */
 
 @theme inline {
   --color-background: var(--background);

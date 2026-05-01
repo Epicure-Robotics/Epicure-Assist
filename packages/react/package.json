@@ -1,7 +1,7 @@
 {
   "name": "@helperai/react",
   "version": "0.9.5",
-  "description": "React/Next.js integration for Epicure Inbox chat widget (upstream-compatible package name)",
+  "description": "React/Next.js integration for Epicure Assist chat widget (upstream-compatible package name)",
   "keywords": [
     "epicure",
     "inbox",

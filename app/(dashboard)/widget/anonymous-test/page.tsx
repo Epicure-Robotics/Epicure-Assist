@@ -13,7 +13,7 @@ export default function AnonymousWidgetTest() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
       <HelperWidgetScript host={env.NEXT_PUBLIC_DEV_HOST} {...config} />
       <div className="w-full max-w-xl rounded-lg bg-background p-6 shadow-md">
-        <h1 className="mb-4 text-2xl font-bold text-foreground">Epicure Inbox widget (anonymous test)</h1>
+        <h1 className="mb-4 text-2xl font-bold text-foreground">Epicure Assist widget (anonymous test)</h1>
         <p className="mb-4 text-muted-foreground">This page demonstrates the widget in anonymous mode.</p>
         <WidgetButtons />
       </div>

@@ -4,7 +4,7 @@ import { knowledgeBankPrompt } from "@/lib/ai/prompts";
 import { buildMessagesWithMocks, runAIQuery } from "@/tests/evals/support/chat";
 
 const knowledgeBankEntries = [
-  "You are a helpful customer support assistant for Epicure Robotics. Epicure builds automation and precision equipment for food production; Epicure Inbox is our team support workspace. Be concise, accurate, and professional.",
+  "You are a helpful customer support assistant for Epicure Robotics. Epicure builds automation and precision equipment for food production; Epicure Assist is our team support workspace. Be concise, accurate, and professional.",
   "Standard limited hardware warranty is 12 months from shipment unless your order acknowledgment states otherwise.",
   "RMA returns: unopened spare parts may be returned within 30 days of delivery with an approved RMA. Opened electrical components are final sale unless defective under warranty.",
   "To update the email on your Epicure account, sign in at https://epicurerobotics.com, open Account settings, and change the primary email. Confirm the verification message in both inboxes.",

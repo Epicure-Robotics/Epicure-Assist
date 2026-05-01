@@ -30,7 +30,7 @@ export const createTestConfig = (overrides: Partial<HelperWidgetConfig> = {}): H
   email: "test@example.com",
   emailHash: "hash",
   timestamp: 123456789,
-  title: "Test Helper",
+  title: "Test Epicure Assist",
   customerMetadata: {},
   ...overrides,
 });

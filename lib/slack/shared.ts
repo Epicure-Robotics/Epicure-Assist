@@ -93,7 +93,7 @@ export const handleMessageSlackAction = async (message: SlackMessage, payload: a
       await postSlackMessage(mailbox.slackBotToken, {
         ephemeralUserId: payload.user.id,
         channel: message.slackChannel,
-        text: "_Team member not found. Use the same email in Slack as in your Epicure Inbox account._",
+        text: "_Team member not found. Use the same email in Slack as in your Epicure Assist account._",
       });
       return;
     }

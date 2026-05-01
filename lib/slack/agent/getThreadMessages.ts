@@ -178,7 +178,7 @@ export const getThreadMessages = cache(
       return [
         {
           role: isBot ? "assistant" : "user",
-          content: content.replace(`<@${botUserId}>`, "@Helper"),
+          content: content.replace(`<@${botUserId}>`, "@Epicure Assist"),
         } satisfies CoreMessage,
       ];
     });

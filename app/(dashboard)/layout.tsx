@@ -14,15 +14,8 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { HydrateClient } from "@/trpc/server";
 
 export const metadata: Metadata = {
-  title: "Epicure Inbox",
+  title: "Epicure Assist",
   description: "Lead inbox and AI drafts for Epicure Robotics",
-  icons: [
-    {
-      rel: "icon",
-      type: "image/x-icon",
-      url: "/favicon.ico",
-    },
-  ],
   itunes: {
     appId: "6739270977",
   },

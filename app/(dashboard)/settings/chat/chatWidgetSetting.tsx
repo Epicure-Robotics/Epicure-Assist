@@ -139,7 +139,7 @@ const ChatWidgetSetting = ({ mailbox }: { mailbox: RouterOutputs["mailbox"]["get
   };
 
   const plainJSPrompt = `
-Integrate the Epicure Inbox chat widget into my app.
+Integrate the Epicure Assist chat widget into my app.
 
 First, add the following code snippet in my HTML layout before the closing </body> tag:
 
@@ -191,7 +191,7 @@ Make sure to inject the placeholder values based on what was generated on the se
   `.trim();
 
   const reactPrompt = `
-Integrate the Epicure Inbox widget into my React/Next.js app.
+Integrate the Epicure Assist widget into my React/Next.js app.
 
 First, install the React package (use yarn, pnpm, etc instead if the current project uses it):
 
@@ -333,7 +333,7 @@ ${NODE_HMAC_SAMPLE_CODE}
                     code={`
 <script>
   window.helperWidgetConfig = {
-    title: "My Epicure Inbox widget",
+    title: "My Epicure Assist widget",
   }
 </script>
 <!-- The script you added earlier -->
@@ -411,7 +411,7 @@ ${WIDGET_SAMPLE_CODE}
                       language="html"
                     />
                     <p className="text-sm">
-                      Optionally, you can add metadata to give Epicure Inbox more context about the customer:
+                      Optionally, you can add metadata to give Epicure Assist more context about the customer:
                     </p>
                     <CodeBlock
                       code={`
@@ -493,7 +493,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     code={`
 <HelperProvider
   host="${getBaseUrl()}"
-  title="My Epicure Inbox widget"
+  title="My Epicure Assist widget"
   iconColor="#ff0000"
 >
   {children}

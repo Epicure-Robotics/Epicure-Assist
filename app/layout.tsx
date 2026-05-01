@@ -13,16 +13,9 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Epicure Inbox",
+  title: "Epicure Assist",
   description: "Lead inbox and AI drafts for Epicure Robotics",
   manifest: "/app.webmanifest",
-  icons: [
-    {
-      rel: "icon",
-      type: "image/x-icon",
-      url: "/favicon.ico",
-    },
-  ],
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

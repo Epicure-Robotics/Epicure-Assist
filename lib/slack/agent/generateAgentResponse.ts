@@ -381,8 +381,8 @@ export const generateAgentResponse = async (
         showStatus(`Searching knowledge base...`, { toolName: "searchKnowledgeBase", parameters: { query } });
         try {
           const [websitePages, knowledgeBank] = await Promise.all([
-            findSimilarWebsitePages(query),
-            findEnabledKnowledgeBankEntries(),
+            findSimilarWebsitePages(query, mailbox.id),
+            findEnabledKnowledgeBankEntries(mailbox.id),
           ]);
           if (websitePages.length === 0 && knowledgeBank.length === 0) {
             return { message: "No relevant website pages found for this query" };
@@ -554,20 +554,20 @@ export const generateAgentResponse = async (
   const user = slackUserId ? await findUserViaSlack(assertDefined(mailbox.slackBotToken), slackUserId) : null;
   const userPrompt = user
     ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user)}\nCurrent user email: ${user.email}`
-    : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Helper email.";
+    : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Epicure Assist account email.";
 
   const result = await runAIQuery({
     mailbox,
     queryType: "agent_response",
     model: MINI_MODEL,
-    system: `You are Helper's Slack bot assistant for customer support teams. Keep your responses concise and to the point.
+    system: `You are Epicure Assist, the Slack-connected assistant for customer support teams. Keep your responses concise and to the point.
 
 You are currently in the mailbox: ${mailbox.name}. You cannot access any other mailboxes; the user must start a new chat or explicitly mention another mailbox by name to access others.
 
 ${userPrompt}
 
 IMPORTANT GUIDELINES:
-- Always identify as "Helper" (never as "Helper AI" or any other variation)
+- Always identify as "Epicure Assist" (the in-app assistant for Epicure Robotics; never as "Helper" or generic third-party AI).
 - Do not tag users in responses
 - Current time is: ${new Date().toISOString()}
 - Stay focused on customer support related inquiries

@@ -261,11 +261,18 @@ const generateSeedsFromFixtures = async () => {
 const seedHelpArticles = async () => {
   console.log("Seeding help articles...");
 
+  const mailbox = await db.query.mailboxes.findFirst();
+  if (!mailbox) {
+    console.warn("No mailbox found, skipping website docs seed");
+    return;
+  }
+
   const helperDocsWebsite = await db
     .insert(websites)
     .values({
       name: "Epicure Robotics (seed placeholder)",
       url: "https://epicurerobotics.com/",
+      unused_mailboxId: mailbox.id,
       createdAt: new Date(),
       updatedAt: new Date(),
     })

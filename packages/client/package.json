@@ -1,7 +1,7 @@
 {
   "name": "@helperai/client",
   "version": "0.4.5",
-  "description": "API client for Epicure Inbox widget and REST APIs (upstream-compatible package name)",
+  "description": "API client for Epicure Assist widget and REST APIs (upstream-compatible package name)",
   "keywords": [
     "epicure",
     "inbox",

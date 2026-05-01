@@ -26,7 +26,7 @@ self.addEventListener("push", (event) => {
 
     const options = {
       body: data.body || "You have a new notification",
-      icon: "/icon_192.png",
+      icon: "/logo_icon.png",
       badge: "/logo_icon.png",
       tag: data.conversationId ? `conversation-${data.conversationId}` : "notification",
       data: {
