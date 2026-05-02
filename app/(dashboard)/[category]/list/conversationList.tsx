@@ -1,4 +1,4 @@
-import { Archive, Ban, Forward, Mail, RotateCcw, Send, UserPlus } from "lucide-react";
+import { Archive, Ban, Forward, Mail, RotateCcw, UserPlus } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -8,8 +8,7 @@ import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import HumanizedTime from "@/components/humanizedTime";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FilterButton } from "@/components/ui/filter-button";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSelected } from "@/components/useSelected";
@@ -564,16 +563,6 @@ const NewConversationModal = () => {
         else setNewConversationModalOpen(true);
       }}
     >
-      <DialogTrigger asChild>
-        <Button
-          variant="default"
-          iconOnly
-          className="fixed z-50 bottom-6 right-6 rounded-full text-primary-foreground dark:bg-bright dark:text-bright-foreground bg-bright hover:bg-bright/90 hover:text-background"
-          aria-label="New message"
-        >
-          <Send className="text-primary dark:text-primary-foreground h-4 w-4" />
-        </Button>
-      </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>New message</DialogTitle>

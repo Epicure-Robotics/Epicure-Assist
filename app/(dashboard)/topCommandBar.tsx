@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, Plus, Search } from "lucide-react";
+import { ArrowRight, Search, Send } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -83,10 +83,11 @@ export function TopCommandBar({ mailboxName }: { mailboxName?: string | null }) 
             variant="bright"
             size="sm"
             iconOnly
-            aria-label="New ticket"
+            className="rounded-full shadow-sm"
+            aria-label="New message"
             onClick={() => router.push(`${pathname}?new=1`)}
           >
-            <Plus className="h-4 w-4" />
+            <Send className="h-4 w-4 -rotate-90" />
           </Button>
         </div>
       </div>
