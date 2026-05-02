@@ -1,12 +1,18 @@
-import { and, cosineDistance, gt, isNull, sql, eq } from "drizzle-orm";
+import { and, cosineDistance, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { knowledgeGaps } from "@/db/schema/knowledgeGaps";
 import { generateEmbedding } from "@/lib/ai";
+import { plainTextFromPossibleHtml } from "@/lib/shared/plainTextFromPossibleHtml";
 
 const DEDUP_SIMILARITY_THRESHOLD = 0.85;
 
 export const logKnowledgeGap = async ({ query }: { query: string }) => {
-  const embedding = await generateEmbedding(query, "embedding-query-similar-pages");
+  const plainQuery = plainTextFromPossibleHtml(query);
+  if (!plainQuery) {
+    return { action: "skipped" as const, reason: "empty_after_normalization" };
+  }
+
+  const embedding = await generateEmbedding(plainQuery, "embedding-query-similar-pages");
   const similarity = sql<number>`1 - (${cosineDistance(knowledgeGaps.embedding, embedding)})`;
 
   const existing = await db.query.knowledgeGaps.findFirst({
@@ -29,7 +35,7 @@ export const logKnowledgeGap = async ({ query }: { query: string }) => {
   const [newGap] = await db
     .insert(knowledgeGaps)
     .values({
-      query,
+      query: plainQuery,
       embedding,
       lastSeenAt: new Date(),
     })

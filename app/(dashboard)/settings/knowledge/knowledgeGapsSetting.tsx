@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { stripHtmlTags } from "@/components/utils/html";
 import { api } from "@/trpc/react";
 import SectionWrapper from "../sectionWrapper";
 
@@ -32,7 +33,7 @@ const KnowledgeGapsSetting = () => {
   });
 
   const handleAddToKnowledgeBank = async (gap: { id: number; query: string }) => {
-    await createFaqMutation.mutateAsync({ content: gap.query });
+    await createFaqMutation.mutateAsync({ content: stripHtmlTags(gap.query) });
     resolveMutation.mutate({ id: gap.id });
   };
 
@@ -81,6 +82,7 @@ const GapRow = ({
   isDismissing: boolean;
 }) => {
   const [expanded, setExpanded] = useState(false);
+  const displayQuery = stripHtmlTags(gap.query);
 
   return (
     <div className="flex items-start gap-3 py-3">
@@ -89,7 +91,7 @@ const GapRow = ({
           className={`text-sm cursor-pointer ${!expanded ? "line-clamp-2" : ""}`}
           onClick={() => setExpanded((v) => !v)}
         >
-          {gap.query}
+          {displayQuery}
         </p>
         <div className="flex items-center gap-2 mt-1">
           <Badge variant="gray" className="text-xs">
