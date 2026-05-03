@@ -144,10 +144,8 @@ export const mailboxRouter = {
         name: z.string().optional(),
         preferences: z
           .object({
-            confetti: z.boolean().optional(),
             autoRespondEmailToChat: z.enum(["draft", "reply"]).nullable().optional(),
             disableTicketResponseTimeAlerts: z.boolean().optional(),
-            disableNextTicketPreview: z.boolean().optional(),
             archiveGmailOnReply: z.boolean().optional(),
           })
           .optional(),

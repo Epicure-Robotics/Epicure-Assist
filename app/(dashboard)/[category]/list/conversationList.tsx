@@ -1,4 +1,4 @@
-import { Archive, Ban, Forward, Mail, RotateCcw, UserPlus } from "lucide-react";
+import { Archive, Ban, Forward, RotateCcw, UserPlus } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -6,13 +6,11 @@ import { toast } from "sonner";
 import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
-import HumanizedTime from "@/components/humanizedTime";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FilterButton } from "@/components/ui/filter-button";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSelected } from "@/components/useSelected";
-import { useSession } from "@/components/useSession";
 import { useShiftSelected } from "@/components/useShiftSelected";
 import { conversationsListChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
@@ -31,7 +29,6 @@ import NewConversationModalContent from "./newConversationModal";
 type ListItem = ConversationItem & { isNew?: boolean };
 
 export const List = () => {
-  const { user } = useSession() ?? {};
   const { searchParams, input } = useConversationsListInput();
   const {
     conversationListData,
@@ -56,7 +53,6 @@ export const List = () => {
   }, [showFilters]);
   const [allConversationsSelected, setAllConversationsSelected] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
-  const [hoveredConversation, setHoveredConversation] = useState<ListItem | null>(null);
   const utils = api.useUtils();
   const { mutate: bulkUpdate } = api.mailbox.conversations.bulkUpdate.useMutation({
     onError: (err) => {
@@ -380,8 +376,6 @@ export const List = () => {
                 onSelectConversation={navigateToConversation}
                 isSelected={allConversationsSelected || selectedConversations.includes(conversation.id)}
                 onToggleSelect={(isSelected, shiftKey) => toggleConversation(conversation.id, isSelected, shiftKey)}
-                onHover={!user?.preferences?.disableHoverPreview ? setHoveredConversation : undefined}
-                isHighlighted={hoveredConversation?.slug === conversation.slug}
               />
             ))}
             <div ref={loadMoreRef} />
@@ -393,136 +387,6 @@ export const List = () => {
           </div>
         )}
         <NewConversationModal />
-      </div>
-
-      {/* Bottom preview dock (distinct from right-sidebar previews) */}
-      {hoveredConversation && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
-          <div className="pointer-events-auto mx-auto max-w-[1100px] px-3 md:px-6 pb-4">
-            <div className="rounded-2xl border border-border/70 bg-background/80 backdrop-blur shadow-lg overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border/60">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">
-                    {hoveredConversation.subject || "(no subject)"}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {hoveredConversation.emailFrom ?? "Anonymous"}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setHoveredConversation(null)}
-                  className="text-muted-foreground hover:text-foreground transition-colors text-lg"
-                  aria-label="Close preview"
-                  type="button"
-                >
-                  ×
-                </button>
-              </div>
-              <div className="max-h-[320px] overflow-y-auto">
-                <EmailPreviewSidebar conversation={hoveredConversation} onClose={() => setHoveredConversation(null)} />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const EmailPreviewSidebar = ({ conversation, onClose }: { conversation: ListItem; onClose: () => void }) => {
-  const displayEmailFrom = conversation.emailFrom ?? "Anonymous";
-  const subject = conversation.subject;
-
-  // Fetch full conversation data with all messages
-  const { data: fullConversation, isLoading } = api.mailbox.conversations.get.useQuery(
-    { conversationSlug: conversation.slug },
-    { staleTime: 30000 },
-  );
-
-  return (
-    <div className="p-4 space-y-3 text-sm">
-      {/* Header with sender info */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/20 text-accent-foreground">
-            <Mail className="h-4 w-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-medium text-foreground">{displayEmailFrom}</p>
-            <p className="text-[10px] text-muted-foreground">
-              <HumanizedTime time={conversation.lastMessageAt ?? conversation.updatedAt} />
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-muted-foreground hover:text-foreground transition-colors text-lg"
-          aria-label="Close preview"
-        >
-          ×
-        </button>
-      </div>
-
-      {/* Subject */}
-      <div>
-        <p className="text-sm font-semibold text-foreground">{subject || "(no subject)"}</p>
-      </div>
-
-      {/* Status badges */}
-      <div className="flex flex-wrap gap-1.5">
-        {conversation.status === "waiting_on_customer" && (
-          <Badge variant="gray" className="text-[10px]">
-            Waiting on user
-          </Badge>
-        )}
-        {conversation.status === "check_back_later" && (
-          <Badge variant="gray" className="text-[10px]">
-            Check back later
-          </Badge>
-        )}
-        {conversation.status === "closed" && (
-          <Badge variant="gray" className="text-[10px]">
-            Closed
-          </Badge>
-        )}
-        {(conversation.unreadMessageCount ?? 0) > 0 && (
-          <Badge variant="bright" className="text-[10px]">
-            {conversation.unreadMessageCount} unread
-          </Badge>
-        )}
-      </div>
-
-      {/* Messages */}
-      <div className="space-y-3">
-        {isLoading ? (
-          <div className="text-xs text-muted-foreground">Loading messages...</div>
-        ) : fullConversation?.messages?.length ? (
-          fullConversation.messages
-            .filter((m) => m.type === "message")
-            .map((message) => (
-              <div key={message.id} className="rounded-md bg-muted/50 p-3">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-[10px] font-medium text-foreground">
-                    {"role" in message && message.role === "user" ? displayEmailFrom : "Support"}
-                  </span>
-                  <span className="text-[10px] text-muted-foreground">
-                    <HumanizedTime time={message.createdAt} />
-                  </span>
-                </div>
-                <div
-                  className="text-xs text-muted-foreground prose prose-xs max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      ("cleanedUpText" in message && message.cleanedUpText) ||
-                      ("body" in message && message.body) ||
-                      "",
-                  }}
-                />
-              </div>
-            ))
-        ) : (
-          <div className="text-xs text-muted-foreground">No messages found</div>
-        )}
       </div>
     </div>
   );

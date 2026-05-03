@@ -8,7 +8,6 @@ import { useConversationContext } from "@/app/(dashboard)/[category]/conversatio
 import { FollowButton } from "@/app/(dashboard)/[category]/conversation/followButton";
 import { EmailSignature } from "@/app/(dashboard)/[category]/emailSignature";
 import { DraftedEmail } from "@/app/types/global";
-import { triggerConfetti } from "@/components/confetti";
 import { useFileUpload } from "@/components/fileUploadContext";
 import { GenerateKnowledgeBankDialog } from "@/components/generateKnowledgeBankDialog";
 import { useDebouncedCallback } from "@/components/useDebouncedCallback";
@@ -117,11 +116,6 @@ export const MessageActions = () => {
   );
 
   const { user } = useSession() ?? {};
-
-  const triggerMailboxConfetti = () => {
-    if (!user?.preferences?.confetti) return;
-    triggerConfetti();
-  };
 
   const shouldAutoAssign = !!user?.preferences?.autoAssignOnReply && !conversation?.assignedToId;
 
@@ -427,14 +421,8 @@ export const MessageActions = () => {
 
       // The reply mutation already closes the conversation server-side (shouldClose: close).
       // Navigate away immediately without an extra API round-trip.
-      let shouldTriggerConfetti = false;
       if (conversation.status === "open" && close) {
         removeConversation();
-        if (!assign) shouldTriggerConfetti = true;
-      }
-
-      if (shouldTriggerConfetti) {
-        triggerMailboxConfetti();
       }
       toast.success(close ? "Replied and closed" : "Message sent!", {
         duration: 10000,

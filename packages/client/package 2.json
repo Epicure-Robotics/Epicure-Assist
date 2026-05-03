@@ -1,0 +1,61 @@
+{
+  "name": "@helperai/client",
+  "version": "0.4.5",
+  "description": "API client for Epicure Assist widget and REST APIs (upstream-compatible package name)",
+  "keywords": [
+    "epicure",
+    "inbox",
+    "api",
+    "client",
+    "sdk"
+  ],
+  "author": "Epicure Robotics (https://epicurerobotics.com)",
+  "license": "MIT",
+  "homepage": "https://epicurerobotics.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/epicurerobotics/helper-epicure.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./auth": {
+      "types": "./dist/auth.d.ts",
+      "import": "./dist/auth.mjs",
+      "require": "./dist/auth.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "pnpm build --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm build"
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.49",
+    "@types/node": "^22.15.3",
+    "tsup": "^8.3.6",
+    "typescript": "^5.3.3",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "superjson": "^2.2",
+    "zod": "^3.24"
+  }
+}

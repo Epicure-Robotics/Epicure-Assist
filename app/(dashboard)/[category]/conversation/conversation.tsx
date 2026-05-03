@@ -10,7 +10,6 @@ import {
 import { MessageThread } from "@/app/(dashboard)/[category]/conversation/messageThread";
 import Viewers from "@/app/(dashboard)/[category]/conversation/viewers";
 import { useConversationListContext } from "@/app/(dashboard)/[category]/list/conversationListContext";
-import { ConversationListItemContent } from "@/app/(dashboard)/[category]/list/conversationListItem";
 import PreviewModal from "@/app/(dashboard)/[category]/previewModal";
 import {
   type AttachedFile,
@@ -28,7 +27,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
-import { useSession } from "@/components/useSession";
 import type { serializeMessage } from "@/lib/data/conversationMessage";
 import { conversationChannelId } from "@/lib/realtime/channels";
 import { useRealtimeEvent } from "@/lib/realtime/hooks";
@@ -151,10 +149,7 @@ const MessageThreadPanel = ({
   setPreviewFileIndex: (index: number) => void;
   setPreviewFiles: (files: AttachedFile[]) => void;
 }) => {
-  const { user } = useSession() ?? {};
   const { data: conversationInfo } = useConversationContext();
-  const { conversationListData, currentIndex, moveToNextConversation } = useConversationListContext();
-  const nextConversation = conversationListData?.conversations[currentIndex + 1] ?? null;
 
   return (
     <div className="grow overflow-y-auto relative" ref={scrollRef} data-testid="message-thread-panel">
@@ -187,16 +182,6 @@ const MessageThreadPanel = ({
             <div className="absolute -top-12 left-0 z-10 pointer-events-auto">
               <ScrollToTopButton scrollRef={scrollRef} />
             </div>
-            {!user?.preferences?.disableNextTicketPreview && nextConversation && (
-              <div
-                className={cn(
-                  "transition-all duration-200 ease-in-out px-3 py-2 border rounded-lg bg-muted transform cursor-pointer hover:shadow-sm hover:scale-[1.01] pointer-events-auto",
-                )}
-                onClick={moveToNextConversation}
-              >
-                <ConversationListItemContent conversation={nextConversation} emailPrefix="Answer Next: " />
-              </div>
-            )}
           </div>
         </div>
       </div>

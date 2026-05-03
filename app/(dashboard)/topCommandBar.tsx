@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
 function isListRoute(pathname: string) {
@@ -44,20 +45,26 @@ export function TopCommandBar({ mailboxName }: { mailboxName?: string | null }) 
   return (
     <div className="sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur supports-[backdrop-filter]:bg-background/55">
       <div className="h-12 px-3 md:px-6 flex items-center gap-3">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-0.5 min-w-0 md:gap-1">
+          <SidebarTrigger
+            className={cn(
+              "shrink-0 h-8 w-8 rounded-lg text-muted-foreground",
+              "hover:bg-muted/60 hover:text-foreground",
+            )}
+          />
           <Link
             href="/all"
             className={cn(
-              "inline-flex items-center gap-2 rounded-lg px-2 py-1 -ml-2",
+              "inline-flex min-w-0 items-center gap-2 rounded-lg px-2 py-1",
               "hover:bg-muted/60 transition-colors",
             )}
             aria-label="Epicure Assist"
           >
-            <Image src="/logo.svg" alt="ER" width={20} height={20} className="rounded" unoptimized />
+            <Image src="/logo.svg" alt="ER" width={20} height={20} className="shrink-0 rounded" unoptimized />
             <span className="hidden md:block text-sm font-semibold tracking-tight truncate">
               {mailboxName || "Epicure Assist"}
             </span>
-            <ArrowRight className="hidden md:block h-4 w-4 text-muted-foreground" />
+            <ArrowRight className="hidden md:block h-4 w-4 shrink-0 text-muted-foreground" />
           </Link>
         </div>
 

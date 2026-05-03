@@ -12,7 +12,6 @@ import {
   MessageCircleReply,
   MessageSquareText,
   MonitorSmartphone,
-  PanelLeft,
   Settings as SettingsIcon,
   User,
   UserPlus,
@@ -66,11 +65,12 @@ export function AppSidebar() {
   const { data: pinnedIssues, error: issueGroupsError } = api.mailbox.issueGroups.pinnedList.useQuery();
   const { data: members } = useMembers();
   const isSettingsPage = pathname.startsWith(`/settings`);
-  const { isMobile, setOpenMobile, toggleSidebar } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const currentIssueGroupId = searchParams.get("issueGroupId");
   const currentRepliedBy = searchParams.get("repliedBy");
   const [staffActivityExpanded, setStaffActivityExpanded] = useState(false);
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
 
   const handleItemClick = () => {
     if (isMobile) {
@@ -110,39 +110,19 @@ export function AppSidebar() {
             </SidebarMenuItem>
           </SidebarMenu>
         ) : (
-          <div className="flex items-center justify-between gap-2 w-full min-h-10 px-2 rounded-xl">
-            <div className="flex min-w-0 flex-1 items-center gap-2 group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:justify-center">
-              <Image
-                src="/logo.svg"
-                alt=""
-                width={28}
-                height={28}
-                className="size-7 shrink-0 rounded-md"
-                priority
-                unoptimized
-              />
-              <span className="truncate text-base font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
-                {mailbox?.name}
-              </span>
-            </div>
-            {/* Collapse button - visible when expanded */}
-            <button
-              onClick={toggleSidebar}
-              className="p-1 px-1.5 rounded-lg text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground group-data-[collapsible=icon]:hidden"
-              title="Collapse sidebar"
-              type="button"
-            >
-              <PanelLeft className="size-5" />
-            </button>
-            {/* Expand button - visible when collapsed */}
-            <button
-              onClick={toggleSidebar}
-              className="hidden group-data-[collapsible=icon]:flex p-1.5 rounded-lg text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground mx-auto"
-              title="Expand sidebar"
-              type="button"
-            >
-              <PanelLeft className="size-5" />
-            </button>
+          <div className="flex w-full min-h-10 items-center gap-2 px-2 py-1 rounded-xl group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-1">
+            <Image
+              src="/logo.svg"
+              alt=""
+              width={28}
+              height={28}
+              className="size-7 shrink-0 rounded-md"
+              priority
+              unoptimized
+            />
+            <span className="min-w-0 flex-1 truncate text-base font-semibold tracking-tight text-sidebar-foreground group-data-[collapsible=icon]:hidden">
+              {mailbox?.name}
+            </span>
           </div>
         )}
       </SidebarHeader>
@@ -225,6 +205,47 @@ export function AppSidebar() {
                 </SidebarMenu>
               </SidebarGroup>
 
+              <SidebarGroup>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      className="cursor-pointer"
+                      onClick={() => setSettingsExpanded(!settingsExpanded)}
+                      tooltip="Settings"
+                    >
+                      <SettingsIcon className="size-4" />
+                      <span className="group-data-[collapsible=icon]:hidden flex-1">Settings</span>
+                      {settingsExpanded ? (
+                        <ChevronDown className="size-3 group-data-[collapsible=icon]:hidden" />
+                      ) : (
+                        <ChevronRight className="size-3 group-data-[collapsible=icon]:hidden" />
+                      )}
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  {settingsExpanded &&
+                    settingsItems.map((item) => (
+                      <SidebarMenuItem key={item.id}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === `/settings/${item.id}`}
+                          tooltip={item.label}
+                        >
+                          <Link
+                            href={`/settings/${item.id}`}
+                            onClick={() => {
+                              previousAppUrlRef.current = pathname;
+                              handleItemClick();
+                            }}
+                          >
+                            <item.icon className="size-4" />
+                            <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                </SidebarMenu>
+              </SidebarGroup>
+
               {!issueGroupsError && pinnedIssues && pinnedIssues.groups.length > 0 && (
                 <SidebarGroup>
                   <SidebarMenu>
@@ -299,26 +320,6 @@ export function AppSidebar() {
                   </SidebarMenu>
                 </SidebarGroup>
               )}
-            </div>
-            <div className="mt-auto">
-              <SidebarGroup>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip="Settings"
-                      onClick={() => {
-                        previousAppUrlRef.current = pathname;
-                      }}
-                    >
-                      <Link href={`/settings/${settingsItems[0].id}`} onClick={handleItemClick}>
-                        <SettingsIcon className="size-4" />
-                        <span className="group-data-[collapsible=icon]:hidden">Settings</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
             </div>
           </>
         )}

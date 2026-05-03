@@ -31,11 +31,8 @@ export const userProfiles = pgTable("user_profiles", {
   pinnedIssueGroupIds: jsonb("pinned_issue_group_ids").$type<number[]>().default([]),
   preferences: jsonb()
     .$type<{
-      confetti?: boolean;
-      disableNextTicketPreview?: boolean;
       autoAssignOnReply?: boolean;
       disableEmailSignature?: boolean;
-      disableHoverPreview?: boolean;
       notifications?: {
         webPushEnabled?: boolean;
         inAppToastEnabled?: boolean;

@@ -190,11 +190,8 @@ export const userRouter = {
       z.object({
         preferences: z
           .object({
-            confetti: z.boolean().optional(),
-            disableNextTicketPreview: z.boolean().optional(),
             autoAssignOnReply: z.boolean().optional(),
             disableEmailSignature: z.boolean().optional(),
-            disableHoverPreview: z.boolean().optional(),
           })
           .optional(),
       }),

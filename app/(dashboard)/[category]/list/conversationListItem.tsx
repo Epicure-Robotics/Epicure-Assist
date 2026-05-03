@@ -21,8 +21,6 @@ type ConversationListItemProps = {
   onSelectConversation: (slug: string) => void;
   isSelected: boolean;
   onToggleSelect: (isSelected: boolean, shiftKey: boolean) => void;
-  onHover?: (conversation: ListItem | null) => void;
-  isHighlighted?: boolean;
 };
 
 export const ConversationListItem = ({
@@ -30,12 +28,9 @@ export const ConversationListItem = ({
   onSelectConversation,
   isSelected,
   onToggleSelect,
-  onHover,
-  isHighlighted,
 }: ConversationListItemProps) => {
   const utils = api.useUtils();
   const hoverTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const showPreviewTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   // Only prefetch if user hovers for >300ms (intentional hover, not just scrolling)
   // This reduces unnecessary prefetches while keeping instant navigation for real hovers
@@ -43,28 +38,16 @@ export const ConversationListItem = ({
     hoverTimeoutRef.current = setTimeout(() => {
       void utils.mailbox.conversations.get.ensureData({ conversationSlug: conversation.slug });
     }, 150);
-
-    // Show preview in sidebar after 400ms
-    if (onHover) {
-      showPreviewTimeoutRef.current = setTimeout(() => {
-        onHover(conversation);
-      }, 500);
-    }
   };
 
   const handleMouseLeave = () => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
-    if (showPreviewTimeoutRef.current) {
-      clearTimeout(showPreviewTimeoutRef.current);
-    }
   };
 
   return (
     <div className="px-1 md:px-2 relative">
-      {/* Highlight bar on left when being previewed */}
-      {isHighlighted && <div className="absolute left-0 top-2 bottom-2 w-1 bg-primary rounded-r" />}
       <div
         className={cn(
           "flex w-full cursor-pointer items-center border-b border-border py-1.5 transition-colors",
