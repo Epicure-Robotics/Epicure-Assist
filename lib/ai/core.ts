@@ -31,8 +31,9 @@ export type AvailableModel =
 
 const EMBEDDING_MODEL = "text-embedding-3-small";
 const EMBEDDING_MODEL_FALLBACK = "openai/text-embedding-3-small";
-export const CHAT_MODEL = MINIMAX_M2_5;
-export const MINI_MODEL = MINIMAX_M2_5;
+/** OpenAI-compatible IDs only — `openai()` in this app targets api.openai.com, not OpenRouter. */
+export const CHAT_MODEL = _GPT_4O_MINI_MODEL;
+export const MINI_MODEL = _GPT_4O_MINI_MODEL;
 export const DRAFT_MODEL = _GPT_4O_MINI_MODEL;
 
 export const generateEmbedding = async (

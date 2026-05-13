@@ -33,7 +33,8 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     source: "chat",
     isPrompt: parsedParams.data.isPrompt ?? false,
     isVisitor,
-    assignedToAI: false,
+    /** Allow the widget / public chat to receive AI replies on first message (escalation path skips streaming when false). */
+    assignedToAI: true,
     anonymousSessionId: session.isAnonymous ? session.anonymousSessionId : undefined,
   });
 

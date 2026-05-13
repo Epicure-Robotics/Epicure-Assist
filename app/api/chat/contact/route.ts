@@ -32,7 +32,7 @@ export const POST = withWidgetAuth(async ({ request }, { mailbox }) => {
           subject: "Contact Form Submission",
           status: "open",
           source: "form",
-          assignedToAI: false,
+          assignedToAI: true,
           isPrompt: false,
           isVisitor: false,
         },

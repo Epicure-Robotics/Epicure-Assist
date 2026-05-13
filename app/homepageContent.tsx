@@ -1,13 +1,12 @@
 "use client";
 
 import { ArrowLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ConversationDetails } from "@helperai/client";
 import { MessageContent, useChat, useConversation, useHelperClient } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRunOnce } from "@/components/useRunOnce";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
@@ -22,13 +21,30 @@ const ChatWidget = ({
   conversation: ConversationDetails;
   onBack: () => void;
 }) => {
-  const { messages, input, handleInputChange, handleSubmit, agentTyping, status, append } = useChat({
+  const { messages, input, handleInputChange, handleSubmit, agentTyping, status, append, setMessages } = useChat({
     conversation,
+    enableRealtime: false,
+    ai: {
+      onError: () => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `error_${Date.now()}`,
+            role: "assistant" as const,
+            content: "Sorry, something went wrong while generating a reply. Please try again in a moment.",
+          },
+        ]);
+      },
+    },
   });
 
-  useRunOnce(() => {
-    append({ role: "user", content: initialMessage });
-  });
+  const openedWithMessageRef = useRef(false);
+  useEffect(() => {
+    const text = initialMessage.trim();
+    if (!text || openedWithMessageRef.current) return;
+    openedWithMessageRef.current = true;
+    void append({ role: "user", content: text });
+  }, [append, initialMessage]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -61,7 +77,7 @@ const ChatWidget = ({
               </div>
             ))}
             {agentTyping && <div className="animate-default-pulse text-muted">An agent is typing...</div>}
-            {status === "submitted" && (
+            {(status === "submitted" || status === "streaming") && (
               <div className="flex items-center gap-1">
                 <div className="size-2 bg-foreground rounded-full animate-default-pulse [animation-delay:-0.3s]" />
                 <div className="size-2 bg-foreground rounded-full animate-default-pulse [animation-delay:-0.15s]" />
@@ -99,6 +115,7 @@ const ChatWidget = ({
 
 export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
   const [question, setQuestion] = useState("");
+  const [starterMessage, setStarterMessage] = useState("");
   const [chatConversationSlug, setChatConversationSlug] = useState<string | null>(null);
   const { data: sampleQuestions, isLoading, error } = api.sampleQuestions.useQuery();
   const { client } = useHelperClient();
@@ -110,7 +127,10 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
     { enabled: !!chatConversationSlug },
   );
 
-  const handleQuestionClick = async () => {
+  const beginChat = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setStarterMessage(trimmed);
     const result = await client.conversations.create();
     setChatConversationSlug(result.conversationSlug);
   };
@@ -118,13 +138,14 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
   const handleBackToMain = () => {
     setChatConversationSlug(null);
     setQuestion("");
+    setStarterMessage("");
   };
 
   if (chatConversationSlug && conversation) {
     return (
       <ChatWidget
         mailboxName={mailboxName}
-        initialMessage={question}
+        initialMessage={starterMessage}
         conversation={conversation}
         onBack={handleBackToMain}
       />
@@ -147,12 +168,12 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
               className="w-full px-6 py-4 text-lg rounded-full pr-16"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && question.trim()) {
-                  handleQuestionClick();
+                  void beginChat(question);
                 }
               }}
             />
             <button
-              onClick={() => question.trim() && handleQuestionClick()}
+              onClick={() => question.trim() && void beginChat(question)}
               disabled={!question.trim()}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
             >
@@ -173,16 +194,16 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {sampleQuestions?.map((question, index) => (
+              {sampleQuestions?.map((sample, index) => (
                 <button
                   key={index}
+                  type="button"
                   onClick={() => {
-                    setQuestion(question.text);
-                    handleQuestionClick();
+                    void beginChat(sample.text);
                   }}
                   className="p-4 border rounded-lg hover:bg-secondary text-left transition-colors"
                 >
-                  <span>{question.text}</span>
+                  <span>{sample.text}</span>
                 </button>
               ))}
             </div>
