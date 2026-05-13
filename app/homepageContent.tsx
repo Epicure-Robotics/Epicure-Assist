@@ -182,10 +182,7 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
                   }}
                   className="p-4 border rounded-lg hover:bg-secondary text-left transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <span className="text-2xl">{question.emoji}</span>
-                    {question.text}
-                  </div>
+                  <span>{question.text}</span>
                 </button>
               ))}
             </div>

@@ -5,7 +5,7 @@ import { conversationMessages, conversations, faqs, websitePages } from "@/db/sc
 import { cacheFor } from "@/lib/cache";
 import { DRAFT_MODEL, generateStructuredObject, type AvailableModel } from "./core";
 
-const SAMPLE_QUESTIONS_PROMPT = `Based on the following knowledge base content, generate 9 diverse and helpful sample questions that users might want to ask. 
+const SAMPLE_QUESTIONS_PROMPT = `Based on the following knowledge base content, generate 9 diverse and helpful sample questions.
 
 Make the questions:
 - Succinct, one *short* sentence each
@@ -13,10 +13,13 @@ Make the questions:
 - Varied in topic and complexity
 - Natural and conversational
 - Relevant to the provided content
+- Professional and customer-facing
+- Include a balanced mix of:
+  - End-customer support questions (orders, products, pricing, delivery, troubleshooting)
+  - CRM/client-enquiry questions from business prospects (demo requests, partnerships, integrations, deployments, procurement)
+- Reflect all relevant brands and offerings mentioned in the knowledge base (including Epicure Robotics, Zoe, Smoothie Bar, and related services)
 
-For each question, also suggest an appropriate emoji that represents the topic.
-
-Return the response as a JSON object with a "questions" array, containing objects with "text" and "emoji" fields.
+Return the response as a JSON object with a "questions" array, containing objects with a "text" field only.
 
 Knowledge base content:
 {{CONTENT}}
@@ -26,21 +29,29 @@ Recent conversation subjects:
 
 interface SampleQuestion {
   text: string;
-  emoji: string;
 }
 
 const SAMPLE_QUESTION_MODELS: AvailableModel[] = [DRAFT_MODEL, "gpt-4o-mini", "gpt-4.1"];
+const MIN_CLIENT_QUESTIONS = 3;
+const SAMPLE_QUESTIONS_CACHE_VERSION = "v2";
 
 const FALLBACK_SAMPLE_QUESTIONS: SampleQuestion[] = [
-  { text: "What services does Epicure Robotics provide?", emoji: "🤖" },
-  { text: "How can I get support for a robot issue?", emoji: "🛠️" },
-  { text: "How quickly can someone respond to my request?", emoji: "⏱️" },
-  { text: "Can I schedule a demo with your team?", emoji: "📅" },
-  { text: "What information should I include in a support ticket?", emoji: "📝" },
-  { text: "Do you provide maintenance and troubleshooting guidance?", emoji: "🔧" },
-  { text: "How do I follow up on an existing conversation?", emoji: "📨" },
-  { text: "Can your team help with integration questions?", emoji: "🔌" },
-  { text: "Where can I find product documentation and FAQs?", emoji: "📚" },
+  { text: "What are your best-selling smoothies and functional drinks right now?" },
+  { text: "Do you offer dairy-free, vegan, or high-protein options across your menu?" },
+  { text: "Can I customize ingredients and nutrition preferences before placing an order?" },
+  { text: "What are your current pricing, package sizes, and delivery timelines?" },
+  { text: "How can I schedule a demo for Epicure Robotics or Zoe solutions?" },
+  { text: "Do you support B2B partnerships for offices, events, or retail locations?" },
+  { text: "What integrations are available for POS, CRM, or kiosk workflows?" },
+  { text: "What is the onboarding process and timeline for a new client deployment?" },
+  { text: "Who should I contact for sales enquiries and enterprise support?" },
+];
+
+const FALLBACK_CLIENT_QUESTIONS: SampleQuestion[] = [
+  { text: "How can I schedule a product demo for Epicure Robotics or Zoe?" },
+  { text: "Do you provide deployment support for multi-location smoothie bar rollouts?" },
+  { text: "What integration options are available for POS and CRM systems?" },
+  { text: "Can you share enterprise pricing and commercial proposal details?" },
 ];
 
 export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
@@ -71,7 +82,7 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
     latestConversation[0]?.updatedAt?.toISOString() ?? "0",
     latestMessage[0]?.updatedAt?.toISOString() ?? "0",
   ].join(":");
-  const cache = cacheFor<SampleQuestion[]>(`sample-questions:${freshnessKey}`);
+  const cache = cacheFor<SampleQuestion[]>(`sample-questions:${SAMPLE_QUESTIONS_CACHE_VERSION}:${freshnessKey}`);
 
   const cached = await cache.get();
   if (cached) {
@@ -121,9 +132,25 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
       } = await generateStructuredObject({
         model,
         prompt,
-        schema: z.object({ questions: z.array(z.object({ text: z.string(), emoji: z.string() })) }),
+        schema: z.object({
+          questions: z.array(
+            z.object({
+              text: z.string(),
+              audience: z.enum(["customer", "client"]),
+            }),
+          ),
+        }),
       });
-      filteredQuestions = questions.filter((q) => q.text && q.emoji && q.text.length > 10).slice(0, 9);
+      const deduped = Array.from(
+        new Map(
+          questions
+            .filter((q) => q.text && q.text.length > 10)
+            .map((q) => [q.text.toLowerCase().trim(), { text: q.text.trim(), audience: q.audience }]),
+        ).values(),
+      );
+      const clientQuestions = deduped.filter((q) => q.audience === "client").map((q) => ({ text: q.text }));
+      const customerQuestions = deduped.filter((q) => q.audience === "customer").map((q) => ({ text: q.text }));
+      filteredQuestions = [...clientQuestions, ...customerQuestions].slice(0, 9);
       if (filteredQuestions.length > 0) break;
     } catch {
       // Try the next model candidate.
@@ -132,6 +159,18 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
 
   if (filteredQuestions.length === 0) {
     filteredQuestions = FALLBACK_SAMPLE_QUESTIONS;
+  }
+
+  const existingClientCount = filteredQuestions.filter((q) =>
+    /demo|integration|client|enterprise|partnership|deployment|procurement|sales|proposal|b2b/i.test(q.text),
+  ).length;
+  if (existingClientCount < MIN_CLIENT_QUESTIONS) {
+    const needed = MIN_CLIENT_QUESTIONS - existingClientCount;
+    const extras = FALLBACK_CLIENT_QUESTIONS.filter(
+      (candidate) =>
+        !filteredQuestions.some((q) => q.text.toLowerCase().trim() === candidate.text.toLowerCase().trim()),
+    ).slice(0, needed);
+    filteredQuestions = [...extras, ...filteredQuestions].slice(0, 9);
   }
 
   await cache.set(filteredQuestions, 60 * 15);
