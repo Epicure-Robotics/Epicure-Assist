@@ -23,6 +23,7 @@ import { fuzzyFindSavedReply } from "@/lib/data/savedReplies";
 import { getMemberStats } from "@/lib/data/stats";
 import { findUserViaSlack } from "@/lib/data/user";
 import { env } from "@/lib/env";
+import { EPICURE_MAILBOX_SLUG, epicurePromptExtension } from "@/lib/epicure/companyKnowledge";
 import { generatePublicConversationToken } from "@/lib/publicConversationToken";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { CLOSED_BY_AGENT_MESSAGE, MARKED_AS_SPAM_BY_AGENT_MESSAGE, REOPENED_BY_AGENT_MESSAGE } from "../constants";
@@ -556,6 +557,8 @@ export const generateAgentResponse = async (
     ? `Current user ID: ${user.id}\nCurrent user name: ${getFullName(user)}\nCurrent user email: ${user.email}`
     : "Current user is unknown. If the user requests something for themselves DO NOT check all users, tell them to update their Slack email to match their Epicure Assist account email.";
 
+  const epicureSlackContext = mailbox.slug === EPICURE_MAILBOX_SLUG ? epicurePromptExtension() : "";
+
   const result = await runAIQuery({
     mailbox,
     queryType: "agent_response",
@@ -565,6 +568,7 @@ export const generateAgentResponse = async (
 You are currently in the mailbox: ${mailbox.name}. You cannot access any other mailboxes; the user must start a new chat or explicitly mention another mailbox by name to access others.
 
 ${userPrompt}
+${epicureSlackContext}
 
 IMPORTANT GUIDELINES:
 - Always identify as "Epicure Assist" (the in-app assistant for Epicure Robotics; never as "Helper" or generic third-party AI).

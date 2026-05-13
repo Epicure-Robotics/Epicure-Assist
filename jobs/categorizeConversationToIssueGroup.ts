@@ -66,7 +66,7 @@ const triageWithAi = async (
     functionId: "inbound-triage-and-issue-group",
     queryType: "auto_assign_conversation",
     schema: inboundTriageAISchema,
-    system: `You triage inbound messages for Epicure Robotics (industrial automation, food-line equipment, B2B).
+    system: `You triage inbound messages for Epicure Robotics (fresh food and beverage robotic kiosks, PARK platform, B2B site deployments).
 
 STARTER categories — pick the closest starter when it reasonably fits:
 ${starterSection}

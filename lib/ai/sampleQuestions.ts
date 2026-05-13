@@ -3,23 +3,26 @@ import { z } from "zod";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, faqs, websitePages } from "@/db/schema";
 import { cacheFor } from "@/lib/cache";
+import { EPICURE_SAMPLE_QUESTIONS_CONTEXT } from "@/lib/epicure/companyKnowledge";
 import { DRAFT_MODEL, generateStructuredObject, type AvailableModel } from "./core";
 
-const SAMPLE_QUESTIONS_PROMPT = `Based on the following knowledge base content, generate 9 diverse and helpful sample questions.
+const SAMPLE_QUESTIONS_PROMPT = `Based on the following knowledge base content, generate 9 diverse and helpful sample questions for **Epicure Robotics** (fresh food and beverage robotic kiosks, PARK platform, The Smoothie Bar 2.0, Zoe, and related deployments).
 
 Make the questions:
 - Succinct, one *short* sentence each
 - Practical and actionable
 - Varied in topic and complexity
 - Natural and conversational
-- Relevant to the provided content
 - Professional and customer-facing
-- Include a balanced mix of:
-  - End-customer support questions (orders, products, pricing, delivery, troubleshooting)
-  - CRM/client-enquiry questions from business prospects (demo requests, partnerships, integrations, deployments, procurement)
-- Reflect all relevant brands and offerings mentioned in the knowledge base (including Epicure Robotics, Zoe, Smoothie Bar, and related services)
+- Grounded in robotics kiosks, menus, speed, hygiene, site requirements, pilots, partnerships, or operator experience when the content supports it
 
-Return the response as a JSON object with a "questions" array, containing objects with a "text" field only.
+Include a balanced mix (label each with audience):
+- **customer**: end users at a kiosk or website (menu, customization, allergens, speed, how to order, hygiene, ingredients like IQF fruit vs syrups, what Zoe vs Smoothie Bar offers)
+- **client**: venues and buyers (offices, tech parks, gyms, malls, food courts, hospitals, pilots, footprint, power/water/Wi‑Fi, fleet monitoring, demos, deployment—not confidential procurement)
+
+**Do not** generate questions that ask for or imply: manufacturing cost, unit selling price, BOM, margins, revenue, monthly revenue potential, MOQ as a price lever, internal traction statistics (cups sold, repeat rates, install targets), or other figures the team would only share privately. For commercial or pricing topics, prefer questions like "How do we get in touch for a commercial discussion?" that point to https://epicurerobotics.com/ rather than asking for numbers.
+
+Return JSON with a "questions" array of objects: { "text": string, "audience": "customer" | "client" }.
 
 Knowledge base content:
 {{CONTENT}}
@@ -33,30 +36,33 @@ interface SampleQuestion {
 
 const SAMPLE_QUESTION_MODELS: AvailableModel[] = [DRAFT_MODEL, "gpt-4o-mini", "gpt-4.1"];
 const MIN_CLIENT_QUESTIONS = 3;
-const SAMPLE_QUESTIONS_CACHE_VERSION = "v2";
+const SAMPLE_QUESTIONS_CACHE_VERSION = "v3";
 
 const FALLBACK_SAMPLE_QUESTIONS: SampleQuestion[] = [
-  { text: "What are your best-selling smoothies and functional drinks right now?" },
-  { text: "Do you offer dairy-free, vegan, or high-protein options across your menu?" },
-  { text: "Can I customize ingredients and nutrition preferences before placing an order?" },
-  { text: "What are your current pricing, package sizes, and delivery timelines?" },
-  { text: "How can I schedule a demo for Epicure Robotics or Zoe solutions?" },
-  { text: "Do you support B2B partnerships for offices, events, or retail locations?" },
-  { text: "What integrations are available for POS, CRM, or kiosk workflows?" },
-  { text: "What is the onboarding process and timeline for a new client deployment?" },
-  { text: "Who should I contact for sales enquiries and enterprise support?" },
+  { text: "How are drinks prepared so quickly while keeping the machine hygienic between orders?" },
+  { text: "What is the difference between Smoothie Bar 2.0 (IQF fruit smoothies) and Zoe’s drink lineup?" },
+  { text: "Can I customize my drink for dairy-free, vegan, or extra protein options?" },
+  { text: "What kind of footprint and hookups do Epicure kiosks need at our site (power, water, Wi‑Fi)?" },
+  { text: "Where can I watch demos or read more on https://epicurerobotics.com/?" },
+  { text: "We run a corporate campus; how do we explore a pilot kiosk for our employees?" },
+  { text: "How do recipe updates and kiosk health monitoring work across multiple locations?" },
+  { text: "How can we schedule a technical walkthrough or pilot for Zoe or Smoothie Bar 2.0 at our venue?" },
+  { text: "What site requirements should we plan for (floor space, drainage, exhaust, network) before deployment?" },
+  { text: "Do you support multi-location rollouts for offices, food courts, or gym chains?" },
+  { text: "How do we reach your team for a commercial or partnership discussion via epicurerobotics.com?" },
+  { text: "Do you build partner-branded kiosk programs similar to the coconut-water kiosk model?" },
 ];
 
-const FALLBACK_CLIENT_QUESTIONS: SampleQuestion[] = [
-  { text: "How can I schedule a product demo for Epicure Robotics or Zoe?" },
-  { text: "Do you provide deployment support for multi-location smoothie bar rollouts?" },
-  { text: "What integration options are available for POS and CRM systems?" },
-  { text: "Can you share enterprise pricing and commercial proposal details?" },
-];
+const FALLBACK_CLIENT_QUESTIONS: SampleQuestion[] = [];
 
 export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
   const [latestFaq, latestWebsitePage, latestConversation, latestMessage] = await Promise.all([
-    db.select({ updatedAt: faqs.updatedAt }).from(faqs).where(eq(faqs.enabled, true)).orderBy(desc(faqs.updatedAt)).limit(1),
+    db
+      .select({ updatedAt: faqs.updatedAt })
+      .from(faqs)
+      .where(eq(faqs.enabled, true))
+      .orderBy(desc(faqs.updatedAt))
+      .limit(1),
     db
       .select({ updatedAt: websitePages.updatedAt })
       .from(websitePages)
@@ -119,7 +125,9 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
     .filter(Boolean)
     .join("\n");
 
-  const content = [faqContent, websiteContent, messageContent.slice(0, 6000)].filter(Boolean).join("\n\n");
+  const content = [EPICURE_SAMPLE_QUESTIONS_CONTEXT, faqContent, websiteContent, messageContent.slice(0, 6000)]
+    .filter(Boolean)
+    .join("\n\n");
   const topics = (topicContent || messageContent || "General support inquiries").slice(0, 3000);
 
   const prompt = SAMPLE_QUESTIONS_PROMPT.replace("{{CONTENT}}", content).replace("{{TOPICS}}", topics);
@@ -162,7 +170,9 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
   }
 
   const existingClientCount = filteredQuestions.filter((q) =>
-    /demo|integration|client|enterprise|partnership|deployment|procurement|sales|proposal|b2b/i.test(q.text),
+    /demo|integration|client|enterprise|partnership|deployment|procurement|sales|proposal|b2b|pilot|kiosk|footprint|rollout|fleet|venue|site|park\b/i.test(
+      q.text,
+    ),
   ).length;
   if (existingClientCount < MIN_CLIENT_QUESTIONS) {
     const needed = MIN_CLIENT_QUESTIONS - existingClientCount;

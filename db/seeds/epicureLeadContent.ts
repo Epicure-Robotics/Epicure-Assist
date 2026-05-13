@@ -1,20 +1,19 @@
-/* eslint-disable no-console */
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import { faqs, issueGroups, mailboxes, savedReplies } from "@/db/schema";
 import { EPICURE_ISSUE_GROUP_SPECS } from "@/lib/epicure/issueGroupSpecs";
 
 const EPICURE_FAQS = [
-  "What is the typical machine cost? Provide a range and what drives price (throughput, options, integration).",
-  "What floor space / footprint is required for installation?",
-  "What is the minimum order quantity (MOQ)?",
-  "What are standard lead times from order to shipment?",
-  "Which regions or countries do you serve and support?",
-  "What training and documentation ship with the system?",
-  "What warranty and service tiers are available?",
-  "Can the system integrate with our existing line or MES?",
-  "What utilities (power, air, network) are required?",
-  "How do software updates and remote diagnostics work?",
+  "Commercial and pricing questions: Do not share manufacturing cost, unit price, revenue, or other internal financial figures in this assistant. Direct people to contact Epicure via https://epicurerobotics.com/ for quotes and commercial discussions.",
+  "What floor space / footprint is required for Smoothie Bar 2.0, Zoe, or other kiosk formats?",
+  "What are typical lead times from order to deployment? (Give ranges only if in the knowledge base; otherwise route to the team.)",
+  "Which regions or countries does Epicure serve and support today?",
+  "What training and documentation ship with a kiosk deployment?",
+  "What warranty and field service options are available?",
+  "Can kiosks integrate with our existing payments, loyalty, or building systems?",
+  "What utilities (power, water, network, drainage) are required on site?",
+  "How do software updates, remote monitoring, and diagnostics work across a fleet?",
+  "Where can I watch product demos or see PARK (Platform for Automated Robotic Kiosks) explained? Point to https://epicurerobotics.com/ and official YouTube links when present in the knowledge base.",
 ];
 
 /**

@@ -48,6 +48,7 @@ import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files"
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
+import { EPICURE_MAILBOX_SLUG, epicurePromptExtension } from "@/lib/epicure/companyKnowledge";
 import { CustomerInfo, fetchCustomerInfo } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
@@ -186,6 +187,10 @@ export const buildPromptMessages = async (
   }
   const userPrompt = customerInfoPrompt(email, customerInfo);
   prompt += userPrompt;
+
+  if (mailbox.slug === EPICURE_MAILBOX_SLUG) {
+    prompt += epicurePromptExtension();
+  }
 
   return {
     messages: [
