@@ -11,7 +11,34 @@ export const EPICURE_MAILBOX_SLUG = "epicure";
 const EPICURE_COMMERCIAL_GUARDRAIL = `Epicure Assist commercial redaction (mandatory):
 - Do not state or estimate manufacturing cost, BOM, margins, revenue, monthly revenue potential, fundraising, or other internal financial figures.
 - Do not cite internal traction statistics (cups sold, customer counts, repeat-rate percentages, deployment targets, or similar) unless they appear on the public website after a crawl.
-- For any question about pricing, manufacturing cost, revenue, procurement volumes, or other commercial or financial specifics not published on https://epicurerobotics.com/, say that you cannot share those details here and ask them to reach out via the contact options on https://epicurerobotics.com/ (or email the team through the address shown there).`;
+- For any question about pricing, manufacturing cost, revenue, procurement volumes, or other commercial or financial specifics not published on https://epicurerobotics.com/, say that you cannot share those details here and ask them to reach out via the contact options on https://epicurerobotics.com/#contact (or https://epicurerobotics.com/) so they have a tappable link.`;
+
+const EPICURE_PUBLIC_LINK_POLICY = `Public links (mandatory in user-facing replies):
+- Whenever you mention the Epicure Robotics website, contact form, sales, enterprise support, careers, products, or policies, include the URL in the message: use https://epicurerobotics.com/ for the main site and https://epicurerobotics.com/#contact when directing people to the “Send us a message” / contact section.
+- Do not rely on vague phrases like “our website” or “the contact form” without also including at least https://epicurerobotics.com/ in that reply.`;
+
+const EPICURE_PUBLIC_WEBSITE_KNOWLEDGE = `
+## Public marketing site (https://epicurerobotics.com/) — mirror of customer-facing copy
+Use this when answering from “what the company publishes online.” Prefer live phrasing from crawled pages when present in context; otherwise use below.
+
+**Positioning (hero):** Fresh. Autonomous. Scalable.
+
+**PARK — Platform for Automated Robotic Kiosks:** Proprietary modular in-house platform for robotic food systems. **Movement system:** gantry-based transport and weighing (site cites high positioning accuracy for ingredients). **Dispensers:** solids (e.g. fruits), liquids, powders, and dense non-Newtonian fluids (site cites fine mass precision for dispensing). **Action blocks:** blenders, frothers, heaters, and similar preparation units. **Software:** recipe management, real-time inventory, maintenance, diagnostics, and analytics.
+
+**Products called out on the homepage:**
+- **The Smoothie Bar:** Personalized fresh fruit smoothies, customizable, staff-free; public copy highlights very fast service (under ~99 seconds) and no added sugar on the smoothie proposition.
+- **Zoe:** Smart beverage kiosk with a wide menu of personalized drinks (site cites 40+ options) in under ~60 seconds; examples in marketing include milkshakes, coffees, iced teas, protein shakes; deployments described include tech parks and corporate offices in Bengaluru.
+
+**“Why Epicure Robotics” themes:** Full in-house control over technology, supply chain, and operations; scalable proprietary robotics platform; fresh ingredients and real-time quality; minimal footprint and plug-and-play style deployment; reliability for unmanned / extended-hours operation.
+
+**Company story (site):** India-based food robotics in Bengaluru; integrated in-house approach from R&D and manufacturing through operations and customer support; emphasis on transparency and quality.
+
+**How visitors reach the team:** “Send us a message” lead form on the homepage; social links (e.g. LinkedIn) as shown in the footer; **use https://epicurerobotics.com/#contact for the contact block** and **https://epicurerobotics.com/** for general browsing.
+
+**Footer navigation (typical paths):** About Us, Services, Products, Careers; policies such as Privacy, Terms, Return & Refund, Shipping.
+
+**Registered address (footer):** Epicure Robotics Pvt. Ltd., 36/23G, Konappana Agrahara, Electronic City, Bengaluru, Doddanagamangala Village, Karnataka 560100, India.
+`;
 
 const EPICURE_COMPANY_AND_PRODUCTS = `
 ## Epicure Robotics (overview)
@@ -78,12 +105,12 @@ PARK is the modular robotics and software stack reused across products.
  */
 export const EPICURE_SAMPLE_QUESTIONS_CONTEXT = `Epicure Robotics (Bengaluru) builds fresh food and beverage robotic kiosks using PARK, an in-house modular platform (precision dispensing, gantry motion, blenders/frothers, refrigeration, self-clean workflows, recipe and fleet software).
 Key offerings to reference in questions: Zoe (many hot/cold customizable drinks, short prep, frother cleaned between drinks); Smoothie Bar 2.0 (IQF fruit cups plus liquids/powders, fast smoothies, rotating menu); earlier products included a robotic wok kitchen (paused), Smoothie Bar 1.0 with fresh-cut fruit, and B2B partner-branded kiosks (e.g. coconut-water style programs).
-Typical deployment contexts: offices, tech parks, gyms, malls, food courts, hospitals, co-working. Public site: https://epicurerobotics.com/
+Typical deployment contexts: offices, tech parks, gyms, malls, food courts, hospitals, co-working. Primary site (always link when mentioning it): https://epicurerobotics.com/ — contact form: https://epicurerobotics.com/#contact
 `;
 
 /**
  * Appended to system prompts for the Epicure mailbox only.
  */
 export function epicurePromptExtension(): string {
-  return `\n\n${EPICURE_COMMERCIAL_GUARDRAIL}\n${EPICURE_COMPANY_AND_PRODUCTS}`;
+  return `\n\n${EPICURE_COMMERCIAL_GUARDRAIL}\n${EPICURE_PUBLIC_LINK_POLICY}\n${EPICURE_COMPANY_AND_PRODUCTS}\n${EPICURE_PUBLIC_WEBSITE_KNOWLEDGE}`;
 }

@@ -31,11 +31,18 @@ export type AvailableModel =
 
 const EMBEDDING_MODEL = "text-embedding-3-small";
 const EMBEDDING_MODEL_FALLBACK = "openai/text-embedding-3-small";
-/** OpenAI-compatible IDs only — `openai()` in this app targets api.openai.com, not OpenRouter. */
+/**
+ * Default chat completion model (widget, guide, and other `streamText` / `generateText` paths that pass `openai(CHAT_MODEL)`).
+ * Intentionally a **mini-tier** model: answers are meant to be short and grounded on retrieved context (FAQ/knowledge bank,
+ * similar website pages, injected org prompts). Heavier “thinking” belongs in optional reasoning paths, not the default reply.
+ */
 export const CHAT_MODEL = _GPT_4O_MINI_MODEL;
+/** Slack agent, categorization, and other lightweight tool-calling / triage flows. */
 export const MINI_MODEL = _GPT_4O_MINI_MODEL;
+/** Inbox email drafts. */
 export const DRAFT_MODEL = _GPT_4O_MINI_MODEL;
 
+/** Vector embeddings for FAQ / website page similarity search (`fetchPromptRetrievalData`, past threads, etc.). Not used for final chat wording. */
 export const generateEmbedding = async (
   value: string,
   functionId?: string,
