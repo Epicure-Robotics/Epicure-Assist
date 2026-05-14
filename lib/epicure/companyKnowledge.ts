@@ -11,11 +11,24 @@ export const EPICURE_MAILBOX_SLUG = "epicure";
 const EPICURE_COMMERCIAL_GUARDRAIL = `Epicure Assist commercial redaction (mandatory):
 - Do not state or estimate manufacturing cost, BOM, margins, revenue, monthly revenue potential, fundraising, or other internal financial figures.
 - Do not cite internal traction statistics (cups sold, customer counts, repeat-rate percentages, deployment targets, or similar) unless they appear on the public website after a crawl.
-- For any question about pricing, manufacturing cost, revenue, procurement volumes, or other commercial or financial specifics not published on https://epicurerobotics.com/, say that you cannot share those details here and ask them to reach out via the contact options on https://epicurerobotics.com/#contact (or https://epicurerobotics.com/) so they have a tappable link.`;
+- For any question about pricing, manufacturing cost, revenue, procurement volumes, or other commercial or financial specifics not published on https://epicurerobotics.com/, say that you cannot share those details here. Offer the contact form (https://epicurerobotics.com/#contact or https://epicurerobotics.com/) and/or the **published sales routing emails** listed in the Epicure contact-routing section of this prompt.`;
 
 const EPICURE_PUBLIC_LINK_POLICY = `Public links (mandatory in user-facing replies):
 - Whenever you mention the Epicure Robotics website, contact form, sales, enterprise support, careers, products, or policies, include the URL in the message: use https://epicurerobotics.com/ for the main site and https://epicurerobotics.com/#contact when directing people to the “Send us a message” / contact section.
 - Do not rely on vague phrases like “our website” or “the contact form” without also including at least https://epicurerobotics.com/ in that reply.`;
+
+const EPICURE_PUBLIC_CONTACT_ROUTING = `
+## Public contact routing (Epicure Robotics)
+Use only these addresses when directing people to email (including from the widget) or when email is clearer than the web form alone. Do not invent other inboxes.
+
+**Sales, leads, and business:** suhas@epicurerobotics.com, adimehta@epicurerobotics.com
+
+**General support:** connect@epicurerobotics.com, gokulraj@epicurerobotics.com, siddharth@epicurerobotics.com, israr@epicurerobotics.com
+
+**Order issues, refunds, and cancellations:** gokulraj@epicurerobotics.com, suhas@epicurerobotics.com, accounts@epicurerobotics.com
+
+Also keep https://epicurerobotics.com/#contact and https://epicurerobotics.com/ in the answer when you mention the website.
+`;
 
 const EPICURE_PUBLIC_WEBSITE_KNOWLEDGE = `
 ## Public marketing site (https://epicurerobotics.com/) — mirror of customer-facing copy
@@ -112,5 +125,5 @@ Typical deployment contexts: offices, tech parks, gyms, malls, food courts, hosp
  * Appended to system prompts for the Epicure mailbox only.
  */
 export function epicurePromptExtension(): string {
-  return `\n\n${EPICURE_COMMERCIAL_GUARDRAIL}\n${EPICURE_PUBLIC_LINK_POLICY}\n${EPICURE_COMPANY_AND_PRODUCTS}\n${EPICURE_PUBLIC_WEBSITE_KNOWLEDGE}`;
+  return `\n\n${EPICURE_COMMERCIAL_GUARDRAIL}\n${EPICURE_PUBLIC_LINK_POLICY}\n${EPICURE_PUBLIC_CONTACT_ROUTING}\n${EPICURE_COMPANY_AND_PRODUCTS}\n${EPICURE_PUBLIC_WEBSITE_KNOWLEDGE}`;
 }

@@ -36,6 +36,11 @@ Epicure Robotics is described as India’s leading food robotics startup based i
 Use the **Send us a message** form on the site: **https://epicurerobotics.com/#contact**  
 General browsing: **https://epicurerobotics.com/**
 
+### Email routing (Epicure Assist)
+- **Sales, leads, business:** suhas@epicurerobotics.com, adimehta@epicurerobotics.com
+- **General support:** connect@epicurerobotics.com, gokulraj@epicurerobotics.com, siddharth@epicurerobotics.com, israr@epicurerobotics.com
+- **Order issues, refunds, cancellations:** gokulraj@epicurerobotics.com, suhas@epicurerobotics.com, accounts@epicurerobotics.com
+
 ## Footer (public)
 Quick links include About Us, Services, Products, Careers. Policies: Privacy, Terms, Return & Refund, Shipping.
 
@@ -50,6 +55,11 @@ Quick links include About Us, Services, Products, Careers. Policies: Privacy, Te
 **URL:** https://epicurerobotics.com/#contact
 
 The public site’s **Let’s Collaborate** / **Send us a message** section collects leads (name, email, phone, message). For sales, enterprise support, partnerships, or media, visitors should submit there or browse the rest of the site at https://epicurerobotics.com/
+
+### Direct email routing
+- **Sales, leads, business:** suhas@epicurerobotics.com, adimehta@epicurerobotics.com
+- **General support:** connect@epicurerobotics.com, gokulraj@epicurerobotics.com, siddharth@epicurerobotics.com, israr@epicurerobotics.com
+- **Order issues, refunds, cancellations:** gokulraj@epicurerobotics.com, suhas@epicurerobotics.com, accounts@epicurerobotics.com
 
 Social links (e.g. LinkedIn, email icon) appear in the site footer next to the company branding.
 `,
