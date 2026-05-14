@@ -187,6 +187,8 @@ export default function Conversation({
   } | null>({
     queryKey: ["conversation", conversationSlug],
     refetchOnWindowFocus: false,
+    staleTime: 30_000,
+    refetchOnMount: false,
     queryFn: async () => {
       const response = await fetch(`/api/chat/conversation/${conversationSlug}`, {
         headers: {

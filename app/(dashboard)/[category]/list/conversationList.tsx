@@ -7,7 +7,7 @@ import { ConversationListItem as ConversationItem } from "@/app/types/global";
 import { AssigneeOption, AssignSelect } from "@/components/assignSelect";
 import { ConfirmationDialog } from "@/components/confirmationDialog";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { FilterButton } from "@/components/ui/filter-button";
 import { Tooltip, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useSelected } from "@/components/useSelected";
@@ -25,8 +25,6 @@ import { ConversationListSkeleton } from "./conversationListSkeleton";
 import { ConversationSearchBar } from "./conversationSearchBar";
 import { NoConversations } from "./emptyState";
 import NewConversationModalContent from "./newConversationModal";
-
-type ListItem = ConversationItem & { isNew?: boolean };
 
 export const List = () => {
   const { searchParams, input } = useConversationsListInput();
@@ -430,6 +428,7 @@ const NewConversationModal = () => {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>New message</DialogTitle>
+          <DialogDescription className="sr-only">Compose and send a new conversation.</DialogDescription>
         </DialogHeader>
         <NewConversationModalContent conversationSlug={newConversationSlug} onSubmit={closeModal} />
       </DialogContent>

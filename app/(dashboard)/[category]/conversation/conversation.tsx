@@ -23,7 +23,7 @@ import { CarouselDirection, createCarousel } from "@/components/carousel";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useBreakpoint } from "@/components/useBreakpoint";
@@ -329,6 +329,7 @@ const CarouselPreviewContent = ({
             <DialogContent className="max-w-5xl">
               <DialogHeader>
                 <DialogTitle>File Preview</DialogTitle>
+                <DialogDescription className="sr-only">Preview attachment and download if needed.</DialogDescription>
               </DialogHeader>
               <div className="relative bottom-0.5 flex items-center justify-between p-3">
                 <div className="max-w-xs truncate" title={currentFile.name}>

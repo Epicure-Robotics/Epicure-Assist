@@ -23,6 +23,22 @@ const knowledgeBankSuggestionSchema = z.discriminatedUnion("action", [
 
 type KnowledgeBankSuggestion = z.infer<typeof knowledgeBankSuggestionSchema>;
 
+const MAX_FAQS_IN_SUGGESTION_PROMPT = 25;
+const MAX_CHARS_PER_FAQ_IN_PROMPT = 1500;
+
+function formatKnowledgeBankEntriesForPrompt(entries: { id: number; content: string }[]): string {
+  const slice = entries.slice(0, MAX_FAQS_IN_SUGGESTION_PROMPT);
+  return slice
+    .map((faq) => {
+      const body =
+        faq.content.length > MAX_CHARS_PER_FAQ_IN_PROMPT
+          ? `${faq.content.slice(0, MAX_CHARS_PER_FAQ_IN_PROMPT)}…`
+          : faq.content;
+      return `ID: ${faq.id}\nContent: "${body}"`;
+    })
+    .join("\n\n");
+}
+
 type SuggestionContext =
   | { type: "human_reply"; messageContent: string; additionalContext?: string }
   | { type: "bad_response"; messageContent: string; additionalContext?: string }
@@ -98,7 +114,7 @@ ${context.conversationText}
 ${contextSpecificPrompt}
 
 Existing entries in knowledge bank:
-${similarFAQs.map((faq) => `ID: ${faq.id}\nContent: "${faq.content}"`).join("\n\n")}
+${formatKnowledgeBankEntriesForPrompt(similarFAQs)}
 `;
 
   const suggestion = await runAIObjectQuery({

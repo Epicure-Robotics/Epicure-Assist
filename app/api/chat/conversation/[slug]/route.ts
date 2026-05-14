@@ -9,6 +9,9 @@ import { serializeMessageForWidget } from "@/lib/data/conversationMessage";
 
 export const OPTIONS = () => corsOptions("GET", "PATCH");
 
+/** Avoid rewriting lastReadAt on every poll/refetch when the widget refetches conversation often. */
+const MARK_READ_GET_THROTTLE_MS = 30_000;
+
 export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }, request }, { session }) => {
   const { slug } = await params;
   const url = new URL(request.url);
@@ -32,7 +35,13 @@ export const GET = withWidgetAuth<{ slug: string }>(async ({ context: { params }
   }
 
   if (markRead) {
-    await updateConversation(conversation.id, { set: { lastReadAt: new Date() } });
+    const last = conversation.lastReadAt;
+    const now = Date.now();
+    const shouldWriteLastRead =
+      !last || now - last.getTime() >= MARK_READ_GET_THROTTLE_MS;
+    if (shouldWriteLastRead) {
+      await updateConversation(conversation.id, { set: { lastReadAt: new Date() } });
+    }
   }
 
   const originalConversation =

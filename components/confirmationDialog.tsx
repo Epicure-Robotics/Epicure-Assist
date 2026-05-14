@@ -8,6 +8,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 
@@ -38,6 +39,7 @@ export function ConfirmationDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
+          <DialogTitle className="sr-only">Confirm</DialogTitle>
           <DialogDescription className="text-base">{message}</DialogDescription>
         </DialogHeader>
         <DialogFooter>

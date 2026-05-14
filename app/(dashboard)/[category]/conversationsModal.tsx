@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import HumanizedTime from "@/components/humanizedTime";
 import LoadingSpinner from "@/components/loadingSpinner";
 import { SimilarityCircle } from "@/components/similarityCircle";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { RouterOutputs } from "@/trpc";
 import { api } from "@/trpc/react";
@@ -51,6 +51,7 @@ const ConversationsModal = ({
       <DialogContent className="max-w-7xl max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription className="sr-only">Browse similar conversations and preview messages.</DialogDescription>
         </DialogHeader>
         {isLoading ? (
           <div className="flex justify-center py-8">

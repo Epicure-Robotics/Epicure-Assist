@@ -52,6 +52,9 @@ export const useConversation = (
     queryKey: ["conversation", slug],
     queryFn: () => client.conversations.get(slug, options),
     enabled: !!slug,
+    // Widgets refetch this often; default GET also marks read — pair with server-side GET throttle.
+    staleTime: 30_000,
+    refetchOnMount: false,
     ...queryOptions,
   });
 

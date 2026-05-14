@@ -99,14 +99,21 @@ export const GenerateKnowledgeBankDialog = ({ open, onOpenChange, messageId }: G
     setOriginalContent("");
   };
 
-  // Auto-run AI suggestion when dialog opens
+  // Auto-run AI suggestion when dialog opens (once per open + messageId; do not loop on mutation error)
   useEffect(() => {
-    if (open && messageId && !hasGenerated && !generateSuggestionMutation.isPending) {
-      generateSuggestionMutation.mutate({
-        messageId,
-      });
+    if (
+      !open ||
+      !messageId ||
+      hasGenerated ||
+      generateSuggestionMutation.isPending ||
+      generateSuggestionMutation.isError
+    ) {
+      return;
     }
-  }, [open, messageId, hasGenerated]);
+    generateSuggestionMutation.mutate({
+      messageId,
+    });
+  }, [open, messageId, hasGenerated, generateSuggestionMutation.isPending, generateSuggestionMutation.isError]);
 
   // Update original content when existing entries are loaded
   useEffect(() => {
@@ -149,6 +156,7 @@ export const GenerateKnowledgeBankDialog = ({ open, onOpenChange, messageId }: G
       onOpenChange={(newOpen) => {
         if (!newOpen) {
           resetState();
+          generateSuggestionMutation.reset();
         }
         onOpenChange(newOpen);
       }}

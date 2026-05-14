@@ -1,5 +1,5 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { takeUniqueOrThrow } from "@/components/utils/arrays";
 import { db } from "@/db/client";
@@ -133,7 +133,11 @@ export const faqsRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const message = await db.query.conversationMessages.findFirst({
-        where: and(eq(conversationMessages.id, input.messageId), eq(conversationMessages.role, "staff")),
+        where: and(
+          eq(conversationMessages.id, input.messageId),
+          inArray(conversationMessages.role, ["staff", "ai_assistant"]),
+          isNull(conversationMessages.deletedAt),
+        ),
       });
 
       if (!message) {
@@ -145,12 +149,10 @@ export const faqsRouter = {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Message content is empty" });
       }
 
-      const suggestion = await generateKnowledgeBankSuggestion(ctx.mailbox, {
+      return await generateKnowledgeBankSuggestion(ctx.mailbox, {
         type: "human_reply",
         messageContent,
       });
-
-      return suggestion;
     }),
   promoteToSavedReply: mailboxProcedure
     .input(
