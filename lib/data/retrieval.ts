@@ -18,6 +18,13 @@ const MAX_SIMILAR_WEBSITE_PAGES = 5;
 const MAX_SIMILAR_FAQS_IN_CHAT_PROMPT = 15;
 /** Slightly looser than inbox-only retrieval so short widget messages still match FAQs. */
 const CHAT_FAQ_SIMILARITY_THRESHOLD = 0.38;
+const LOW_SIGNAL_QUERY_MAX_FAQS = 8;
+
+const isLowSignalQuery = (query: string) => {
+  const trimmed = query.trim();
+  if (trimmed.length < 4) return true;
+  return /^(hi+|hello|hey|hola|thanks|thank you|ok+|okay|yo|sup|howdy)\b/i.test(trimmed) && trimmed.length < 28;
+};
 
 export const findSimilarConversations = async (
   queryInput: string | number[],
@@ -169,6 +176,18 @@ export const fetchPromptRetrievalData = async (
   mailboxId: number,
 ): Promise<PromptRetrievalData> => {
   const metadataText = metadata ? `User metadata:\n${JSON.stringify(metadata, null, 2)}` : null;
+
+  if (isLowSignalQuery(query)) {
+    const enabled = await findEnabledKnowledgeBankEntries(mailboxId);
+    const capped = enabled.slice(0, LOW_SIGNAL_QUERY_MAX_FAQS);
+    return {
+      knowledgeBank: knowledgeBankPrompt(capped),
+      knowledgeBankEntryIds: capped.map((e) => e.id),
+      metadata: metadataText,
+      websitePagesPrompt: null,
+      websitePages: [],
+    };
+  }
 
   let queryEmbedding: number[];
   try {

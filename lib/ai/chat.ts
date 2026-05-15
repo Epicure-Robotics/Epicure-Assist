@@ -48,7 +48,11 @@ import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files"
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
 import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
-import { EPICURE_MAILBOX_SLUG, epicurePromptExtension } from "@/lib/epicure/companyKnowledge";
+import {
+  EPICURE_MAILBOX_SLUG,
+  epicurePromptExtension,
+  epicureWidgetPromptExtension,
+} from "@/lib/epicure/companyKnowledge";
 import { CustomerInfo, fetchCustomerInfo } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
@@ -151,6 +155,8 @@ export const loadPreviousMessages = async (conversationId: number, latestMessage
     });
 };
 
+export type ChatPromptProfile = "widget" | "full";
+
 export const buildPromptMessages = async (
   mailbox: Mailbox,
   email: string | null,
@@ -159,6 +165,7 @@ export const buildPromptMessages = async (
   customerInfoUrl?: string | null,
   isDraftMode = false,
   draftPromptOverride?: string,
+  promptProfile: ChatPromptProfile = "full",
 ): Promise<{
   messages: CoreMessage[];
   sources: { url: string; pageTitle: string; markdown: string; similarity: number }[];
@@ -189,7 +196,7 @@ export const buildPromptMessages = async (
   prompt += userPrompt;
 
   if (mailbox.slug === EPICURE_MAILBOX_SLUG) {
-    prompt += epicurePromptExtension();
+    prompt += promptProfile === "widget" ? epicureWidgetPromptExtension() : epicurePromptExtension();
   }
 
   return {
@@ -350,6 +357,8 @@ export const generateAIResponse = async ({
   maxTokens,
   customPrompt,
   isDraftMode = false,
+  promptProfile = "full",
+  maxSteps,
 }: {
   messages: Message[];
   mailbox: Mailbox;
@@ -377,19 +386,34 @@ export const generateAIResponse = async ({
   maxTokens?: number;
   customPrompt?: string | null;
   isDraftMode?: boolean;
+  promptProfile?: ChatPromptProfile;
+  maxSteps?: number;
 }) => {
   const lastMessage = messages.findLast((m: Message) => m.role === "user");
   const query = lastMessage?.content || "";
+  const isWidgetProfile = promptProfile === "widget";
 
   const coreMessages = convertToCoreMessages(messages, { tools: {} });
   const [{ messages: systemMessages, sources, promptInfo, customerInfo }, tools] = await Promise.all([
-    buildPromptMessages(mailbox, email, query, guideEnabled, customerInfoUrl, isDraftMode),
+    buildPromptMessages(
+      mailbox,
+      email,
+      query,
+      guideEnabled,
+      customerInfoUrl,
+      isDraftMode,
+      undefined,
+      promptProfile ?? "full",
+    ),
     buildTools({
       conversationId,
       email,
       includeHumanSupport: true,
       includeShopifyTools: false,
       guideEnabled,
+      includeMailboxTools: !isWidgetProfile,
+      includePastConversationSearch: !isWidgetProfile,
+      includeSavedReplyTool: !isWidgetProfile,
     }),
   ]);
 
@@ -489,7 +513,7 @@ export const generateAIResponse = async ({
   return streamText({
     model,
     messages: finalMessages,
-    maxSteps: 4,
+    maxSteps: maxSteps ?? (isWidgetProfile ? 2 : 4),
     tools,
     temperature: 0.1,
     seed: evaluation ? 100 : undefined,
@@ -628,6 +652,7 @@ export const respondWithAI = async ({
   tools,
   customerInfoUrl,
   customPrompt,
+  promptProfile = "widget",
 }: {
   conversation: Conversation;
   mailbox: Mailbox;
@@ -637,6 +662,7 @@ export const respondWithAI = async ({
   messageId: number;
   readPageTool: ReadPageToolConfig | null;
   guideEnabled: boolean;
+  promptProfile?: ChatPromptProfile;
   onResponse?: (result: {
     messages: Message[];
     platformCustomer: PlatformCustomer | null;
@@ -717,6 +743,12 @@ export const respondWithAI = async ({
     return createTextResponse("", Date.now().toString());
   }
 
+  const greetingReply = getInstantGreetingReply(message.content);
+  if (isFirstMessage && greetingReply) {
+    const assistantMessage = await handleAssistantMessage(greetingReply, false);
+    return createTextResponse(greetingReply, assistantMessage.id.toString());
+  }
+
   const cacheKey = `chat:v2:mailbox-${mailbox.id}:initial-response:${hashQuery(message.content)}`;
   if (isFirstMessage && isPromptConversation) {
     const cached: string | null = await cacheFor<string>(cacheKey).get();
@@ -744,6 +776,8 @@ export const respondWithAI = async ({
         tools,
         customerInfoUrl,
         customPrompt,
+        promptProfile,
+        maxSteps: promptProfile === "widget" ? 2 : 4,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>
@@ -843,6 +877,30 @@ const createTextResponse = (text: string, messageId: string) => {
 
 const hashQuery = (query: string): string => {
   return createHash("md5").update(query).digest("hex");
+};
+
+const normalizeGreetingQuery = (query: string) =>
+  query
+    .trim()
+    .toLowerCase()
+    .replace(/[!?.]+$/g, "")
+    .replace(/\s+/g, " ");
+
+const INSTANT_GREETING_REPLIES: Record<string, string> = {
+  hi: "Hello! How can I assist you today?",
+  hii: "Hello! How can I assist you today?",
+  hiii: "Hello! How can I assist you today?",
+  hello: "Hello! How can I assist you today?",
+  hey: "Hello! How can I assist you today?",
+  "good morning": "Good morning! How can I assist you today?",
+  "good afternoon": "Good afternoon! How can I assist you today?",
+  "good evening": "Good evening! How can I assist you today?",
+};
+
+const getInstantGreetingReply = (content: string | undefined | null): string | null => {
+  if (!content) return null;
+  const key = normalizeGreetingQuery(content);
+  return INSTANT_GREETING_REPLIES[key] ?? null;
 };
 
 const convertMarkdownToHtml = async (markdown: string): Promise<string> => {

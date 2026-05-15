@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { eq } from "drizzle-orm";
 import { createConversationBodySchema } from "@helperai/client";
 import { corsOptions, corsResponse, withWidgetAuth } from "@/app/api/widget/utils";
@@ -39,7 +40,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
   });
 
   if (!mailbox.chatIntegrationUsed) {
-    await db.update(mailboxes).set({ chatIntegrationUsed: true }).where(eq(mailboxes.id, mailbox.id));
+    waitUntil(db.update(mailboxes).set({ chatIntegrationUsed: true }).where(eq(mailboxes.id, mailbox.id)));
   }
 
   return corsResponse({ conversationSlug: newConversation.slug });

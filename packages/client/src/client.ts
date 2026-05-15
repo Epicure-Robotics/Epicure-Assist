@@ -52,6 +52,11 @@ export class HelperClient {
     return this.token!;
   };
 
+  /** Warm the widget session token before the user sends a message (reduces first-send latency). */
+  ensureSession = async (): Promise<void> => {
+    await this.getToken();
+  };
+
   private supabaseParams: { url: string; anonKey: string } | null = null;
 
   private async createSession() {

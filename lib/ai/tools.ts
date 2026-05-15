@@ -68,6 +68,8 @@ export const buildTools = async ({
   guideEnabled = false,
   includeMailboxTools = true,
   includeShopifyTools = false,
+  includePastConversationSearch = true,
+  includeSavedReplyTool = true,
   reasoningMiddlewarePrompt,
 }: {
   conversationId: number;
@@ -76,6 +78,9 @@ export const buildTools = async ({
   guideEnabled?: boolean;
   includeMailboxTools?: boolean;
   includeShopifyTools?: boolean;
+  /** Past-thread search is redundant when FAQ/website excerpts are already in the system prompt (widget chat). */
+  includePastConversationSearch?: boolean;
+  includeSavedReplyTool?: boolean;
   reasoningMiddlewarePrompt?: string;
 }): Promise<Record<string, Tool>> => {
   const reasoningMiddleware = async (result: Promise<string | undefined> | string | undefined) => {
@@ -94,8 +99,10 @@ export const buildTools = async ({
       userMessage: "",
     });
 
-  const tools: Record<string, Tool> = {
-    knowledge_base: tool({
+  const tools: Record<string, Tool> = {};
+
+  if (includePastConversationSearch) {
+    tools.knowledge_base = tool({
       description:
         "Search past support conversations similar to this query (includes both customer messages and agent replies). Use for recurring issues, phrasing, or how humans handled comparable cases. Official facts and marketing content come from the knowledge bank and crawled website excerpts already in your system instructions—call this when ticket history may help beyond those sources.",
       parameters: z.object({
@@ -105,8 +112,11 @@ export const buildTools = async ({
         reasoningMiddleware(searchPastSupportThreads(query)).finally(() =>
           logToolEvent("search_knowledge_base", { query }),
         ),
-    }),
-    read_saved_reply: tool({
+    });
+  }
+
+  if (includeSavedReplyTool) {
+    tools.read_saved_reply = tool({
       description: "read a saved reply, to get the message content when a saved reply should be used",
       parameters: z.object({
         replyName: z.string().describe("name of the saved reply to read"),
@@ -125,8 +135,8 @@ export const buildTools = async ({
           logToolEvent("read_saved_reply", { replyName });
         }
       },
-    }),
-  };
+    });
+  }
 
   // Add Shopify tools if configured and explicitly enabled
   if (includeShopifyTools && isShopifyConfigured() && email) {

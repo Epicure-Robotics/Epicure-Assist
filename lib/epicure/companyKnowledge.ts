@@ -127,3 +127,8 @@ Typical deployment contexts: offices, tech parks, gyms, malls, food courts, hosp
 export function epicurePromptExtension(): string {
   return `\n\n${EPICURE_COMMERCIAL_GUARDRAIL}\n${EPICURE_PUBLIC_LINK_POLICY}\n${EPICURE_PUBLIC_CONTACT_ROUTING}\n${EPICURE_COMPANY_AND_PRODUCTS}\n${EPICURE_PUBLIC_WEBSITE_KNOWLEDGE}`;
 }
+
+/** Smaller Epicure block for public widget chat (lower latency, same guardrails + site copy). */
+export function epicureWidgetPromptExtension(): string {
+  return `\n\n${EPICURE_COMMERCIAL_GUARDRAIL}\n${EPICURE_PUBLIC_LINK_POLICY}\n${EPICURE_PUBLIC_CONTACT_ROUTING}\n${EPICURE_SAMPLE_QUESTIONS_CONTEXT}\n${EPICURE_PUBLIC_WEBSITE_KNOWLEDGE}`;
+}

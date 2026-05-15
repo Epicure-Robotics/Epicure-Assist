@@ -190,7 +190,7 @@ export default function Conversation({
     staleTime: 30_000,
     refetchOnMount: false,
     queryFn: async () => {
-      const response = await fetch(`/api/chat/conversation/${conversationSlug}`, {
+      const response = await fetch(`/api/chat/conversation/${conversationSlug}?markRead=false`, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,

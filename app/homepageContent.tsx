@@ -10,6 +10,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
+const emptyConversation = (slug: string): ConversationDetails => ({
+  slug,
+  subject: null,
+  isEscalated: false,
+  messages: [],
+  experimental_guideSessions: [],
+});
+
 const ChatWidget = ({
   mailboxName,
   initialMessage,
@@ -123,11 +131,15 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
   });
   const { client } = useHelperClient();
 
-  // Get conversation details when conversationSlug is available
+  useEffect(() => {
+    void client.ensureSession();
+  }, [client]);
+
+  // Hydrate history in the background; chat can start with an empty thread immediately.
   const { data: conversation } = useConversation(
     chatConversationSlug!,
-    { enableRealtime: false },
-    { enabled: !!chatConversationSlug },
+    { enableRealtime: false, markRead: false },
+    { enabled: !!chatConversationSlug, staleTime: 60_000 },
   );
 
   const beginChat = async (text: string) => {
@@ -144,12 +156,12 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
     setStarterMessage("");
   };
 
-  if (chatConversationSlug && conversation) {
+  if (chatConversationSlug) {
     return (
       <ChatWidget
         mailboxName={mailboxName}
         initialMessage={starterMessage}
-        conversation={conversation}
+        conversation={conversation ?? emptyConversation(chatConversationSlug)}
         onBack={handleBackToMain}
       />
     );
