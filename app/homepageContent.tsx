@@ -3,7 +3,7 @@
 import { ArrowLeft, ChevronRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ConversationDetails } from "@helperai/client";
-import { MessageContent, useChat, useConversation, useHelperClient } from "@helperai/react";
+import { MessageContent, useChat, useHelperClient } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,17 +18,37 @@ const emptyConversation = (slug: string): ConversationDetails => ({
   experimental_guideSessions: [],
 });
 
-const ChatWidget = ({
+const ChatHeader = ({ mailboxName, onBack }: { mailboxName: string; onBack: () => void }) => (
+  <div className="border-b p-4">
+    <div className="max-w-4xl mx-auto flex items-center gap-4">
+      <Button variant="ghost" onClick={onBack}>
+        <ArrowLeft className="h-4 w-4" />
+      </Button>
+      <h1 className="text-xl font-bold">{mailboxName} Answers</h1>
+    </div>
+  </div>
+);
+
+const TypingIndicator = () => (
+  <div className="flex items-center gap-1">
+    <div className="size-2 bg-foreground rounded-full animate-default-pulse [animation-delay:-0.3s]" />
+    <div className="size-2 bg-foreground rounded-full animate-default-pulse [animation-delay:-0.15s]" />
+    <div className="size-2 bg-foreground rounded-full animate-default-pulse" />
+  </div>
+);
+
+const ActiveChat = ({
   mailboxName,
+  conversationSlug,
   initialMessage,
-  conversation,
   onBack,
 }: {
   mailboxName: string;
+  conversationSlug: string;
   initialMessage: string;
-  conversation: ConversationDetails;
   onBack: () => void;
 }) => {
+  const conversation = emptyConversation(conversationSlug);
   const { messages, input, handleInputChange, handleSubmit, agentTyping, status, append, setMessages } = useChat({
     conversation,
     enableRealtime: false,
@@ -56,14 +76,7 @@ const ChatWidget = ({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <div className="border-b p-4">
-        <div className="max-w-4xl mx-auto flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl font-bold">{mailboxName} Answers</h1>
-        </div>
-      </div>
+      <ChatHeader mailboxName={mailboxName} onBack={onBack} />
 
       <div className="flex-1 overflow-y-auto p-4">
         <div className="max-w-4xl mx-auto">
@@ -85,13 +98,7 @@ const ChatWidget = ({
               </div>
             ))}
             {agentTyping && <div className="animate-default-pulse text-muted">An agent is typing...</div>}
-            {(status === "submitted" || status === "streaming") && (
-              <div className="flex items-center gap-1">
-                <div className="size-2 bg-foreground rounded-full animate-default-pulse [animation-delay:-0.3s]" />
-                <div className="size-2 bg-foreground rounded-full animate-default-pulse [animation-delay:-0.15s]" />
-                <div className="size-2 bg-foreground rounded-full animate-default-pulse" />
-              </div>
-            )}
+            {(status === "submitted" || status === "streaming") && <TypingIndicator />}
           </div>
         </div>
       </div>
@@ -121,10 +128,40 @@ const ChatWidget = ({
   );
 };
 
+const PreparingChat = ({
+  mailboxName,
+  initialMessage,
+  onBack,
+}: {
+  mailboxName: string;
+  initialMessage: string;
+  onBack: () => void;
+}) => (
+  <div className="min-h-screen flex flex-col">
+    <ChatHeader mailboxName={mailboxName} onBack={onBack} />
+    <div className="flex-1 overflow-y-auto p-4">
+      <div className="max-w-4xl mx-auto flex flex-col gap-4">
+        {initialMessage.trim() ? (
+          <div className="rounded-lg p-3 max-w-[80%] ml-auto bg-primary">
+            <p className="text-sm text-primary-foreground">{initialMessage}</p>
+          </div>
+        ) : null}
+        <TypingIndicator />
+      </div>
+    </div>
+    <div className="border-t p-4">
+      <div className="max-w-4xl mx-auto">
+        <Input placeholder="Type your message..." className="flex-1" disabled />
+      </div>
+    </div>
+  </div>
+);
+
 export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
   const [question, setQuestion] = useState("");
   const [starterMessage, setStarterMessage] = useState("");
   const [chatConversationSlug, setChatConversationSlug] = useState<string | null>(null);
+  const [isPreparingChat, setIsPreparingChat] = useState(false);
   const { data: sampleQuestions, isLoading, error } = api.sampleQuestions.useQuery(undefined, {
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
@@ -135,36 +172,47 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
     void client.ensureSession();
   }, [client]);
 
-  // Hydrate history in the background; chat can start with an empty thread immediately.
-  const { data: conversation } = useConversation(
-    chatConversationSlug!,
-    { enableRealtime: false, markRead: false },
-    { enabled: !!chatConversationSlug, staleTime: 60_000 },
-  );
-
-  const beginChat = async (text: string) => {
+  const beginChat = (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || isPreparingChat || chatConversationSlug) return;
+
     setStarterMessage(trimmed);
-    const result = await client.conversations.create();
-    setChatConversationSlug(result.conversationSlug);
+    setIsPreparingChat(true);
+
+    void client.conversations
+      .create()
+      .then((result) => {
+        setChatConversationSlug(result.conversationSlug);
+      })
+      .catch(() => {
+        setIsPreparingChat(false);
+        setStarterMessage("");
+      })
+      .finally(() => {
+        setIsPreparingChat(false);
+      });
   };
 
   const handleBackToMain = () => {
     setChatConversationSlug(null);
+    setIsPreparingChat(false);
     setQuestion("");
     setStarterMessage("");
   };
 
   if (chatConversationSlug) {
     return (
-      <ChatWidget
+      <ActiveChat
         mailboxName={mailboxName}
+        conversationSlug={chatConversationSlug}
         initialMessage={starterMessage}
-        conversation={conversation ?? emptyConversation(chatConversationSlug)}
         onBack={handleBackToMain}
       />
     );
+  }
+
+  if (isPreparingChat) {
+    return <PreparingChat mailboxName={mailboxName} initialMessage={starterMessage} onBack={handleBackToMain} />;
   }
 
   return (
@@ -183,12 +231,13 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
               className="w-full px-6 py-4 text-lg rounded-full pr-16"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && question.trim()) {
-                  void beginChat(question);
+                  beginChat(question);
                 }
               }}
             />
             <button
-              onClick={() => question.trim() && void beginChat(question)}
+              type="button"
+              onClick={() => question.trim() && beginChat(question)}
               disabled={!question.trim()}
               className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-muted-foreground hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
             >
@@ -213,9 +262,7 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
                 <button
                   key={index}
                   type="button"
-                  onClick={() => {
-                    void beginChat(sample.text);
-                  }}
+                  onClick={() => beginChat(sample.text)}
                   className="p-4 border rounded-lg hover:bg-secondary text-left transition-colors"
                 >
                   <span>{sample.text}</span>
