@@ -117,7 +117,10 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
   const [question, setQuestion] = useState("");
   const [starterMessage, setStarterMessage] = useState("");
   const [chatConversationSlug, setChatConversationSlug] = useState<string | null>(null);
-  const { data: sampleQuestions, isLoading, error } = api.sampleQuestions.useQuery();
+  const { data: sampleQuestions, isLoading, error } = api.sampleQuestions.useQuery(undefined, {
+    staleTime: 6 * 60 * 60 * 1000,
+    gcTime: 24 * 60 * 60 * 1000,
+  });
   const { client } = useHelperClient();
 
   // Get conversation details when conversationSlug is available

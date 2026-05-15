@@ -106,11 +106,27 @@ Epicure website links (widget and chat):
 
 export const GUIDE_INSTRUCTIONS = `When there is a clear instruction on how to do something in the user interface based on the user question, you should call the tool 'guide_user' so it will do the actions on the user behalf. For example: "Go to the settings page and change your preferences to receive emails every day instead of weekly".`;
 
-export const knowledgeBankPrompt = (entries: { content: string }[]) => {
+export const knowledgeBankPrompt = (entries: { content: string }[], maxTotalChars = 28_000) => {
   if (entries.length === 0) return null;
 
-  const knowledgeEntries = entries.map((entry) => entry.content).join("\n\n");
-  return `The following are information and instructions from our knowledge bank. Follow all rules, and use any relevant information to inform your responses, adapting the content as needed while maintaining accuracy:\n\n${knowledgeEntries}`;
+  const header =
+    "The following are information and instructions from our knowledge bank. Follow all rules, and use any relevant information to inform your responses, adapting the content as needed while maintaining accuracy:\n\n";
+  let used = header.length;
+  const parts: string[] = [];
+
+  for (const entry of entries) {
+    const text = entry.content.trim();
+    if (!text) continue;
+    const remaining = maxTotalChars - used;
+    if (remaining <= 0) break;
+    const slice = text.length > remaining ? `${text.slice(0, Math.max(0, remaining - 1))}…` : text;
+    parts.push(slice);
+    used += slice.length + 2;
+  }
+
+  if (parts.length === 0) return null;
+
+  return `${header}${parts.join("\n\n")}`;
 };
 
 export const websitePagesPrompt = (
@@ -127,7 +143,7 @@ export const websitePagesPrompt = (
 Title: ${page.pageTitle}
 URL: ${page.url}
 Content:
-${page.markdown}
+${page.markdown.length > 4500 ? `${page.markdown.slice(0, 4500)}…` : page.markdown}
 --- Page End ---`,
     )
     .join("\n\n");

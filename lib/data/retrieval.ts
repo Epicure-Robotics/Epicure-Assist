@@ -14,6 +14,10 @@ const SIMILARITY_THRESHOLD = 0.4;
 const CHAT_WEBSITE_SIMILARITY_THRESHOLD = 0.33;
 const MAX_SIMILAR_CONVERSATIONS = 3;
 const MAX_SIMILAR_WEBSITE_PAGES = 5;
+/** Max FAQs injected into chat system prompt (semantic top-K); avoids huge prompts and slow TTFT. */
+const MAX_SIMILAR_FAQS_IN_CHAT_PROMPT = 15;
+/** Slightly looser than inbox-only retrieval so short widget messages still match FAQs. */
+const CHAT_FAQ_SIMILARITY_THRESHOLD = 0.38;
 
 export const findSimilarConversations = async (
   queryInput: string | number[],
@@ -81,23 +85,30 @@ export const findEnabledKnowledgeBankEntries = async (mailboxId: number) =>
     orderBy: (faqs, { asc }) => [asc(faqs.content)],
   });
 
-export const findSimilarFaqEntries = async (
+export const findTopSimilarFaqsForChat = async (
   queryEmbedding: number[],
   mailboxId: number,
-  similarityThreshold: number = SIMILARITY_THRESHOLD,
+  limit: number = MAX_SIMILAR_FAQS_IN_CHAT_PROMPT,
+  similarityThreshold: number = CHAT_FAQ_SIMILARITY_THRESHOLD,
 ) => {
   const similarity = sql<number>`1 - (${cosineDistance(faqs.embedding, queryEmbedding)})`;
   return await db
-    .select({ id: faqs.id })
+    .select({
+      id: faqs.id,
+      content: faqs.content,
+      similarity: similarity.as("similarity"),
+    })
     .from(faqs)
     .where(
       and(
         gt(similarity, similarityThreshold),
         eq(faqs.enabled, true),
+        isNotNull(faqs.embedding),
         or(eq(faqs.unused_mailboxId, mailboxId), eq(faqs.unused_mailboxId, 0)),
       ),
     )
-    .limit(1);
+    .orderBy(desc(similarity))
+    .limit(limit);
 };
 
 export const findSimilarWebsitePages = async (
@@ -166,33 +177,41 @@ export const fetchPromptRetrievalData = async (
   } catch (error) {
     captureExceptionAndLog(error);
     const knowledgeBankFallback = await findEnabledKnowledgeBankEntries(mailboxId);
+    const capped = knowledgeBankFallback.slice(0, MAX_SIMILAR_FAQS_IN_CHAT_PROMPT);
     return {
-      knowledgeBank: knowledgeBankPrompt(knowledgeBankFallback),
-      knowledgeBankEntryIds: knowledgeBankFallback.map((e) => e.id),
+      knowledgeBank: knowledgeBankPrompt(capped),
+      knowledgeBankEntryIds: capped.map((e) => e.id),
       metadata: metadataText,
       websitePagesPrompt: null,
       websitePages: [],
     };
   }
 
-  const [knowledgeBank, websitePages, similarFaqs] = await Promise.all([
-    findEnabledKnowledgeBankEntries(mailboxId),
+  const [websitePages, similarFaqsRanked] = await Promise.all([
     findSimilarWebsitePages(queryEmbedding, mailboxId, MAX_SIMILAR_WEBSITE_PAGES, CHAT_WEBSITE_SIMILARITY_THRESHOLD),
-    findSimilarFaqEntries(queryEmbedding, mailboxId),
+    findTopSimilarFaqsForChat(queryEmbedding, mailboxId),
   ]);
+
+  let knowledgeEntries: { id: number; content: string }[];
+  if (similarFaqsRanked.length > 0) {
+    knowledgeEntries = similarFaqsRanked.map((f) => ({ id: f.id, content: f.content }));
+  } else {
+    const enabled = await findEnabledKnowledgeBankEntries(mailboxId);
+    knowledgeEntries = enabled.slice(0, MAX_SIMILAR_FAQS_IN_CHAT_PROMPT).map((e) => ({ id: e.id, content: e.content }));
+  }
 
   // A gap is a query where neither website pages nor any FAQ entry was semantically
   // relevant. Checking FAQ similarity (not just list length) prevents false negatives
   // in mailboxes that already have FAQ entries unrelated to this particular query.
-  if (query.trim().length > 10 && websitePages.length === 0 && similarFaqs.length === 0) {
+  if (query.trim().length > 10 && websitePages.length === 0 && similarFaqsRanked.length === 0) {
     triggerEvent("knowledge/gap.detected", { query }).catch(() => {
       // Non-critical: don't fail the main request if gap logging fails
     });
   }
 
   return {
-    knowledgeBank: knowledgeBankPrompt(knowledgeBank),
-    knowledgeBankEntryIds: knowledgeBank.map((e) => e.id),
+    knowledgeBank: knowledgeBankPrompt(knowledgeEntries),
+    knowledgeBankEntryIds: knowledgeEntries.map((e) => e.id),
     metadata: metadataText,
     websitePagesPrompt: websitePages.length > 0 ? websitePagesPrompt(websitePages) : null,
     websitePages,

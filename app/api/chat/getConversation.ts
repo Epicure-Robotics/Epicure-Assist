@@ -15,18 +15,6 @@ export const getConversation = async (conversationSlug: string, session: WidgetS
     session.isAnonymous && session.anonymousSessionId && conversation.anonymousSessionId === session.anonymousSessionId;
   const hasEmailAccess = !session.isAnonymous && session.email && conversation.emailFrom === session.email;
 
-  // Debug logging
-  console.log("[getConversation] Authorization check:", {
-    conversationSlug,
-    "session.isAnonymous": session.isAnonymous,
-    "session.anonymousSessionId": session.anonymousSessionId,
-    "session.email": session.email,
-    "conversation.anonymousSessionId": conversation.anonymousSessionId,
-    "conversation.emailFrom": conversation.emailFrom,
-    hasAnonymousAccess,
-    hasEmailAccess,
-  });
-
   if (!hasAnonymousAccess && !hasEmailAccess) {
     throw new Error("Unauthorized");
   }

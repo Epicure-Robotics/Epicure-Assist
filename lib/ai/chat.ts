@@ -382,22 +382,19 @@ export const generateAIResponse = async ({
   const query = lastMessage?.content || "";
 
   const coreMessages = convertToCoreMessages(messages, { tools: {} });
-  const {
-    messages: systemMessages,
-    sources,
-    promptInfo,
-    customerInfo,
-  } = await buildPromptMessages(mailbox, email, query, guideEnabled, customerInfoUrl, isDraftMode);
+  const [{ messages: systemMessages, sources, promptInfo, customerInfo }, tools] = await Promise.all([
+    buildPromptMessages(mailbox, email, query, guideEnabled, customerInfoUrl, isDraftMode),
+    buildTools({
+      conversationId,
+      email,
+      includeHumanSupport: true,
+      includeShopifyTools: false,
+      guideEnabled,
+    }),
+  ]);
 
   if (email && customerInfo) await upsertPlatformCustomer({ email, customerInfo });
 
-  const tools = await buildTools({
-    conversationId,
-    email,
-    includeHumanSupport: true,
-    includeShopifyTools: false,
-    guideEnabled,
-  });
   if (readPageTool) {
     tools[readPageTool.toolName] = {
       description: readPageTool.toolDescription,
@@ -656,14 +653,14 @@ export const respondWithAI = async ({
 }) => {
   if (conversation.status === "spam") return createTextResponse("", Date.now().toString());
 
-  const previousMessages = await loadPreviousMessages(conversation.id, messageId);
+  const [previousMessages, platformCustomer] = await Promise.all([
+    loadPreviousMessages(conversation.id, messageId),
+    userEmail ? getPlatformCustomer(userEmail) : Promise.resolve(null),
+  ]);
   const messages = appendClientMessage({
     messages: previousMessages,
     message,
   });
-
-  let platformCustomer = null;
-  if (userEmail) platformCustomer = await getPlatformCustomer(userEmail);
 
   const isPromptConversation = conversation.isPrompt;
   const isFirstMessage = messages.length === 1;

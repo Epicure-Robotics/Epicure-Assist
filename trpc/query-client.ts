@@ -12,7 +12,8 @@ const getStaleTime = (queryKey: readonly unknown[]): number => {
   if (
     key.includes('"user"') ||
     key.includes('"preferences"') ||
-    key.includes('"mailbox","get"')
+    key.includes('"mailbox","get"') ||
+    key.includes('"sampleQuestions"')
   ) {
     return 15 * 60 * 1000; // 15 minutes
   }

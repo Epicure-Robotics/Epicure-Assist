@@ -4,7 +4,7 @@ import { db } from "@/db/client";
 import { conversationMessages, conversations, faqs, websitePages } from "@/db/schema";
 import { cacheFor } from "@/lib/cache";
 import { EPICURE_SAMPLE_QUESTIONS_CONTEXT } from "@/lib/epicure/companyKnowledge";
-import { DRAFT_MODEL, generateStructuredObject, type AvailableModel } from "./core";
+import { generateStructuredObject, type AvailableModel } from "./core";
 
 const SAMPLE_QUESTIONS_PROMPT = `Based on the following knowledge base content, generate 9 diverse and helpful sample questions for **Epicure Robotics** (fresh food and beverage robotic kiosks, PARK platform, The Smoothie Bar 2.0, Zoe, and related deployments).
 
@@ -34,7 +34,7 @@ interface SampleQuestion {
   text: string;
 }
 
-const SAMPLE_QUESTION_MODELS: AvailableModel[] = [DRAFT_MODEL, "gpt-4o-mini", "gpt-4.1"];
+const SAMPLE_QUESTION_MODELS: AvailableModel[] = ["gpt-4o-mini"];
 const MIN_CLIENT_QUESTIONS = 3;
 const SAMPLE_QUESTIONS_CACHE_VERSION = "v3";
 
@@ -101,7 +101,7 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
     .select({ title: websitePages.pageTitle, markdown: websitePages.markdown })
     .from(websitePages)
     .where(isNull(websitePages.deletedAt))
-    .limit(20);
+    .limit(12);
 
   const recentSubjects = await db
     .select({ subject: conversations.subject })
@@ -125,7 +125,7 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
     .filter(Boolean)
     .join("\n");
 
-  const content = [EPICURE_SAMPLE_QUESTIONS_CONTEXT, faqContent, websiteContent, messageContent.slice(0, 6000)]
+  const content = [EPICURE_SAMPLE_QUESTIONS_CONTEXT, faqContent, websiteContent, messageContent.slice(0, 4000)]
     .filter(Boolean)
     .join("\n\n");
   const topics = (topicContent || messageContent || "General support inquiries").slice(0, 3000);
@@ -133,7 +133,7 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
   const prompt = SAMPLE_QUESTIONS_PROMPT.replace("{{CONTENT}}", content).replace("{{TOPICS}}", topics);
 
   let filteredQuestions: SampleQuestion[] = [];
-  for (const model of [...new Set(SAMPLE_QUESTION_MODELS)]) {
+  for (const model of SAMPLE_QUESTION_MODELS) {
     try {
       const {
         object: { questions },
@@ -183,6 +183,6 @@ export const generateSampleQuestions = async (): Promise<SampleQuestion[]> => {
     filteredQuestions = [...extras, ...filteredQuestions].slice(0, 9);
   }
 
-  await cache.set(filteredQuestions, 60 * 15);
+  await cache.set(filteredQuestions, 60 * 60 * 6);
   return filteredQuestions;
 };
