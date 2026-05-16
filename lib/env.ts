@@ -135,6 +135,9 @@ export const env = createEnv({
       .default("")
       .transform((v) => (v ? v.split(",").map((d) => d.trim()) : [])),
 
+    // Optional Redis URL (e.g. Upstash) — speeds up cacheFor (embeddings, sample questions, chat cache)
+    REDIS_URL: emptyUnsetOptUrl(),
+
     // Log SQL queries to the console
     DRIZZLE_LOGGING: z.string().optional(),
     

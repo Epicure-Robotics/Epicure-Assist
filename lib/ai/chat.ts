@@ -16,7 +16,7 @@ import {
   type TextStreamPart,
   type Tool,
 } from "ai";
-import { eq, inArray } from "drizzle-orm";
+import { count, eq, inArray } from "drizzle-orm";
 import { remark } from "remark";
 import remarkHtml from "remark-html";
 import { z } from "zod";
@@ -119,7 +119,19 @@ const loadScreenshotAttachments = async (messages: (typeof conversationMessages.
   );
 };
 
-export const loadPreviousMessages = async (conversationId: number, latestMessageId?: number): Promise<Message[]> => {
+export const loadPreviousMessages = async (
+  conversationId: number,
+  latestMessageId?: number,
+  { skipHistoryWhenEmpty = false }: { skipHistoryWhenEmpty?: boolean } = {},
+): Promise<Message[]> => {
+  if (skipHistoryWhenEmpty && latestMessageId) {
+    const [{ value }] = await db
+      .select({ value: count() })
+      .from(conversationMessages)
+      .where(eq(conversationMessages.conversationId, conversationId));
+    if (Number(value) <= 1) return [];
+  }
+
   const conversationMessages = await getMessagesOnly(conversationId);
   const attachments = await loadScreenshotAttachments(conversationMessages);
 
@@ -172,6 +184,12 @@ export const buildPromptMessages = async (
   promptInfo: Omit<PromptInfo, "availableTools">;
   customerInfo: CustomerInfo | null;
 }> => {
+  if (promptProfile === "widget" && query.trim()) {
+    const cacheKey = `widget-system-prompt:v1:${mailbox.id}:${hashQuery(query)}`;
+    const cached = await cacheFor<Awaited<ReturnType<typeof buildPromptMessages>>>(cacheKey).get();
+    if (cached) return cached;
+  }
+
   const [{ knowledgeBank, knowledgeBankEntryIds, websitePagesPrompt, websitePages }, customerInfo] = await Promise.all([
     fetchPromptRetrievalData(query, null, mailbox.id),
     email && customerInfoUrl ? fetchCustomerInfo(email, customerInfoUrl, mailbox) : null,
@@ -199,13 +217,13 @@ export const buildPromptMessages = async (
     prompt += promptProfile === "widget" ? epicureWidgetPromptExtension() : epicurePromptExtension();
   }
 
-  return {
+  const result = {
     messages: [
       {
         role: "system",
         content: prompt,
       },
-    ],
+    ] as CoreMessage[],
     sources: websitePages,
     promptInfo: {
       systemPrompt,
@@ -216,6 +234,13 @@ export const buildPromptMessages = async (
     },
     customerInfo,
   };
+
+  if (promptProfile === "widget" && query.trim()) {
+    const cacheKey = `widget-system-prompt:v1:${mailbox.id}:${hashQuery(query)}`;
+    await cacheFor(cacheKey).set(result, 60 * 60);
+  }
+
+  return result;
 };
 
 const generateReasoning = async ({
@@ -517,7 +542,7 @@ export const generateAIResponse = async ({
     tools,
     temperature: 0.1,
     seed: evaluation ? 100 : undefined,
-    maxTokens,
+    maxTokens: maxTokens ?? (isWidgetProfile ? 480 : undefined),
     experimental_transform: hideToolResults(),
     experimental_providerMetadata: {
       openai: {
@@ -680,7 +705,7 @@ export const respondWithAI = async ({
   if (conversation.status === "spam") return createTextResponse("", Date.now().toString());
 
   const [previousMessages, platformCustomer] = await Promise.all([
-    loadPreviousMessages(conversation.id, messageId),
+    loadPreviousMessages(conversation.id, messageId, { skipHistoryWhenEmpty: true }),
     userEmail ? getPlatformCustomer(userEmail) : Promise.resolve(null),
   ]);
   const messages = appendClientMessage({
@@ -750,6 +775,14 @@ export const respondWithAI = async ({
   }
 
   const cacheKey = `chat:v2:mailbox-${mailbox.id}:initial-response:${hashQuery(message.content)}`;
+  const widgetCacheKey = `chat:widget:v1:${mailbox.id}:${hashQuery(message.content ?? "")}`;
+  if (isFirstMessage && promptProfile === "widget") {
+    const cached: string | null = await cacheFor<string>(widgetCacheKey).get();
+    if (cached != null) {
+      const assistantMessage = await handleAssistantMessage(cached, false);
+      return createTextResponse(cached, assistantMessage.id.toString());
+    }
+  }
   if (isFirstMessage && isPromptConversation) {
     const cached: string | null = await cacheFor<string>(cacheKey).get();
     if (cached != null) {
@@ -778,6 +811,7 @@ export const respondWithAI = async ({
         customPrompt,
         promptProfile,
         maxSteps: promptProfile === "widget" ? 2 : 4,
+        maxTokens: promptProfile === "widget" ? 480 : undefined,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>
@@ -835,7 +869,11 @@ export const respondWithAI = async ({
           });
 
           if (finishReason === "stop" && isFirstMessage && !hasSensitiveToolCall && !hasRequestHumanSupportCall) {
-            await cacheFor<string>(cacheKey).set(responseText, 60 * 60 * 24);
+            if (promptProfile === "widget") {
+              await cacheFor<string>(widgetCacheKey).set(responseText, 60 * 60 * 24);
+            } else if (isPromptConversation) {
+              await cacheFor<string>(cacheKey).set(responseText, 60 * 60 * 24);
+            }
           }
         },
       });

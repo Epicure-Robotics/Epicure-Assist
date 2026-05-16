@@ -13,7 +13,6 @@ import { storeTools } from "@/lib/data/storedTool";
 import { publicConversationChannelId } from "@/lib/realtime/channels";
 import { publishToRealtime } from "@/lib/realtime/publish";
 import { validateAttachments } from "@/lib/shared/attachmentValidation";
-import { createClient } from "@/lib/supabase/server";
 import { ToolRequestBody } from "@/packages/client/dist";
 
 export const maxDuration = 60;
@@ -97,12 +96,6 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     attachmentData,
   );
 
-  const supabase = await createClient();
-  let isHelperUser = false;
-  if ((await supabase.auth.getUser()).data.user?.id) {
-    isHelperUser = true;
-  }
-
   return await respondWithAI({
     conversation,
     mailbox,
@@ -113,7 +106,7 @@ export const POST = withWidgetAuth(async ({ request }, { session, mailbox }) => 
     guideEnabled,
     sendEmail: false,
     reasoningEnabled: false,
-    isHelperUser,
+    isHelperUser: false,
     tools,
     customerInfoUrl,
     onResponse: ({ messages, isPromptConversation, isFirstMessage, humanSupportRequested }) => {
