@@ -7,6 +7,7 @@ import { MessageContent, useChat, useHelperClient } from "@helperai/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getInstantGreetingReply } from "@/lib/ai/instantGreeting";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 
@@ -41,11 +42,13 @@ const ActiveChat = ({
   mailboxName,
   conversationSlug,
   initialMessage,
+  initialInstantReply,
   onBack,
 }: {
   mailboxName: string;
   conversationSlug: string;
   initialMessage: string;
+  initialInstantReply?: { text: string; assistantMessageId: string };
   onBack: () => void;
 }) => {
   const conversation = emptyConversation(conversationSlug);
@@ -71,8 +74,28 @@ const ActiveChat = ({
     const text = initialMessage.trim();
     if (!text || openedWithMessageRef.current) return;
     openedWithMessageRef.current = true;
+
+    if (initialInstantReply) {
+      const now = Date.now();
+      setMessages([
+        {
+          id: `user_${now}`,
+          role: "user",
+          content: text,
+          createdAt: new Date(now),
+        },
+        {
+          id: initialInstantReply.assistantMessageId,
+          role: "assistant",
+          content: initialInstantReply.text,
+          createdAt: new Date(now + 1),
+        },
+      ]);
+      return;
+    }
+
     void append({ role: "user", content: text });
-  }, [append, initialMessage]);
+  }, [append, initialInstantReply, initialMessage, setMessages]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -131,10 +154,12 @@ const ActiveChat = ({
 const PreparingChat = ({
   mailboxName,
   initialMessage,
+  instantReplyText,
   onBack,
 }: {
   mailboxName: string;
   initialMessage: string;
+  instantReplyText?: string;
   onBack: () => void;
 }) => (
   <div className="min-h-screen flex flex-col">
@@ -146,7 +171,13 @@ const PreparingChat = ({
             <p className="text-sm text-primary-foreground">{initialMessage}</p>
           </div>
         ) : null}
-        <TypingIndicator />
+        {instantReplyText ? (
+          <div className="rounded-lg p-3 max-w-[80%] border border-primary">
+            <p className="text-sm">{instantReplyText}</p>
+          </div>
+        ) : (
+          <TypingIndicator />
+        )}
       </div>
     </div>
     <div className="border-t p-4">
@@ -161,6 +192,7 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
   const [question, setQuestion] = useState("");
   const [starterMessage, setStarterMessage] = useState("");
   const [chatConversationSlug, setChatConversationSlug] = useState<string | null>(null);
+  const [instantReply, setInstantReply] = useState<{ text: string; assistantMessageId: string } | null>(null);
   const [isPreparingChat, setIsPreparingChat] = useState(false);
   const { data: sampleQuestions, isLoading, error } = api.sampleQuestions.useQuery(undefined, {
     staleTime: 6 * 60 * 60 * 1000,
@@ -180,14 +212,25 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
     setStarterMessage(trimmed);
     setIsPreparingChat(true);
 
+    const greetingReply = getInstantGreetingReply(trimmed);
+    if (greetingReply) {
+      setInstantReply({ text: greetingReply, assistantMessageId: `ai_${Date.now()}` });
+    } else {
+      setInstantReply(null);
+    }
+
     void client.conversations
-      .create()
+      .create({ initialMessage: trimmed })
       .then((result) => {
         setChatConversationSlug(result.conversationSlug);
+        if (result.instantReply) {
+          setInstantReply(result.instantReply);
+        }
       })
       .catch(() => {
         setIsPreparingChat(false);
         setStarterMessage("");
+        setInstantReply(null);
       })
       .finally(() => {
         setIsPreparingChat(false);
@@ -196,6 +239,7 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
 
   const handleBackToMain = () => {
     setChatConversationSlug(null);
+    setInstantReply(null);
     setIsPreparingChat(false);
     setQuestion("");
     setStarterMessage("");
@@ -207,13 +251,21 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
         mailboxName={mailboxName}
         conversationSlug={chatConversationSlug}
         initialMessage={starterMessage}
+        initialInstantReply={instantReply ?? undefined}
         onBack={handleBackToMain}
       />
     );
   }
 
   if (isPreparingChat) {
-    return <PreparingChat mailboxName={mailboxName} initialMessage={starterMessage} onBack={handleBackToMain} />;
+    return (
+      <PreparingChat
+        mailboxName={mailboxName}
+        initialMessage={starterMessage}
+        instantReplyText={instantReply?.text}
+        onBack={handleBackToMain}
+      />
+    );
   }
 
   return (

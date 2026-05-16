@@ -25,6 +25,7 @@ import { ReadPageToolConfig } from "@helperai/sdk";
 import { db } from "@/db/client";
 import { conversationMessages, conversations, files, MessageMetadata, ToolMetadata } from "@/db/schema";
 import { CHAT_MODEL, DRAFT_MODEL, isWithinTokenLimit, MINI_MODEL } from "@/lib/ai/core";
+import { getInstantGreetingReply } from "@/lib/ai/instantGreeting";
 import { customerInfoPrompt } from "@/lib/ai/customerInfoPrompt";
 import openai from "@/lib/ai/openai";
 import { PromptInfo } from "@/lib/ai/promptInfo";
@@ -55,7 +56,10 @@ import {
 } from "@/lib/epicure/companyKnowledge";
 import { CustomerInfo, fetchCustomerInfo } from "@/lib/metadataApiClient";
 import { trackAIUsageEvent } from "../data/aiUsageEvents";
+import { waitUntil } from "@vercel/functions";
 import { captureExceptionAndLog, captureExceptionAndThrowIfDevelopment } from "../shared/sentry";
+
+export { getInstantGreetingReply } from "@/lib/ai/instantGreeting";
 
 const SUMMARY_MAX_TOKENS = 7000;
 const SUMMARY_PROMPT =
@@ -718,6 +722,21 @@ export const respondWithAI = async ({
 }) => {
   if (conversation.status === "spam") return createTextResponse("", Date.now().toString());
 
+  const greetingReply = getInstantGreetingReply(message.content);
+  if (greetingReply) {
+    const responseId = `ai_${Date.now()}`;
+    waitUntil(
+      (async () => {
+        await createAssistantMessage(conversation.id, messageId, greetingReply, {});
+        await updateOriginalConversation(conversation.id, {
+          set: { assignedToAI: true },
+          message: "Automated reply sent",
+        });
+      })().catch(captureExceptionAndLog),
+    );
+    return createTextResponse(greetingReply, responseId);
+  }
+
   const [previousMessages, platformCustomer] = await Promise.all([
     loadPreviousMessages(conversation.id, messageId, { skipHistoryWhenEmpty: true }),
     userEmail ? getPlatformCustomer(userEmail) : Promise.resolve(null),
@@ -781,26 +800,22 @@ export const respondWithAI = async ({
     return createTextResponse("", Date.now().toString());
   }
 
-  const greetingReply = getInstantGreetingReply(message.content);
-  if (isFirstMessage && greetingReply) {
-    const assistantMessage = await handleAssistantMessage(greetingReply, false);
-    return createTextResponse(greetingReply, assistantMessage.id.toString());
-  }
-
   const cacheKey = `chat:v2:mailbox-${mailbox.id}:initial-response:${hashQuery(message.content)}`;
   const widgetCacheKey = `chat:widget:v1:${mailbox.id}:${hashQuery(message.content ?? "")}`;
   if (isFirstMessage && promptProfile === "widget") {
     const cached: string | null = await cacheFor<string>(widgetCacheKey).get();
     if (cached != null) {
-      const assistantMessage = await handleAssistantMessage(cached, false);
-      return createTextResponse(cached, assistantMessage.id.toString());
+      const responseId = `ai_${Date.now()}`;
+      waitUntil(handleAssistantMessage(cached, false).catch(captureExceptionAndLog));
+      return createTextResponse(cached, responseId);
     }
   }
   if (isFirstMessage && isPromptConversation) {
     const cached: string | null = await cacheFor<string>(cacheKey).get();
     if (cached != null) {
-      const assistantMessage = await handleAssistantMessage(cached, false);
-      return createTextResponse(cached, assistantMessage.id.toString());
+      const responseId = `ai_${Date.now()}`;
+      waitUntil(handleAssistantMessage(cached, false).catch(captureExceptionAndLog));
+      return createTextResponse(cached, responseId);
     }
   }
 
@@ -924,30 +939,6 @@ const createTextResponse = (text: string, messageId: string) => {
       });
     },
   });
-};
-
-const normalizeGreetingQuery = (query: string) =>
-  query
-    .trim()
-    .toLowerCase()
-    .replace(/[!?.]+$/g, "")
-    .replace(/\s+/g, " ");
-
-const INSTANT_GREETING_REPLIES: Record<string, string> = {
-  hi: "Hello! How can I assist you today?",
-  hii: "Hello! How can I assist you today?",
-  hiii: "Hello! How can I assist you today?",
-  hello: "Hello! How can I assist you today?",
-  hey: "Hello! How can I assist you today?",
-  "good morning": "Good morning! How can I assist you today?",
-  "good afternoon": "Good afternoon! How can I assist you today?",
-  "good evening": "Good evening! How can I assist you today?",
-};
-
-const getInstantGreetingReply = (content: string | undefined | null): string | null => {
-  if (!content) return null;
-  const key = normalizeGreetingQuery(content);
-  return INSTANT_GREETING_REPLIES[key] ?? null;
 };
 
 const convertMarkdownToHtml = async (markdown: string): Promise<string> => {

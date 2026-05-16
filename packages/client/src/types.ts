@@ -141,6 +141,8 @@ export type CreateSessionResult = {
 export const createConversationBodySchema = z.object({
   isPrompt: z.boolean().nullish(),
   subject: z.string().nullish(),
+  /** When set with a greeting (hi/hello), server returns instantReply and skips a separate /api/chat round-trip. */
+  initialMessage: z.string().nullish(),
 });
 export type CreateConversationRequestBody = z.infer<typeof createConversationBodySchema>;
 export type CreateConversationParams = CreateConversationRequestBody & {
@@ -149,6 +151,10 @@ export type CreateConversationParams = CreateConversationRequestBody & {
 
 export type CreateConversationResult = {
   conversationSlug: string;
+  instantReply?: {
+    text: string;
+    assistantMessageId: string;
+  };
 };
 
 export const updateConversationBodySchema = z.object({
