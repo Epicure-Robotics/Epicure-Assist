@@ -325,6 +325,9 @@ importers:
       recharts:
         specifier: ^2.15.3
         version: 2.15.3(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
+      redis:
+        specifier: ^4.7.0
+        version: 4.7.0
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0
@@ -25875,7 +25878,7 @@ snapshots:
   webpack@5.99.7(esbuild@0.19.12):
     dependencies:
       '@types/eslint-scope': 3.7.7
-      '@types/estree': 1.0.8
+      '@types/estree': 1.0.7
       '@types/json-schema': 7.0.15
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1

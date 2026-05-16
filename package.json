@@ -165,6 +165,7 @@
     "react-resizable-panels": "^2.1.5",
     "react-responsive": "^10.0.0",
     "recharts": "^2.15.3",
+    "redis": "^4.7.0",
     "rehype-raw": "^7.0.0",
     "rehype-sanitize": "^6.0.0",
     "remark": "^15.0.1",
