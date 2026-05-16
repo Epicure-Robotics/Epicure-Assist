@@ -47,7 +47,7 @@ import {
 import { createAndUploadFile, downloadFile, getFileUrl } from "@/lib/data/files";
 import { type Mailbox } from "@/lib/data/mailbox";
 import { getPlatformCustomer, PlatformCustomer, upsertPlatformCustomer } from "@/lib/data/platformCustomer";
-import { fetchPromptRetrievalData } from "@/lib/data/retrieval";
+import { fetchFastWidgetRetrievalData, fetchPromptRetrievalData } from "@/lib/data/retrieval";
 import {
   EPICURE_MAILBOX_SLUG,
   epicurePromptExtension,
@@ -192,10 +192,16 @@ export const buildPromptMessages = async (
     if (cached) return cached;
   }
 
-  const [{ knowledgeBank, knowledgeBankEntryIds, websitePagesPrompt, websitePages }, customerInfo] = await Promise.all([
-    fetchPromptRetrievalData(query, null, mailbox.id),
-    email && customerInfoUrl ? fetchCustomerInfo(email, customerInfoUrl, mailbox) : null,
-  ]);
+  const retrievalPromise =
+    promptProfile === "widget"
+      ? fetchFastWidgetRetrievalData(mailbox.id)
+      : fetchPromptRetrievalData(query, null, mailbox.id);
+
+  const [{ knowledgeBank, knowledgeBankEntryIds, websitePagesPrompt, websitePages }, customerInfo] =
+    await Promise.all([
+      retrievalPromise,
+      email && customerInfoUrl ? fetchCustomerInfo(email, customerInfoUrl, mailbox) : null,
+    ]);
 
   const basePrompt = draftPromptOverride ?? (isDraftMode ? DRAFT_SYSTEM_PROMPT : CHAT_SYSTEM_PROMPT);
   const systemPrompt = [
@@ -436,16 +442,18 @@ export const generateAIResponse = async ({
       undefined,
       promptProfile ?? "full",
     ),
-    buildTools({
-      conversationId,
-      email,
-      includeHumanSupport: true,
-      includeShopifyTools: false,
-      guideEnabled,
-      includeMailboxTools: !isWidgetProfile,
-      includePastConversationSearch: !isWidgetProfile,
-      includeSavedReplyTool: !isWidgetProfile,
-    }),
+    isWidgetProfile
+      ? Promise.resolve({} as Record<string, Tool>)
+      : buildTools({
+          conversationId,
+          email,
+          includeHumanSupport: true,
+          includeShopifyTools: false,
+          guideEnabled,
+          includeMailboxTools: true,
+          includePastConversationSearch: true,
+          includeSavedReplyTool: true,
+        }),
   ]);
 
   if (email && customerInfo) await upsertPlatformCustomer({ email, customerInfo });
@@ -544,8 +552,8 @@ export const generateAIResponse = async ({
   return streamText({
     model,
     messages: finalMessages,
-    maxSteps: maxSteps ?? (isWidgetProfile ? 2 : 4),
-    tools,
+    maxSteps: maxSteps ?? (isWidgetProfile ? 1 : 4),
+    ...(isWidgetProfile ? {} : { tools }),
     temperature: 0.1,
     seed: evaluation ? 100 : undefined,
     maxTokens: maxTokens ?? (isWidgetProfile ? 480 : undefined),
@@ -728,18 +736,17 @@ export const respondWithAI = async ({
     traceId: string | null = null,
     reasoning: string | null = null,
   ) => {
-    if (!humanSupportRequested) {
-      await updateOriginalConversation(conversation.id, {
-        set: { assignedToAI: true },
-        message: "Automated reply sent",
-      });
-    }
-
     const assistantMessage = await createAssistantMessage(conversation.id, messageId, text, {
       traceId,
       reasoning,
       sendEmail,
     });
+    if (!humanSupportRequested) {
+      void updateOriginalConversation(conversation.id, {
+        set: { assignedToAI: true },
+        message: "Automated reply sent",
+      }).catch(captureExceptionAndLog);
+    }
     onResponse?.({
       messages,
       platformCustomer,
@@ -816,8 +823,8 @@ export const respondWithAI = async ({
         customerInfoUrl,
         customPrompt,
         promptProfile,
-        maxSteps: promptProfile === "widget" ? 2 : 4,
-        maxTokens: promptProfile === "widget" ? 480 : undefined,
+        maxSteps: promptProfile === "widget" ? 1 : 4,
+        maxTokens: promptProfile === "widget" ? 400 : undefined,
         dataStream,
         async onFinish({ text, finishReason, steps, traceId, experimental_providerMetadata, sources, promptInfo }) {
           const hasSensitiveToolCall = steps.some((step: any) =>

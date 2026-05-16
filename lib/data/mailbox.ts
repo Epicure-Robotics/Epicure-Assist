@@ -8,7 +8,27 @@ import { env } from "@/lib/env";
 import { getGitHubInstallUrl } from "@/lib/github/client";
 import { uninstallSlackApp } from "@/lib/slack/client";
 import { REQUIRED_SCOPES, SLACK_REDIRECT_URI } from "@/lib/slack/constants";
+import { cacheFor } from "@/lib/cache";
 import { captureExceptionAndLog } from "../shared/sentry";
+
+const MAILBOX_CACHE_KEY = "mailbox:active:v1";
+const MAILBOX_CACHE_TTL_SECONDS = 300;
+
+/** Cached mailbox row for widget auth (avoids a DB round-trip on every session/chat request). */
+export const getMailboxCached = async (): Promise<typeof mailboxes.$inferSelect | null> => {
+  const cached = await cacheFor<typeof mailboxes.$inferSelect>(MAILBOX_CACHE_KEY).get();
+  if (cached) return cached;
+
+  const mailbox = await getMailbox();
+  if (mailbox) {
+    try {
+      await cacheFor(MAILBOX_CACHE_KEY).set(mailbox, MAILBOX_CACHE_TTL_SECONDS);
+    } catch (error) {
+      captureExceptionAndLog(error);
+    }
+  }
+  return mailbox;
+};
 
 export const getMailbox = cache(async (): Promise<typeof mailboxes.$inferSelect | null> => {
   const result = await db.query.mailboxes.findFirst({

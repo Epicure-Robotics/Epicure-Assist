@@ -1,6 +1,6 @@
 import { CreateSessionResult, sessionParamsSchema } from "@helperai/client";
 import { fetchAndUpdateUnsentNotifications } from "@/lib/data/messageNotifications";
-import { getMailbox } from "@/lib/data/mailbox";
+import { getMailboxCached } from "@/lib/data/mailbox";
 import { getPlatformCustomer } from "@/lib/data/platformCustomer";
 import { env } from "@/lib/env";
 import { createWidgetSession, getEmailHash } from "@/lib/widgetSession";
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   const { email, emailHash, timestamp, currentToken } = result.data;
 
-  const mailboxRecord = await getMailbox();
+  const mailboxRecord = await getMailboxCached();
 
   if (!mailboxRecord) {
     return corsResponse({ error: "Invalid mailbox" }, { status: 400 });

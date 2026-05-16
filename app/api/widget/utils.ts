@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { mailboxes } from "@/db/schema";
-import { getMailbox, Mailbox } from "@/lib/data/mailbox";
+import { getMailboxCached, Mailbox } from "@/lib/data/mailbox";
 import { verifyWidgetSession, type WidgetSessionPayload } from "@/lib/widgetSession";
 
 const corsHeaders = {
@@ -45,7 +45,7 @@ export async function authenticateWidget(request: Request): Promise<Authenticate
   }
 
   const token = authHeader.slice(7);
-  const mailbox = await getMailbox();
+  const mailbox = await getMailboxCached();
 
   if (!mailbox) {
     return { success: false, error: "Mailbox not found" };

@@ -170,6 +170,21 @@ export type PromptRetrievalData = {
   }[];
 };
 
+/** Widget chat: skip embedding + vector search; Epicure block + capped FAQs are enough and save ~2–5s TTFT. */
+const WIDGET_FAST_FAQ_LIMIT = 10;
+
+export const fetchFastWidgetRetrievalData = async (mailboxId: number): Promise<PromptRetrievalData> => {
+  const enabled = await findEnabledKnowledgeBankEntries(mailboxId);
+  const capped = enabled.slice(0, WIDGET_FAST_FAQ_LIMIT);
+  return {
+    knowledgeBank: knowledgeBankPrompt(capped),
+    knowledgeBankEntryIds: capped.map((e) => e.id),
+    metadata: null,
+    websitePagesPrompt: null,
+    websitePages: [],
+  };
+};
+
 export const fetchPromptRetrievalData = async (
   query: string,
   metadata: object | null,
