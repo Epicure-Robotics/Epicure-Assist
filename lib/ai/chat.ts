@@ -62,6 +62,8 @@ const SUMMARY_PROMPT =
   "Summarize the following text while preserving all key information and context. Keep the summary under 8000 tokens.";
 export const REASONING_MODEL = fireworks("accounts/fireworks/models/deepseek-r1");
 
+const hashQuery = (query: string): string => createHash("md5").update(query).digest("hex");
+
 function hideToolResults<TOOLS extends Record<string, Tool>>(): (options: {
   tools: TOOLS;
 }) => TransformStream<TextStreamPart<TOOLS>, TextStreamPart<TOOLS>> {
@@ -125,17 +127,17 @@ export const loadPreviousMessages = async (
   { skipHistoryWhenEmpty = false }: { skipHistoryWhenEmpty?: boolean } = {},
 ): Promise<Message[]> => {
   if (skipHistoryWhenEmpty && latestMessageId) {
-    const [{ value }] = await db
+    const [countRow] = await db
       .select({ value: count() })
       .from(conversationMessages)
       .where(eq(conversationMessages.conversationId, conversationId));
-    if (Number(value) <= 1) return [];
+    if (countRow && Number(countRow.value) <= 1) return [];
   }
 
-  const conversationMessages = await getMessagesOnly(conversationId);
-  const attachments = await loadScreenshotAttachments(conversationMessages);
+  const dbMessages = await getMessagesOnly(conversationId);
+  const attachments = await loadScreenshotAttachments(dbMessages);
 
-  return conversationMessages
+  return dbMessages
     .filter((message) => message.body && message.id !== latestMessageId)
     .map((message) => {
       if (message.role === "tool") {
@@ -237,7 +239,11 @@ export const buildPromptMessages = async (
 
   if (promptProfile === "widget" && query.trim()) {
     const cacheKey = `widget-system-prompt:v1:${mailbox.id}:${hashQuery(query)}`;
-    await cacheFor(cacheKey).set(result, 60 * 60);
+    try {
+      await cacheFor(cacheKey).set(result, 60 * 60);
+    } catch (error) {
+      captureExceptionAndLog(error);
+    }
   }
 
   return result;
@@ -911,10 +917,6 @@ const createTextResponse = (text: string, messageId: string) => {
       });
     },
   });
-};
-
-const hashQuery = (query: string): string => {
-  return createHash("md5").update(query).digest("hex");
 };
 
 const normalizeGreetingQuery = (query: string) =>

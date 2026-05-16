@@ -165,6 +165,7 @@ export const HomepageContent = ({ mailboxName }: { mailboxName: string }) => {
   const { data: sampleQuestions, isLoading, error } = api.sampleQuestions.useQuery(undefined, {
     staleTime: 6 * 60 * 60 * 1000,
     gcTime: 24 * 60 * 60 * 1000,
+    retry: 2,
   });
   const { client } = useHelperClient();
 
