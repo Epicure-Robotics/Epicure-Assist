@@ -1,9 +1,9 @@
 import { and, eq, ne } from "drizzle-orm";
-import { Resend } from "resend";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
 import { conversationFollowers, conversations, userProfiles } from "@/db/schema";
 import FollowerNotificationEmail from "@/lib/emails/followerNotification";
+import { isSmtpConfigured, sendEmail } from "@/lib/emails/sendEmail";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 
@@ -29,7 +29,7 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
       return;
     }
 
-    if (!env.RESEND_API_KEY || !env.RESEND_FROM_ADDRESS) {
+    if (!isSmtpConfigured()) {
       return;
     }
 
@@ -87,7 +87,6 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
     const triggeredByName = triggeredByUser?.displayName || triggeredByUser?.user?.email || "Someone";
 
     const conversationLink = `${env.AUTH_URL}/conversations?id=${conversation.slug}`;
-    const resend = new Resend(env.RESEND_API_KEY);
 
     const emailPromises = followers.map(async (follower) => {
       const email = follower.user?.email;
@@ -108,8 +107,7 @@ export const sendFollowerNotification = async (payload: SendFollowerNotification
 
       try {
         const sanitizedSubject = (conversation.subject || "Untitled").replace(/[\r\n]/g, "");
-        await resend.emails.send({
-          from: env.RESEND_FROM_ADDRESS!,
+        await sendEmail({
           to: assertDefined(email),
           subject: `${eventDescription} in "${sanitizedSubject}"`,
           react: FollowerNotificationEmail({

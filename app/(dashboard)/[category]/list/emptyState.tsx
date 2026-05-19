@@ -13,7 +13,7 @@ export const NoConversations = ({ filtered, onClearFilters }: { filtered?: boole
 
   const onboardingState = conversationListData?.onboardingState;
   const isOnboarding =
-    !onboardingState?.hasResend || !onboardingState?.hasWidgetHost || !onboardingState?.hasGmailSupportEmail;
+    !onboardingState?.hasSmtp || !onboardingState?.hasWidgetHost || !onboardingState?.hasGmailSupportEmail;
 
   const shouldShowNoTickets = !input.status?.length || input.status?.[0] === "open";
 
@@ -56,12 +56,12 @@ export const NoConversations = ({ filtered, onClearFilters }: { filtered?: boole
             className="border transition-colors hover:border-foreground rounded-lg p-4"
           >
             <div className="flex items-center gap-2">
-              {onboardingState?.hasResend ? <Check className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
-              <p className={cn(onboardingState?.hasResend && "line-through")}>
-                Set up Resend to send emails from Epicure Assist
+              {onboardingState?.hasSmtp ? <Check className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+              <p className={cn(onboardingState?.hasSmtp && "line-through")}>
+                Set up SMTP to send emails from Epicure Assist
               </p>
             </div>
-            {!onboardingState?.hasResend && (
+            {!onboardingState?.hasSmtp && (
               <div className="mt-2 flex items-center gap-1 ml-7 text-sm text-bright">
                 Learn how <ArrowRight className="w-4 h-4" />
               </div>

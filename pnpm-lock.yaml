@@ -343,9 +343,6 @@ importers:
       require-in-the-middle:
         specifier: ^7.5.2
         version: 7.5.2
-      resend:
-        specifier: ^4.5.1
-        version: 4.5.1(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
       rrweb-player:
         specifier: ^1.0.0-alpha.4
         version: 1.0.0-alpha.4
@@ -10963,10 +10960,6 @@ packages:
 
   requires-port@1.0.0:
     resolution: {integrity: sha512-KigOCHcocU3XODJxsu8i/j8T9tzT4adHiecwORRQ0ZZFcp7ahwXuRU1m+yuO90C5ZUyGeGfocHDI14M3L3yDAQ==}
-
-  resend@4.5.1:
-    resolution: {integrity: sha512-ryhHpZqCBmuVyzM19IO8Egtc2hkWI4JOL5lf5F3P7Dydu3rFeX6lHNpGqG0tjWoZ63rw0l731JEmuJZBdDm3og==}
-    engines: {node: '>=18'}
 
   resolve-alpn@1.2.1:
     resolution: {integrity: sha512-0a1F4l73/ZFZOakJnQ3FvkJ2+gSTQWz/r2KE5OdDY0TxPm5h4GkqkWWfM47T7HsbnOtcJVEF4epCVy6u7Q3K+g==}
@@ -24089,13 +24082,6 @@ snapshots:
 
   requires-port@1.0.0: {}
 
-  resend@4.5.1(react-dom@19.1.2(react@19.1.2))(react@19.1.2):
-    dependencies:
-      '@react-email/render': 1.0.6(react-dom@19.1.2(react@19.1.2))(react@19.1.2)
-    transitivePeerDependencies:
-      - react
-      - react-dom
-
   resolve-alpn@1.2.1: {}
 
   resolve-cwd@3.0.0:
@@ -25878,7 +25864,7 @@ snapshots:
   webpack@5.99.7(esbuild@0.19.12):
     dependencies:
       '@types/eslint-scope': 3.7.7
-      '@types/estree': 1.0.7
+      '@types/estree': 1.0.8
       '@types/json-schema': 7.0.15
       '@webassemblyjs/ast': 1.14.1
       '@webassemblyjs/wasm-edit': 1.14.1

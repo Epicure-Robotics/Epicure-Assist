@@ -8,17 +8,14 @@ import * as sentryUtils from "@/lib/shared/sentry";
 vi.mock("@/lib/env", () => ({
   env: {
     POSTGRES_URL: inject("TEST_DATABASE_URL"),
-    RESEND_API_KEY: "test-api-key",
-    RESEND_FROM_ADDRESS: "test@example.com",
     AUTH_URL: "https://helperai.dev",
   },
 }));
 
-const mockEmailSend = vi.fn();
-vi.mock("resend", () => ({
-  Resend: vi.fn().mockImplementation(() => ({
-    emails: { send: mockEmailSend },
-  })),
+const mockSendEmail = vi.fn();
+vi.mock("@/lib/emails/sendEmail", () => ({
+  isSmtpConfigured: () => true,
+  sendEmail: (...args: unknown[]) => mockSendEmail(...args),
 }));
 vi.mock("@/lib/emails/followerNotification", () => ({
   default: vi.fn().mockReturnValue("Mock FollowerNotificationEmail component"),
@@ -30,7 +27,7 @@ vi.mock("@/lib/shared/sentry", () => ({
 describe("sendFollowerNotification", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockEmailSend.mockResolvedValue({ id: "mock-email-id" });
+    mockSendEmail.mockResolvedValue(undefined);
   });
 
   describe("successful notifications", () => {
@@ -44,7 +41,7 @@ describe("sendFollowerNotification", () => {
         eventDetails: {},
       });
       expect(result).toBeUndefined();
-      expect(mockEmailSend).not.toHaveBeenCalled();
+      expect(mockSendEmail).not.toHaveBeenCalled();
     });
 
     it("sends notifications to all followers except the triggering user", async () => {
@@ -70,15 +67,13 @@ describe("sendFollowerNotification", () => {
         eventDetails: {},
       });
 
-      expect(mockEmailSend).toHaveBeenCalledTimes(2);
-      expect(mockEmailSend).toHaveBeenCalledWith({
-        from: "test@example.com",
+      expect(mockSendEmail).toHaveBeenCalledTimes(2);
+      expect(mockSendEmail).toHaveBeenCalledWith({
         to: "follower1@example.com",
         subject: 'New message in "Test Conversation"',
         react: "Mock FollowerNotificationEmail component",
       });
-      expect(mockEmailSend).toHaveBeenCalledWith({
-        from: "test@example.com",
+      expect(mockSendEmail).toHaveBeenCalledWith({
         to: "follower2@example.com",
         subject: 'New message in "Test Conversation"',
         react: "Mock FollowerNotificationEmail component",
@@ -108,7 +103,7 @@ describe("sendFollowerNotification", () => {
         eventDetails: { oldStatus: "open", newStatus: "closed" },
       });
 
-      expect(mockEmailSend).toHaveBeenLastCalledWith(
+      expect(mockSendEmail).toHaveBeenLastCalledWith(
         expect.objectContaining({
           subject: 'Status changed in "Event Test Conversation"',
         }),
@@ -121,7 +116,7 @@ describe("sendFollowerNotification", () => {
         eventDetails: { oldAssignee: "John", newAssignee: "Jane" },
       });
 
-      expect(mockEmailSend).toHaveBeenLastCalledWith(
+      expect(mockSendEmail).toHaveBeenLastCalledWith(
         expect.objectContaining({
           subject: 'Assignment changed in "Event Test Conversation"',
         }),
@@ -134,13 +129,13 @@ describe("sendFollowerNotification", () => {
         eventDetails: {},
       });
 
-      expect(mockEmailSend).toHaveBeenLastCalledWith(
+      expect(mockSendEmail).toHaveBeenLastCalledWith(
         expect.objectContaining({
           subject: 'New note in "Event Test Conversation"',
         }),
       );
 
-      expect(mockEmailSend).toHaveBeenCalledTimes(3);
+      expect(mockSendEmail).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -154,7 +149,7 @@ describe("sendFollowerNotification", () => {
       });
 
       expect(result).toBeUndefined();
-      expect(mockEmailSend).not.toHaveBeenCalled();
+      expect(mockSendEmail).not.toHaveBeenCalled();
     });
 
     it("returns early when eventType is missing", async () => {
@@ -166,7 +161,7 @@ describe("sendFollowerNotification", () => {
       });
 
       expect(result).toBeUndefined();
-      expect(mockEmailSend).not.toHaveBeenCalled();
+      expect(mockSendEmail).not.toHaveBeenCalled();
     });
 
     it("returns early when triggeredByUserId is missing", async () => {
@@ -178,7 +173,7 @@ describe("sendFollowerNotification", () => {
       });
 
       expect(result).toBeUndefined();
-      expect(mockEmailSend).not.toHaveBeenCalled();
+      expect(mockSendEmail).not.toHaveBeenCalled();
     });
   });
 
@@ -212,8 +207,8 @@ describe("sendFollowerNotification", () => {
         eventDetails: {},
       });
 
-      expect(mockEmailSend).toHaveBeenCalledTimes(1);
-      expect(mockEmailSend).toHaveBeenCalledWith(expect.objectContaining({ to: "valid@example.com" }));
+      expect(mockSendEmail).toHaveBeenCalledTimes(1);
+      expect(mockSendEmail).toHaveBeenCalledWith(expect.objectContaining({ to: "valid@example.com" }));
     });
 
     it("handles individual email sending failures gracefully", async () => {
@@ -225,7 +220,7 @@ describe("sendFollowerNotification", () => {
       await conversationFollowersFactory.create({ conversationId: conversation.id, userId: follower2.id });
 
       const sendError = new Error("Email provider failed");
-      mockEmailSend.mockImplementation((payload) => {
+      mockSendEmail.mockImplementation((payload) => {
         if (payload.to === "failure@example.com") throw sendError;
         return { id: "success-id" };
       });
@@ -237,7 +232,7 @@ describe("sendFollowerNotification", () => {
         eventDetails: {},
       });
 
-      expect(mockEmailSend).toHaveBeenCalledTimes(2);
+      expect(mockSendEmail).toHaveBeenCalledTimes(2);
       expect(sentryUtils.captureExceptionAndLog).toHaveBeenCalledWith(sendError);
       expect(result?.totalFollowers).toBe(2);
       expect(result?.emailResults).toHaveLength(2);

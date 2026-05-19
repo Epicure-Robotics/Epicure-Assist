@@ -60,9 +60,20 @@ export const env = createEnv({
       ? z.string().min(1).default("mock-openrouter-api-key")
       : emptyUnsetOptString(),
 
-    // Set these before or after deploying for email sending and receiving
-    RESEND_API_KEY: emptyUnsetOptString(),
-    RESEND_FROM_ADDRESS: emptyUnsetOptString(),
+    // SMTP for outbound email (OTP codes, follower notifications).
+    // Gmail: SMTP_USER is your address, SMTP_PASSWORD is a 16-char App Password
+    // (https://myaccount.google.com/apppasswords).
+    SMTP_HOST: z.preprocess(
+      (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.string().min(1).default("smtp.gmail.com"),
+    ),
+    SMTP_PORT: z.preprocess(
+      (v: unknown) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.coerce.number().int().positive().default(465),
+    ),
+    SMTP_USER: emptyUnsetOptString(),
+    SMTP_PASSWORD: emptyUnsetOptString(),
+    SMTP_FROM_ADDRESS: emptyUnsetOptEmail(),
     GOOGLE_CLIENT_ID: emptyUnsetOptString(), // Google OAuth client credentials from https://console.cloud.google.com for Gmail sync
     GOOGLE_CLIENT_SECRET: emptyUnsetOptString(),
     GOOGLE_PUBSUB_TOPIC_NAME: emptyUnsetOptString(), // Google PubSub for Gmail sync

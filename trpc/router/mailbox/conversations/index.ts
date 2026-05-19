@@ -22,7 +22,7 @@ import {
 } from "@/lib/data/conversationMessage";
 import { getGmailSupportEmail } from "@/lib/data/gmailSupportEmail";
 import { findSimilarConversations } from "@/lib/data/retrieval";
-import { env } from "@/lib/env";
+import { isSmtpConfigured } from "@/lib/emails/sendEmail";
 import { mailboxProcedure } from "../procedure";
 import { filesRouter } from "./files";
 import { messagesRouter } from "./messages";
@@ -45,7 +45,7 @@ export const conversationsRouter = {
       defaultSort: "oldest" as const,
       supportsHighestValueSort,
       onboardingState: {
-        hasResend: !!(env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS),
+        hasSmtp: isSmtpConfigured(),
         hasWidgetHost: !!ctx.mailbox.chatIntegrationUsed,
         hasGmailSupportEmail: !!(await getGmailSupportEmail(ctx.mailbox)),
       },

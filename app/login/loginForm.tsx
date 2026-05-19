@@ -235,7 +235,7 @@ export function LoginForm({ className, ...props }: React.ComponentPropsWithoutRe
               </div>
               {dashboardUrl && (
                 <Alert variant="bright">
-                  You have not yet set up Resend for email sending. You can find the OTP code in the{" "}
+                  You have not yet set up SMTP for email sending. You can find the OTP code in the{" "}
                   <a
                     href={dashboardUrl}
                     target="_blank"

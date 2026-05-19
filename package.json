@@ -171,7 +171,6 @@
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
     "require-in-the-middle": "^7.5.2",
-    "resend": "^4.5.1",
     "rrweb-player": "^1.0.0-alpha.4",
     "scroll-into-view-if-needed": "^3.1.0",
     "server-only": "^0.0.1",

@@ -1,6 +1,5 @@
 import { TRPCError, TRPCRouterRecord } from "@trpc/server";
 import { and, desc, eq, isNull, sql } from "drizzle-orm";
-import { Resend } from "resend";
 import { z } from "zod";
 import { assertDefined } from "@/components/utils/assert";
 import { db } from "@/db/client";
@@ -9,6 +8,7 @@ import { authUsers } from "@/db/supabaseSchema/auth";
 import { setupMailboxForNewUser } from "@/lib/auth/authService";
 import { cacheFor } from "@/lib/cache";
 import OtpEmail from "@/lib/emails/otp";
+import { isSmtpConfigured, sendEmail } from "@/lib/emails/sendEmail";
 import { env } from "@/lib/env";
 import { captureExceptionAndLog } from "@/lib/shared/sentry";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -46,19 +46,18 @@ export const userRouter = {
       });
     }
 
-    if (env.RESEND_API_KEY && env.RESEND_FROM_ADDRESS) {
-      const resend = new Resend(env.RESEND_API_KEY);
-      const { error } = await resend.emails.send({
-        from: env.RESEND_FROM_ADDRESS,
-        to: assertDefined(user.email),
-        subject: `Your OTP for Helper: ${data.properties.email_otp}`,
-        react: OtpEmail({ otp: data.properties.email_otp }),
-      });
-      if (error) {
+    if (isSmtpConfigured()) {
+      try {
+        await sendEmail({
+          to: assertDefined(user.email),
+          subject: `Your OTP for Helper: ${data.properties.email_otp}`,
+          react: OtpEmail({ otp: data.properties.email_otp }),
+        });
+      } catch (error) {
         captureExceptionAndLog(error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to send OTP: ${error.message}`,
+          message: `Failed to send OTP: ${error instanceof Error ? error.message : "Unknown error"}`,
         });
       }
       return { email: true };
