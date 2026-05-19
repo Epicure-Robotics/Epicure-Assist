@@ -11,7 +11,7 @@ import openai from "@/lib/ai/openai";
 import { replaceTemplateVariables } from "@/lib/utils/templateVariables";
 
 // Sample customer question
-const sampleCustomerQuestion = `We're a factory with about 500 employees and want to explore smart vending for the break room. What's the typical timeline to evaluate a pilot?`;
+const sampleCustomerQuestion = `We run a gym in Whitefield and keep hearing members ask for protein shakes between classes. Does Epicure place Zoe kiosks at fitness venues, and what would you need from us to explore a site?`;
 
 async function generateAIResponse(question: string): Promise<string> {
   console.log("🤖 Generating real AI response using GPT-4o-mini...\n");
@@ -21,11 +21,11 @@ async function generateAIResponse(question: string): Promise<string> {
     messages: [
       {
         role: "system",
-        content: `You are a helpful B2B sales contact for Epicure Robotics (smart vending / workplace solutions).
+        content: `You are a helpful Epicure Robotics support contact. Epicure deploys and operates fresh-food kiosks (Smoothie Bar, Zoe) at offices, tech parks, and gyms — service-led, not selling machines as capital equipment by default.
 Provide clear, professional replies with:
 - Short paragraphs
 - Numbered lists when steps help
-- No invented pricing or binding commitments`,
+- Use menu price bands from knowledge when relevant; no invented commitments or install guarantees`,
       },
       {
         role: "user",

@@ -14,7 +14,7 @@ export const EPICURE_ISSUE_GROUP_SPECS: EpicureIssueGroupSpec[] = [
   {
     title: "Business Lead",
     description:
-      "Inbound commercial interest, quotes, pilots, and general sales conversations (end customers evaluating Epicure equipment).",
+      "Venue hosting interest, site partnerships, pilots, or general commercial conversations — not capital-equipment purchase quotes unless published.",
     color: "#2563eb",
     templateName: "Epicure reply — Business lead",
     templateBody: `Hi {{name}},
@@ -29,7 +29,7 @@ Epicure Robotics`,
   {
     title: "Vendor / Manufacturer Pitch",
     description:
-      "Suppliers or manufacturers pitching components, contract manufacturing, or lower-cost alternatives (‘use our parts/services’) — not a buyer evaluating Epicure equipment.",
+      "Suppliers or manufacturers pitching components, contract manufacturing, or lower-cost alternatives — not a site user or venue hosting inquiry.",
     color: "#7c3aed",
     templateName: "Epicure reply — Vendor pitch",
     templateBody: `Hi {{name}},

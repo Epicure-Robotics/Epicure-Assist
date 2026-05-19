@@ -54,7 +54,7 @@ Quick links include About Us, Services, Products, Careers. Policies: Privacy, Te
 
 **URL:** https://epicurerobotics.com/#contact
 
-The public site’s **Let’s Collaborate** / **Send us a message** section collects leads (name, email, phone, message). For sales, enterprise support, partnerships, or media, visitors should submit there or browse the rest of the site at https://epicurerobotics.com/
+The public site’s **Let’s Collaborate** / **Send us a message** section collects leads (name, email, phone, message). For hosting a kiosk at a site, partnerships, support at an existing deployment, or media, visitors should submit there or browse https://epicurerobotics.com/
 
 ### Direct email routing
 - **Sales, leads, business:** suhas@epicurerobotics.com, adimehta@epicurerobotics.com
